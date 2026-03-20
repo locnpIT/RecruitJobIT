@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.candidate.entity;
 
+import com.phuocloc.projectfinal.recruit.ai.entity.ResumeEmbeddingIndex;
 import com.phuocloc.projectfinal.recruit.job.entity.JobApplication;
 import com.phuocloc.projectfinal.recruit.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -49,9 +50,11 @@ public class CandidateResume extends BaseEntity {
     private String parsedSkillsText;
 
     @Column(name = "is_default", nullable = false)
+    @Builder.Default
     private Boolean isDefault = false;
 
     @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @Column(name = "uploaded_at")
@@ -60,54 +63,6 @@ public class CandidateResume extends BaseEntity {
     @OneToMany(mappedBy = "resume", fetch = FetchType.LAZY)
     private List<JobApplication> jobApplications;
 
-    // ==================== AI EMBEDDING FIELDS ====================
-    // Lưu trữ thông tin embedding vector trong Qdrant (vector database)
-    // Dùng cho AI matching: tìm job phù hợp với CV
-
-    /**
-     * Qdrant Point ID - UUID dùng để query vector từ Qdrant.
-     * NULL khi CV chưa được embed (chưa xử lý xong).
-     */
-    @Column(name = "qdrant_point_id", length = 36, unique = true)
-    private String qdrantPointId;
-
-    /**
-     * Tên collection trong Qdrant.
-     * Mặc định: recruitment_embeddings (chung cho cả CV và Job)
-     */
-    @Column(name = "qdrant_collection_name", length = 120)
-    private String qdrantCollectionName = "recruitment_embeddings";
-
-    /**
-     * Số chiều của vector (dimension).
-     * Ví dụ: paraphrase-multilingual-MiniLM-L6-v2 = 384 chiều
-     */
-    @Column(name = "vector_dimension")
-    private Integer vectorDimension = 384;
-
-    /**
-     * Model AI dùng để tạo embedding.
-     * Ví dụ: paraphrase-multilingual-MiniLM-L6-v2
-     */
-    @Column(name = "embedding_model_name", length = 120)
-    private String embeddingModelName;
-
-    /**
-     * Version của embedding để biết khi nào cần re-embed.
-     * Ví dụ: v1.0, v2.0
-     */
-    @Column(name = "embedding_version", length = 50)
-    private String embeddingVersion;
-
-    /**
-     * Thời điểm tạo embedding gần nhất.
-     */
-    @Column(name = "embedded_at")
-    private LocalDateTime embeddedAt;
-
-    /**
-     * Thời điểm re-embed gần nhất (nếu có).
-     */
-    @Column(name = "last_reembedded_at")
-    private LocalDateTime lastReembeddedAt;
+    @OneToMany(mappedBy = "resume", fetch = FetchType.LAZY)
+    private List<ResumeEmbeddingIndex> embeddingIndexes;
 }

@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.job.entity;
 
+import com.phuocloc.projectfinal.recruit.ai.entity.JobEmbeddingIndex;
 import com.phuocloc.projectfinal.recruit.auth.entity.Users;
 import com.phuocloc.projectfinal.recruit.company.entity.Company;
 import com.phuocloc.projectfinal.recruit.company.entity.CompanyBranch;
@@ -77,6 +78,7 @@ public class Job extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @Builder.Default
     private JobStatus status = JobStatus.DRAFT;
 
     @Column(name = "reject_reason", length = 500)
@@ -98,48 +100,6 @@ public class Job extends BaseEntity {
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
     private List<JobApplication> jobApplications;
 
-    // ==================== AI EMBEDDING FIELDS ====================
-    // Lưu trữ thông tin embedding vector trong Qdrant (vector database)
-    // Dùng cho AI matching: tìm job phù hợp với CV và ngược lại
-
-    /**
-     * Qdrant Point ID - UUID dùng để query vector từ Qdrant.
-     * NULL khi job chưa được embed (ví dụ: job ở trạng thái DRAFT).
-     */
-    @Column(name = "qdrant_point_id", length = 36, unique = true)
-    private String qdrantPointId;
-
-    /**
-     * Tên collection trong Qdrant.
-     * Mặc định: recruitment_embeddings (chung cho cả CV và Job)
-     */
-    @Column(name = "qdrant_collection_name", length = 120)
-    private String qdrantCollectionName = "recruitment_embeddings";
-
-    /**
-     * Số chiều của vector (dimension).
-     * Ví dụ: paraphrase-multilingual-MiniLM-L6-v2 = 384 chiều
-     */
-    @Column(name = "vector_dimension")
-    private Integer vectorDimension = 384;
-
-    /**
-     * Model AI dùng để tạo embedding.
-     * Ví dụ: paraphrase-multilingual-MiniLM-L6-v2
-     */
-    @Column(name = "embedding_model_name", length = 120)
-    private String embeddingModelName;
-
-    /**
-     * Version của embedding để biết khi nào cần re-embed.
-     * Ví dụ: v1.0, v2.0
-     */
-    @Column(name = "embedding_version", length = 50)
-    private String embeddingVersion;
-
-    /**
-     * Thời điểm tạo embedding gần nhất.
-     */
-    @Column(name = "embedded_at")
-    private LocalDateTime embeddedAt;
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    private List<JobEmbeddingIndex> embeddingIndexes;
 }
