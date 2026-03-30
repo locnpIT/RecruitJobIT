@@ -2,6 +2,7 @@ package com.phuocloc.projectfinal.recruit.company.entity;
 
 import com.phuocloc.projectfinal.recruit.job.entity.Job;
 import com.phuocloc.projectfinal.recruit.common.entity.BaseEntity;
+import com.phuocloc.projectfinal.recruit.common.entity.City;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,23 +23,25 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "company_branch")
+@Table(name = "chiNhanhCongTy")
 public class CompanyBranch extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
+    @JoinColumn(name = "congTyId", nullable = false)
     private Company company;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "ten", nullable = false, length = 200)
     private String name;
 
-    @Column(length = 500)
+    @Column(name = "diaChi", length = 500)
     private String address;
 
-    @Column(length = 120)
-    private String city;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "maTinhThanh")
+    private City city;
 
-    @Column(name = "is_headquarter", nullable = false)
+    @Column(name = "laTruSoChinh", nullable = false)
+    @Builder.Default
     private Boolean isHeadquarter = false;
 
     @OneToMany(mappedBy = "branch", fetch = FetchType.LAZY)

@@ -23,25 +23,25 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(
-        name = "job_view_log",
+        name = "lichSuXemTinTuyenDung",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_job_view_log_job_session",
-                columnNames = {"job_id", "session_id"}
+                columnNames = {"tinTuyenDungId", "phienId"}
         )
 )
 public class JobViewLog extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id", nullable = false)
+    @JoinColumn(name = "tinTuyenDungId", nullable = false)
     private Job job;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "candidate_id")
+    @JoinColumn(name = "ungVienId")
     private CandidateProfile candidate;
 
-    @Column(name = "session_id", nullable = false, length = 120)
+    @Column(name = "phienId", nullable = false, length = 120)
     private String sessionId;
 
-    @Column(name = "viewed_at", nullable = false)
+    @Column(name = "xemLuc", nullable = false)
     private LocalDateTime viewedAt;
 }

@@ -21,25 +21,26 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(
-        name = "job_skill",
+        name = "kyNangTinTuyenDung",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_job_skill_job_skill",
-                columnNames = {"job_id", "skill_id"}
+                columnNames = {"tinTuyenDungId", "kyNangId"}
         )
 )
 public class JobSkill extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id", nullable = false)
+    @JoinColumn(name = "tinTuyenDungId", nullable = false)
     private Job job;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "skill_id", nullable = false)
+    @JoinColumn(name = "kyNangId", nullable = false)
     private Skill skill;
 
-    @Column(name = "is_required", nullable = false)
+    @Column(name = "batBuoc", nullable = false)
+    @Builder.Default
     private Boolean isRequired = true;
 
-    @Column(name = "priority_score")
+    @Column(name = "diemUuTien")
     private Integer priorityScore;
 }

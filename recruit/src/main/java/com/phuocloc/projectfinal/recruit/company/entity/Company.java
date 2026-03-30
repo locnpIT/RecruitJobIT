@@ -3,6 +3,7 @@ package com.phuocloc.projectfinal.recruit.company.entity;
 import com.phuocloc.projectfinal.recruit.auth.entity.Users;
 import com.phuocloc.projectfinal.recruit.job.entity.Job;
 import com.phuocloc.projectfinal.recruit.common.entity.BaseEntity;
+import com.phuocloc.projectfinal.recruit.common.entity.City;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,47 +30,49 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(
-        name = "company",
-        uniqueConstraints = @UniqueConstraint(name = "uk_company_tax_code", columnNames = "tax_code")
+        name = "congTy",
+        uniqueConstraints = @UniqueConstraint(name = "uk_company_tax_code", columnNames = "maSoThue")
 )
 public class Company extends BaseEntity {
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "ten", nullable = false, length = 200)
     private String name;
 
-    @Column(name = "tax_code", nullable = false, length = 50)
+    @Column(name = "maSoThue", nullable = false, length = 50)
     private String taxCode;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "moTa", columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 255)
+    @Column(name = "website", length = 255)
     private String website;
 
-    @Column(name = "logo_url", length = 500)
+    @Column(name = "logoUrl", length = 500)
     private String logoUrl;
 
-    @Column(name = "cover_image_url", length = 500)
+    @Column(name = "anhBiaUrl", length = 500)
     private String coverImageUrl;
 
-    @Column(length = 500)
+    @Column(name = "diaChi", length = 500)
     private String address;
 
-    @Column(length = 120)
-    private String city;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "maTinhThanh")
+    private City city;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "trangThai", nullable = false, length = 20)
+    @Builder.Default
     private CompanyStatus status = CompanyStatus.PENDING;
 
-    @Column(name = "reject_reason", length = 500)
+    @Column(name = "lyDoTuChoi", length = 500)
     private String rejectReason;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reviewed_by")
+    @JoinColumn(name = "duyetBoi")
     private Users reviewedBy;
 
-    @Column(name = "reviewed_at")
+    @Column(name = "duyetLuc")
     private LocalDateTime reviewedAt;
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
@@ -83,4 +86,7 @@ public class Company extends BaseEntity {
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     private List<Subscription> subscriptions;
+
+    @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+    private List<CompanyProofDocument> proofDocuments;
 }

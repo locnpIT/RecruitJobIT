@@ -1,8 +1,7 @@
 package com.phuocloc.projectfinal.recruit.company.enums;
 
-public enum InvitationStatus {
+public enum CompanyProofDocumentStatus {
     PENDING,
-    ACCEPTED,
-    EXPIRED,
-    CANCELLED
+    APPROVED,
+    REJECTED
 }

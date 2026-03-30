@@ -22,14 +22,14 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "role")
+@Table(name = "vaiTro")
 public class Roles extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(name = "ten", nullable = false, unique = true, length = 20)
     private RoleName name;
 
-    @Column(length = 500)
+    @Column(name = "moTa", length = 500)
     private String description;
 
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)

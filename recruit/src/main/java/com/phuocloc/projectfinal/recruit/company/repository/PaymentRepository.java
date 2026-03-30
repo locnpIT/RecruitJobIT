@@ -9,7 +9,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Optional<Payment> findByTransactionCode(String transactionCode);
 
-    Optional<Payment> findByIdempotencyKey(String idempotencyKey);
-
     List<Payment> findByCompany_IdOrderByCreatedAtDesc(Long companyId);
 }

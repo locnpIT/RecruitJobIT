@@ -10,6 +10,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
@@ -27,29 +29,48 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(
-        name = "conversation",
+        name = "cuocTroChuyen",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_conversation_candidate_employer_job",
-                columnNames = {"candidate_id", "employer_id", "job_id"}
+                name = "uk_conversation_candidate_employer_key",
+                columnNames = {"ungVienId", "nhaTuyenDungId", "maCuocTroChuyen"}
         )
 )
 public class Conversation extends BaseEntity {
 
+    private static final String GENERAL_CONVERSATION_KEY = "GENERAL";
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "candidate_id", nullable = false)
+    @JoinColumn(name = "ungVienId", nullable = false)
     private CandidateProfile candidate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employer_id", nullable = false)
+    @JoinColumn(name = "nhaTuyenDungId", nullable = false)
     private EmployerProfile employer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id")
+    @JoinColumn(name = "tinTuyenDungId")
     private Job job;
 
-    @Column(name = "last_message_at")
+    @Column(name = "maCuocTroChuyen", nullable = false, length = 40)
+    private String conversationKey;
+
+    @Column(name = "tinNhanGanNhatLuc")
     private LocalDateTime lastMessageAt;
 
     @OneToMany(mappedBy = "conversation", fetch = FetchType.LAZY)
     private List<Message> messages;
+
+    @PrePersist
+    @PreUpdate
+    private void syncConversationKey() {
+        if (job == null) {
+            conversationKey = GENERAL_CONVERSATION_KEY;
+            return;
+        }
+        Long jobId = job.getId();
+        if (jobId == null) {
+            throw new IllegalStateException("Conversation.job must be persisted before being associated.");
+        }
+        conversationKey = "JOB_" + jobId;
+    }
 }

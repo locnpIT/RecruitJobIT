@@ -3,14 +3,15 @@ package com.phuocloc.projectfinal.recruit.candidate.entity;
 import com.phuocloc.projectfinal.recruit.auth.entity.Users;
 import com.phuocloc.projectfinal.recruit.job.entity.JobApplication;
 import com.phuocloc.projectfinal.recruit.common.entity.BaseEntity;
+import com.phuocloc.projectfinal.recruit.common.entity.City;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -25,38 +26,36 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "candidate_profile")
+@Table(name = "hoSoUngVien")
 public class CandidateProfile extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "nguoiDungId", nullable = false, unique = true)
     private Users user;
 
-    @Column(length = 255)
+    @Column(name = "tieuDeCaNhan", length = 255)
     private String headline;
 
-    @Column(name = "date_of_birth")
+    @Column(name = "ngaySinh")
     private LocalDate dateOfBirth;
 
-    @Column(length = 30)
+    @Column(name = "gioiTinh", length = 30)
     private String gender;
 
-    @Column(length = 500)
+    @Column(name = "diaChi", length = 500)
     private String address;
 
-    @Column(length = 120)
-    private String city;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "maTinhThanh")
+    private City city;
 
-    @Column(name = "expected_salary", precision = 15, scale = 2)
-    private BigDecimal expectedSalary;
-
-    @Column(name = "years_of_experience")
+    @Column(name = "soNamKinhNghiem")
     private Integer yearsOfExperience;
 
-    @Column(name = "education_level", length = 120)
+    @Column(name = "trinhDoHocVan", length = 120)
     private String educationLevel;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "gioiThieu", columnDefinition = "TEXT")
     private String bio;
 
     @OneToMany(mappedBy = "candidateProfile", fetch = FetchType.LAZY)

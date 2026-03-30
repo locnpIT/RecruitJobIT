@@ -9,9 +9,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,30 +27,44 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "job_matches")
+@Table(name = "ketQuaPhuHopViecLam")
 public class JobMatch extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id", nullable = false)
+    @JoinColumn(name = "tinTuyenDungId", nullable = false)
     private Job job;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resume_id", nullable = false)
+    @JoinColumn(name = "hoSoCvId", nullable = false)
     private CandidateResume resume;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "candidate_id", nullable = false)
+    @JoinColumn(name = "ungVienId", nullable = false)
     private CandidateProfile candidate;
 
-    @Column(name = "semantic_score", precision = 8, scale = 4)
+    @Column(name = "diemNguNghia", precision = 8, scale = 4)
     private BigDecimal semanticScore;
 
-    @Column(name = "final_score", precision = 8, scale = 4)
+    @Column(name = "diemCuoi", precision = 8, scale = 4)
     private BigDecimal finalScore;
 
-    @Column(name = "matched_at", nullable = false)
+    @Column(name = "ghepNoiLuc", nullable = false)
     private LocalDateTime matchedAt;
 
-    @Column(name = "expires_at")
+    @Column(name = "hanDenLuc")
     private LocalDateTime expiresAt;
+
+    @PrePersist
+    @PreUpdate
+    private void validateIntegrity() {
+        if (candidate == null || resume == null || candidate.getId() == null) {
+            return;
+        }
+        CandidateProfile resumeCandidate = resume.getCandidate();
+        if (resumeCandidate != null
+                && resumeCandidate.getId() != null
+                && !Objects.equals(candidate.getId(), resumeCandidate.getId())) {
+            throw new IllegalStateException("JobMatch.resume must belong to JobMatch.candidate.");
+        }
+    }
 }

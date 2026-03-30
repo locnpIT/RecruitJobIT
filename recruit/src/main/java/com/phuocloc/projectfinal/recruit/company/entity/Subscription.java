@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.AssertTrue;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,30 +25,41 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "subscription")
+@Table(name = "goiDichVu")
 public class Subscription extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
+    @JoinColumn(name = "congTyId", nullable = false)
     private Company company;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "plan_type", nullable = false, length = 20)
+    @Column(name = "loaiGoi", nullable = false, length = 20)
+    @Builder.Default
     private SubscriptionPlanType planType = SubscriptionPlanType.FREE;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "trangThai", nullable = false, length = 20)
+    @Builder.Default
     private SubscriptionStatus status = SubscriptionStatus.ACTIVE;
 
-    @Column(name = "started_at", nullable = false)
+    @Column(name = "batDauLuc", nullable = false)
     private LocalDateTime startedAt;
 
-    @Column(name = "expired_at")
+    @Column(name = "hetHanLuc")
     private LocalDateTime expiredAt;
 
-    @Column(name = "grace_until")
+    @Column(name = "giaHanDenLuc")
     private LocalDateTime graceUntil;
 
-    @Column(name = "auto_renew", nullable = false)
+    @Column(name = "tuDongGiaHan", nullable = false)
+    @Builder.Default
     private Boolean autoRenew = false;
+
+    @AssertTrue(message = "expiredAt must be after startedAt")
+    private boolean isValidPeriod() {
+        if (startedAt == null) {
+            return false;
+        }
+        return expiredAt == null || expiredAt.isAfter(startedAt);
+    }
 }

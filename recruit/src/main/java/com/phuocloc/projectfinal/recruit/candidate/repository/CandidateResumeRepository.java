@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CandidateResumeRepository extends JpaRepository<CandidateResume, Long> {
 
-    List<CandidateResume> findByCandidate_IdAndIsDeletedFalse(Long candidateId);
+    List<CandidateResume> findByCandidate_Id(Long candidateId);
 
     Optional<CandidateResume> findByIdAndCandidate_Id(Long resumeId, Long candidateId);
 

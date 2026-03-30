@@ -27,54 +27,54 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(
-        name = "resume_embedding_index",
+        name = "chiMucNhungCvUngVien",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_resume_embedding_point_id", columnNames = "point_id"),
+                @UniqueConstraint(name = "uk_resume_embedding_point_id", columnNames = "maDiem"),
                 @UniqueConstraint(
                         name = "uk_resume_embedding_resume_model_version",
-                        columnNames = {"resume_id", "model_name", "embedding_version"}
+                        columnNames = {"hoSoCvId", "tenMoHinh", "phienBanNhung"}
                 )
         }
 )
 public class ResumeEmbeddingIndex extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resume_id", nullable = false)
+    @JoinColumn(name = "hoSoCvId", nullable = false)
     private CandidateResume resume;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "nhaCungCap", nullable = false, length = 20)
     @Builder.Default
     private EmbeddingProvider provider = EmbeddingProvider.QDRANT;
 
-    @Column(name = "collection_name", nullable = false, length = 120)
+    @Column(name = "tenBoSuuTap", nullable = false, length = 120)
     @Builder.Default
     private String collectionName = "recruitment_embeddings";
 
-    @Column(name = "point_id", nullable = false, length = 64)
+    @Column(name = "maDiem", nullable = false, length = 64)
     private String pointId;
 
-    @Column(name = "model_name", nullable = false, length = 120)
+    @Column(name = "tenMoHinh", nullable = false, length = 120)
     private String modelName;
 
-    @Column(name = "embedding_version", nullable = false, length = 50)
+    @Column(name = "phienBanNhung", nullable = false, length = 50)
     private String embeddingVersion;
 
-    @Column(name = "vector_dimension", nullable = false)
+    @Column(name = "kichThuocVector", nullable = false)
     private Integer vectorDimension;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "trangThai", nullable = false, length = 20)
     @Builder.Default
     private EmbeddingStatus status = EmbeddingStatus.PENDING;
 
-    @Column(name = "is_active", nullable = false)
+    @Column(name = "dangHoatDong", nullable = false)
     @Builder.Default
     private Boolean isActive = true;
 
-    @Column(name = "embedded_at")
+    @Column(name = "nhungLuc")
     private LocalDateTime embeddedAt;
 
-    @Column(name = "last_error", length = 500)
+    @Column(name = "loiGanNhat", length = 500)
     private String lastError;
 }

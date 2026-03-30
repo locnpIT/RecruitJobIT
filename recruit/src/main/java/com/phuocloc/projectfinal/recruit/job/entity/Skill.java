@@ -22,15 +22,15 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(
-        name = "skill",
-        uniqueConstraints = @UniqueConstraint(name = "uk_skill_name", columnNames = "name")
+        name = "kyNang",
+        uniqueConstraints = @UniqueConstraint(name = "uk_skill_name", columnNames = "ten")
 )
 public class Skill extends BaseEntity {
 
-    @Column(nullable = false, length = 120)
+    @Column(name = "ten", nullable = false, length = 120)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "moTa", columnDefinition = "TEXT")
     private String description;
 
     @OneToMany(mappedBy = "skill", fetch = FetchType.LAZY)

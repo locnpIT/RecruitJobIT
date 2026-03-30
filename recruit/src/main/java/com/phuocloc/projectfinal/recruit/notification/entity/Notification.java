@@ -24,29 +24,30 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "notification")
+@Table(name = "thongBao")
 public class Notification extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "nguoiDungId", nullable = false)
     private Users user;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "tieuDe", nullable = false, length = 255)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "noiDung", columnDefinition = "TEXT")
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "loai", nullable = false, length = 20)
     private NotificationType type;
 
-    @Column(name = "is_read", nullable = false)
+    @Column(name = "daDoc", nullable = false)
+    @Builder.Default
     private Boolean isRead = false;
 
-    @Column(name = "read_at")
+    @Column(name = "docLuc")
     private LocalDateTime readAt;
 
-    @Column(name = "expired_at")
+    @Column(name = "hetHanLuc")
     private LocalDateTime expiredAt;
 }

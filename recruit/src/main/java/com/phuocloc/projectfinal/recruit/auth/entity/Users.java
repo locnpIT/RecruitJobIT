@@ -11,7 +11,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,39 +24,41 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(
-        name = "users",
+        name = "nguoiDung",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_users_email", columnNames = "email")
         }
 )
 public class Users extends BaseEntity {
 
-    @Column(nullable = false, length = 150)
+    @Column(name = "email", nullable = false, length = 150)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "matKhauBam", nullable = false, length = 255)
     private String passwordHash;
 
-    @Column(name = "full_name", nullable = false, length = 150)
-    private String fullName;
+    @Column(name = "ho", nullable = false, length = 100)
+    private String lastName;
 
-    @Column(name = "phone_number", length = 20)
+    @Column(name = "ten", nullable = false, length = 100)
+    private String firstName;
+
+    @Column(name = "soDienThoai", length = 20)
     private String phoneNumber;
 
-    @Column(name = "avatar_url", length = 500)
+    @Column(name = "anhDaiDienUrl", length = 10000)
     private String avatarUrl;
 
-    @Column(name = "is_active", nullable = false)
+    @Column(name = "dangHoatDong", nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
 
-    @Column(name = "is_locked", nullable = false)
+    @Column(name = "biKhoa", nullable = false)
+    @Builder.Default
     private Boolean isLocked = false;
 
-    @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", nullable = false)
+    @JoinColumn(name = "vaiTroId", nullable = false)
     private Roles role;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)

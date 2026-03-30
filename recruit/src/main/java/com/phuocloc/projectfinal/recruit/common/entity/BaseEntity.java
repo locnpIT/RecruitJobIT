@@ -13,10 +13,8 @@ import jakarta.persistence.MappedSuperclass;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @MappedSuperclass
@@ -27,10 +25,13 @@ public abstract class BaseEntity {
     private Long id;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "ngayTao", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "ngayCapNhat", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "ngayXoa")
+    private LocalDateTime deletedAt;
 }

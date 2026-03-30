@@ -24,40 +24,36 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "candidate_resume")
+@Table(name = "hoSoCvUngVien")
 public class CandidateResume extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "candidate_id", nullable = false)
+    @JoinColumn(name = "ungVienId", nullable = false)
     private CandidateProfile candidate;
 
-    @Column(name = "file_name", nullable = false, length = 255)
+    @Column(name = "tenTep", nullable = false, length = 255)
     private String fileName;
 
-    @Column(name = "file_url", nullable = false, length = 1000)
+    @Column(name = "duongDanTep", nullable = false, length = 1000)
     private String fileUrl;
 
-    @Column(name = "file_type", nullable = false, length = 30)
+    @Column(name = "loaiTep", nullable = false, length = 30)
     private String fileType;
 
-    @Column(name = "file_size")
+    @Column(name = "kichThuocTep")
     private Long fileSize;
 
-    @Column(name = "extracted_text", columnDefinition = "TEXT")
+    @Column(name = "vanBanTrichXuat", columnDefinition = "TEXT")
     private String extractedText;
 
-    @Column(name = "parsed_skills_text", columnDefinition = "TEXT")
+    @Column(name = "vanBanKyNangPhanTich", columnDefinition = "TEXT")
     private String parsedSkillsText;
 
-    @Column(name = "is_default", nullable = false)
+    @Column(name = "macDinh", nullable = false)
     @Builder.Default
     private Boolean isDefault = false;
 
-    @Column(name = "is_deleted", nullable = false)
-    @Builder.Default
-    private Boolean isDeleted = false;
-
-    @Column(name = "uploaded_at")
+    @Column(name = "taiLenLuc")
     private LocalDateTime uploadedAt;
 
     @OneToMany(mappedBy = "resume", fetch = FetchType.LAZY)

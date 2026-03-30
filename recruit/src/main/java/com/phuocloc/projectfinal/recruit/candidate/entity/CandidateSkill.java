@@ -22,25 +22,25 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(
-        name = "candidate_skill",
+        name = "kyNangUngVien",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_candidate_skill_candidate_skill",
-                columnNames = {"candidate_profile_id", "skill_id"}
+                columnNames = {"hoSoUngVienId", "kyNangId"}
         )
 )
 public class CandidateSkill extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "candidate_profile_id", nullable = false)
+    @JoinColumn(name = "hoSoUngVienId", nullable = false)
     private CandidateProfile candidateProfile;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "skill_id", nullable = false)
+    @JoinColumn(name = "kyNangId", nullable = false)
     private Skill skill;
 
-    @Column(length = 50)
+    @Column(name = "capDo", length = 50)
     private String level;
 
-    @Column(name = "years_of_experience")
+    @Column(name = "soNamKinhNghiem")
     private Integer yearsOfExperience;
 }

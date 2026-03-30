@@ -24,27 +24,29 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "message")
+@Table(name = "tinNhan")
 public class Message extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "conversation_id", nullable = false)
+    @JoinColumn(name = "cuocTroChuyenId", nullable = false)
     private Conversation conversation;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_user_id", nullable = false)
+    @JoinColumn(name = "nguoiGuiId", nullable = false)
     private Users senderUser;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "noiDung", nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "message_type", nullable = false, length = 20)
+    @Column(name = "loaiTinNhan", nullable = false, length = 20)
+    @Builder.Default
     private MessageType messageType = MessageType.TEXT;
 
-    @Column(name = "is_read", nullable = false)
+    @Column(name = "daDoc", nullable = false)
+    @Builder.Default
     private Boolean isRead = false;
 
-    @Column(name = "read_at")
+    @Column(name = "docLuc")
     private LocalDateTime readAt;
 }
