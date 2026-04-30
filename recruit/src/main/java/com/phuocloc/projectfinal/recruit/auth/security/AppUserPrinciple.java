@@ -8,8 +8,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.phuocloc.projectfinal.recruit.auth.entity.Users;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,18 +24,17 @@ public class AppUserPrinciple implements UserDetails {
     private final String email;
     private final String passwordHash;
     private final Boolean active;
-    private final Boolean locked;
     private final RoleName role;
 
 
-    public static AppUserPrinciple fromUser(Users user) {
+    public static AppUserPrinciple fromUser(NguoiDung user) {
+        RoleName roleName = RoleName.valueOf(user.getVaiTroHeThong().getTen().toUpperCase());
         return new AppUserPrinciple(
-                user.getId(),
+                user.getId().longValue(),
                 user.getEmail(),
-                user.getPasswordHash(),
-                user.getIsActive(),
-                user.getIsLocked(),
-                user.getRole().getName()
+                user.getMatKhauBam(),
+                user.getDangHoatDong(),
+                roleName
         );
     }
 
@@ -56,7 +55,7 @@ public class AppUserPrinciple implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !Boolean.TRUE.equals(locked);
+        return true;
     }
 
     @Override

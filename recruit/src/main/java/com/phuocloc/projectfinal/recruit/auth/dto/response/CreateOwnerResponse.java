@@ -26,7 +26,6 @@ public class CreateOwnerResponse {
         private String proofUrl;
         private String role;
         private Boolean isActive;
-        private Boolean isLocked;
     }
 
     @Data

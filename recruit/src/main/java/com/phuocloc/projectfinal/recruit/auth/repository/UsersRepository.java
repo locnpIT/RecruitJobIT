@@ -1,15 +1,15 @@
 package com.phuocloc.projectfinal.recruit.auth.repository;
 
-import com.phuocloc.projectfinal.recruit.auth.entity.Users;
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UsersRepository extends JpaRepository<Users, Long> {
+public interface UsersRepository extends JpaRepository<NguoiDung, Integer> {
 
-    Optional<Users> findByEmail(String email);
+    Optional<NguoiDung> findByEmail(String email);
 
     boolean existsByEmail(String email);
 
-    List<Users> findByRole_Id(Long roleId);
+    List<NguoiDung> findByVaiTroHeThong_Id(Integer roleId);
 }

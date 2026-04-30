@@ -1,12 +1,12 @@
 package com.phuocloc.projectfinal.recruit.candidate.repository;
 
-import com.phuocloc.projectfinal.recruit.candidate.entity.CandidateProfile;
+import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CandidateProfileRepository extends JpaRepository<CandidateProfile, Long> {
+public interface CandidateProfileRepository extends JpaRepository<HoSoUngVien, Integer> {
 
-    Optional<CandidateProfile> findByUser_Id(Long userId);
+    Optional<HoSoUngVien> findByNguoiDung_Id(Integer nguoiDungId);
 
-    boolean existsByUser_Id(Long userId);
+    boolean existsByNguoiDung_Id(Integer nguoiDungId);
 }

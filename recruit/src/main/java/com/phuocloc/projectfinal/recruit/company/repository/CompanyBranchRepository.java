@@ -1,13 +1,13 @@
 package com.phuocloc.projectfinal.recruit.company.repository;
 
-import com.phuocloc.projectfinal.recruit.company.entity.CompanyBranch;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CompanyBranchRepository extends JpaRepository<CompanyBranch, Long> {
+public interface CompanyBranchRepository extends JpaRepository<ChiNhanhCongTy, Integer> {
 
-    List<CompanyBranch> findByCompany_Id(Long companyId);
+    List<ChiNhanhCongTy> findByCongTy_Id(Integer congTyId);
 
-    Optional<CompanyBranch> findByCompany_IdAndIsHeadquarterTrue(Long companyId);
+    Optional<ChiNhanhCongTy> findByCongTy_IdAndLaTruSoChinhTrue(Integer congTyId);
 }

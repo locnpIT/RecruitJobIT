@@ -1,17 +1,16 @@
 package com.phuocloc.projectfinal.recruit.company.repository;
 
-import com.phuocloc.projectfinal.recruit.company.entity.Company;
-import com.phuocloc.projectfinal.recruit.company.enums.CompanyStatus;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface CompanyRepository extends JpaRepository<Company, Long>, JpaSpecificationExecutor<Company> {
+public interface CompanyRepository extends JpaRepository<CongTy, Integer>, JpaSpecificationExecutor<CongTy> {
 
-    Optional<Company> findByTaxCode(String taxCode);
+    Optional<CongTy> findByMaSoThue(String maSoThue);
 
-    boolean existsByTaxCode(String taxCode);
+    boolean existsByMaSoThue(String maSoThue);
 
-    List<Company> findByStatus(CompanyStatus status);
+    List<CongTy> findByTrangThai(String trangThai);
 }

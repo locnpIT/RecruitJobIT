@@ -1,16 +1,12 @@
 package com.phuocloc.projectfinal.recruit.company.repository;
 
-import com.phuocloc.projectfinal.recruit.company.entity.CompanyProofDocument;
-import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentStatus;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.TepMinhChungCongTy;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CompanyProofDocumentRepository extends JpaRepository<CompanyProofDocument, Long> {
+public interface CompanyProofDocumentRepository extends JpaRepository<TepMinhChungCongTy, Integer> {
 
-    List<CompanyProofDocument> findByCompany_IdOrderByCreatedAtDesc(Long companyId);
+    List<TepMinhChungCongTy> findByCongTy_IdOrderByNgayTaoDesc(Integer congTyId);
 
-    List<CompanyProofDocument> findByCompany_IdAndStatusOrderByCreatedAtDesc(
-            Long companyId,
-            CompanyProofDocumentStatus status
-    );
+    List<TepMinhChungCongTy> findByCongTy_IdAndTrangThaiOrderByNgayTaoDesc(Integer congTyId, String trangThai);
 }

@@ -5,20 +5,13 @@ import com.phuocloc.projectfinal.recruit.auth.dto.request.LoginRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.RegisterRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.AuthResponse;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.CreateOwnerResponse;
-import com.phuocloc.projectfinal.recruit.auth.entity.Roles;
-import com.phuocloc.projectfinal.recruit.auth.entity.Users;
 import com.phuocloc.projectfinal.recruit.auth.enums.RegisterRole;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
 import com.phuocloc.projectfinal.recruit.auth.repository.RolesRepository;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
-import com.phuocloc.projectfinal.recruit.candidate.entity.CandidateProfile;
 import com.phuocloc.projectfinal.recruit.candidate.repository.CandidateProfileRepository;
 import com.phuocloc.projectfinal.recruit.company.dto.request.CreateEmployerRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CreateEmployerResponse;
-import com.phuocloc.projectfinal.recruit.company.entity.Company;
-import com.phuocloc.projectfinal.recruit.company.entity.CompanyBranch;
-import com.phuocloc.projectfinal.recruit.company.entity.CompanyProofDocument;
-import com.phuocloc.projectfinal.recruit.company.entity.EmployerProfile;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentStatus;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyStatus;
@@ -27,6 +20,17 @@ import com.phuocloc.projectfinal.recruit.company.repository.CompanyBranchReposit
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyProofDocumentRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.EmployerProfileRepository;
+import com.phuocloc.projectfinal.recruit.company.repository.LoaiTaiLieuRepository;
+import com.phuocloc.projectfinal.recruit.company.repository.VaiTroCongTyRepository;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.LoaiTaiLieu;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.TepMinhChungCongTy;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.VaiTroCongTy;
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
+import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.infrastructure.cloudinary.CloudinaryStorageService;
 import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import java.net.URI;
@@ -63,6 +67,8 @@ public class AuthService {
     private final CompanyBranchRepository companyBranchRepository;
     private final EmployerProfileRepository employerProfileRepository;
     private final CompanyProofDocumentRepository companyProofDocumentRepository;
+    private final VaiTroCongTyRepository vaiTroCongTyRepository;
+    private final LoaiTaiLieuRepository loaiTaiLieuRepository;
 
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -79,25 +85,21 @@ public class AuthService {
         String normalizedEmail = normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
-        Roles candidateRole = requireRole(RoleName.CANDIDATE);
+        VaiTroHeThong candidateRole = requireRole(RoleName.CANDIDATE);
 
-        Users user = Users.builder()
-                .email(normalizedEmail)
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName().trim())
-                .lastName(request.getLastName().trim())
-                .phoneNumber(trimToNull(request.getPhoneNumber()))
-                .isActive(true)
-                .isLocked(false)
-                .role(candidateRole)
-                .build();
-
+        NguoiDung user = new NguoiDung();
+        user.setEmail(normalizedEmail);
+        user.setMatKhauBam(passwordEncoder.encode(request.getPassword()));
+        user.setTen(request.getFirstName().trim());
+        user.setHo(request.getLastName().trim());
+        user.setSoDienThoai(trimToNull(request.getPhoneNumber()));
+        user.setDangHoatDong(true);
+        user.setVaiTroHeThong(candidateRole);
         user = usersRepository.save(user);
 
-        CandidateProfile candidateProfile = CandidateProfile.builder()
-                .user(user)
-                .build();
-        candidateProfileRepository.save(candidateProfile);
+        HoSoUngVien hoSoUngVien = new HoSoUngVien();
+        hoSoUngVien.setNguoiDung(user);
+        candidateProfileRepository.save(hoSoUngVien);
 
         String accessToken = jwtService.generateAccessToken(user);
         return toAuthResponse(user, accessToken);
@@ -108,67 +110,62 @@ public class AuthService {
         String normalizedEmail = normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
-        Roles ownerRole = requireRole(RoleName.OWNER);
+        VaiTroHeThong ownerRole = requireRole(RoleName.OWNER);
         String proofUrl = resolveProofUrl(request);
 
-        Users owner = Users.builder()
-                .email(normalizedEmail)
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName().trim())
-                .lastName(request.getLastName().trim())
-                .phoneNumber(trimToNull(request.getPhoneNumber()))
-                .isActive(true)
-                .isLocked(false)
-                .role(ownerRole)
-                .build();
+        NguoiDung owner = new NguoiDung();
+        owner.setEmail(normalizedEmail);
+        owner.setMatKhauBam(passwordEncoder.encode(request.getPassword()));
+        owner.setTen(request.getFirstName().trim());
+        owner.setHo(request.getLastName().trim());
+        owner.setSoDienThoai(trimToNull(request.getPhoneNumber()));
+        owner.setDangHoatDong(true);
+        owner.setVaiTroHeThong(ownerRole);
         owner = usersRepository.save(owner);
 
-        Company company = Company.builder()
-                .name(buildDefaultCompanyName(owner))
-                .taxCode(generateTempTaxCode())
-                .status(CompanyStatus.PENDING)
-                .build();
-        company = companyRepository.save(company);
+        CongTy congTy = new CongTy();
+        congTy.setTen(buildDefaultCompanyName(owner));
+        congTy.setMaSoThue(generateTempTaxCode());
+        congTy.setTrangThai(CompanyStatus.PENDING.name());
+        congTy.setChuCongTy(owner);
+        congTy = companyRepository.save(congTy);
 
-        CompanyBranch headquarter = CompanyBranch.builder()
-                .company(company)
-                .name(company.getName() + " - Tru so chinh")
-                .isHeadquarter(true)
-                .build();
-        headquarter = companyBranchRepository.save(headquarter);
+        ChiNhanhCongTy chiNhanhChinh = new ChiNhanhCongTy();
+        chiNhanhChinh.setCongTy(congTy);
+        chiNhanhChinh.setTen(congTy.getTen() + " - Tru so chinh");
+        chiNhanhChinh.setLaTruSoChinh(true);
+        chiNhanhChinh = companyBranchRepository.save(chiNhanhChinh);
 
-        EmployerProfile ownerProfile = EmployerProfile.builder()
-                .user(owner)
-                .company(company)
-                .branch(headquarter)
-                .companyRole(EmployerCompanyRole.OWNER)
-                .isActive(true)
-                .build();
+        VaiTroCongTy vaiTroOwner = requireCompanyRole(EmployerCompanyRole.OWNER);
+
+        ThanhVienCongTy ownerProfile = new ThanhVienCongTy();
+        ownerProfile.setNguoiDung(owner);
+        ownerProfile.setChiNhanh(chiNhanhChinh);
+        ownerProfile.setVaiTroCongTy(vaiTroOwner);
+        ownerProfile.setTrangThai("ACTIVE");
         employerProfileRepository.save(ownerProfile);
 
-        CompanyProofDocument proofDocument = CompanyProofDocument.builder()
-                .company(company)
-                .fileUrl(proofUrl)
-                .fileName(resolveProofFileName(proofUrl, request.getProofFile()))
-                .fileType(resolveProofFileType(request.getProofFile()))
-                .fileSize(resolveProofFileSize(request.getProofFile()))
-                .documentType(CompanyProofDocumentType.OWNER_ID_CARD)
-                .status(CompanyProofDocumentStatus.PENDING)
-                .build();
+        LoaiTaiLieu loaiTaiLieu = resolveOrCreateLoaiTaiLieu(CompanyProofDocumentType.OWNER_ID_CARD.name());
+
+        TepMinhChungCongTy proofDocument = new TepMinhChungCongTy();
+        proofDocument.setCongTy(congTy);
+        proofDocument.setLoaiTaiLieu(loaiTaiLieu);
+        proofDocument.setDuongDanTep(proofUrl);
+        proofDocument.setTenTep(resolveProofFileName(proofUrl, request.getProofFile()));
+        proofDocument.setTrangThai(CompanyProofDocumentStatus.PENDING.name());
         companyProofDocumentRepository.save(proofDocument);
 
         String accessToken = jwtService.generateAccessToken(owner);
 
         return CreateOwnerResponse.builder()
                 .owner(CreateOwnerResponse.OwnerInfo.builder()
-                        .id(owner.getId())
+                        .id(owner.getId().longValue())
                         .email(owner.getEmail())
-                        .firstName(owner.getFirstName())
-                        .lastName(owner.getLastName())
+                        .firstName(owner.getTen())
+                        .lastName(owner.getHo())
                         .proofUrl(proofUrl)
-                        .role(owner.getRole().getName().name())
-                        .isActive(owner.getIsActive())
-                        .isLocked(owner.getIsLocked())
+                        .role(owner.getVaiTroHeThong().getTen())
+                        .isActive(owner.getDangHoatDong())
                         .build())
                 .token(CreateOwnerResponse.TokenData.builder()
                         .accessToken(accessToken)
@@ -179,62 +176,62 @@ public class AuthService {
 
     @Transactional
     public CreateEmployerResponse createEmployerByOwner(Long ownerUserId, CreateEmployerRequest request) {
-        EmployerProfile ownerProfile = requireOwnerProfile(ownerUserId);
+        ThanhVienCongTy ownerProfile = requireOwnerProfile(ownerUserId);
 
         String normalizedEmail = normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
-        Company ownerCompany = ownerProfile.getCompany();
-        CompanyBranch branch = companyBranchRepository.findById(request.getBranchId())
+        CongTy ownerCompany = requireOwnerCompany(ownerProfile);
+        Integer branchId = toIntId(request.getBranchId(), "branchId");
+
+        ChiNhanhCongTy branch = companyBranchRepository.findById(branchId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chi nhánh"));
 
-        if (!branch.getCompany().getId().equals(ownerCompany.getId())) {
+        if (!branch.getCongTy().getId().equals(ownerCompany.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chi nhánh không thuộc công ty của OWNER");
         }
 
-        Roles hrRole = requireRole(RoleName.HR);
+        VaiTroHeThong hrRole = requireRole(RoleName.HR);
+        VaiTroCongTy vaiTroHr = requireCompanyRole(EmployerCompanyRole.HR);
+
         String temporaryPassword = generateTemporaryPassword(HR_TEMP_PASSWORD_LENGTH);
 
-        Users hrUser = Users.builder()
-                .email(normalizedEmail)
-                .passwordHash(passwordEncoder.encode(temporaryPassword))
-                .firstName(request.getFirstName().trim())
-                .lastName(request.getLastName().trim())
-                .phoneNumber(trimToNull(request.getPhoneNumber()))
-                .isActive(true)
-                .isLocked(false)
-                .role(hrRole)
-                .build();
+        NguoiDung hrUser = new NguoiDung();
+        hrUser.setEmail(normalizedEmail);
+        hrUser.setMatKhauBam(passwordEncoder.encode(temporaryPassword));
+        hrUser.setTen(request.getFirstName().trim());
+        hrUser.setHo(request.getLastName().trim());
+        hrUser.setSoDienThoai(trimToNull(request.getPhoneNumber()));
+        hrUser.setDangHoatDong(true);
+        hrUser.setVaiTroHeThong(hrRole);
         hrUser = usersRepository.save(hrUser);
 
-        EmployerProfile hrProfile = EmployerProfile.builder()
-                .user(hrUser)
-                .company(ownerCompany)
-                .branch(branch)
-                .companyRole(EmployerCompanyRole.HR)
-                .isActive(true)
-                .build();
+        ThanhVienCongTy hrProfile = new ThanhVienCongTy();
+        hrProfile.setNguoiDung(hrUser);
+        hrProfile.setChiNhanh(branch);
+        hrProfile.setVaiTroCongTy(vaiTroHr);
+        hrProfile.setTrangThai("ACTIVE");
         hrProfile = employerProfileRepository.save(hrProfile);
 
         hrCredentialMailService.sendInitialPassword(
                 hrUser.getEmail(),
-                hrUser.getFirstName(),
-                hrUser.getLastName(),
-                ownerCompany.getName(),
+                hrUser.getTen(),
+                hrUser.getHo(),
+                ownerCompany.getTen(),
                 temporaryPassword
         );
 
         return CreateEmployerResponse.builder()
-                .employerProfileId(hrProfile.getId())
-                .userId(hrUser.getId())
+                .employerProfileId(hrUser.getId().longValue())
+                .userId(hrUser.getId().longValue())
                 .email(hrUser.getEmail())
-                .firstName(hrUser.getFirstName())
-                .lastName(hrUser.getLastName())
-                .phoneNumber(hrUser.getPhoneNumber())
-                .companyId(ownerCompany.getId())
-                .branchId(branch.getId())
-                .companyRole(hrProfile.getCompanyRole().name())
-                .isActive(hrProfile.getIsActive())
+                .firstName(hrUser.getTen())
+                .lastName(hrUser.getHo())
+                .phoneNumber(hrUser.getSoDienThoai())
+                .companyId(ownerCompany.getId().longValue())
+                .branchId(branch.getId().longValue())
+                .companyRole(hrProfile.getVaiTroCongTy().getTen())
+                .isActive(hrUser.getDangHoatDong())
                 .build();
     }
 
@@ -242,13 +239,10 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         String normalizedEmail = normalizeEmail(request.getEmail());
 
-        Users user = usersRepository.findByEmail(normalizedEmail)
+        NguoiDung user = usersRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai email hoặc mật khẩu"));
 
-        if (Boolean.TRUE.equals(user.getIsLocked())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tài khoản đang bị khóa");
-        }
-        if (!Boolean.TRUE.equals(user.getIsActive())) {
+        if (!Boolean.TRUE.equals(user.getDangHoatDong())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tài khoản chưa được kích hoạt");
         }
 
@@ -264,40 +258,58 @@ public class AuthService {
         return toAuthResponse(user, accessToken);
     }
 
-    private EmployerProfile requireOwnerProfile(Long ownerUserId) {
+    private ThanhVienCongTy requireOwnerProfile(Long ownerUserId) {
         if (ownerUserId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Thiếu thông tin người dùng đăng nhập");
         }
 
-        EmployerProfile ownerProfile = employerProfileRepository.findByUser_Id(ownerUserId)
+        Integer ownerId = toIntId(ownerUserId, "ownerUserId");
+
+        ThanhVienCongTy ownerProfile = employerProfileRepository
+                .findFirstByNguoiDung_IdAndVaiTroCongTy_TenIgnoreCase(ownerId, EmployerCompanyRole.OWNER.name())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Không tìm thấy hồ sơ OWNER"));
 
-        if (ownerProfile.getCompanyRole() != EmployerCompanyRole.OWNER) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ OWNER mới được tạo HR");
-        }
-
-        if (!Boolean.TRUE.equals(ownerProfile.getIsActive())) {
+        if (!Boolean.TRUE.equals(ownerProfile.getNguoiDung().getDangHoatDong())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Hồ sơ OWNER đang bị vô hiệu hóa");
         }
 
         return ownerProfile;
     }
 
-    private String generateTemporaryPassword(int length) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            int index = SECURE_RANDOM.nextInt(TEMP_PASSWORD_ALPHABET.length());
-            sb.append(TEMP_PASSWORD_ALPHABET.charAt(index));
+    private CongTy requireOwnerCompany(ThanhVienCongTy ownerProfile) {
+        if (ownerProfile.getChiNhanh() == null || ownerProfile.getChiNhanh().getCongTy() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Hồ sơ OWNER chưa được gắn chi nhánh/công ty hợp lệ"
+            );
         }
-        return sb.toString();
+        return ownerProfile.getChiNhanh().getCongTy();
     }
 
-    private Roles requireRole(RoleName roleName) {
-        return rolesRepository.findByName(roleName)
+    private VaiTroHeThong requireRole(RoleName roleName) {
+        return rolesRepository.findByTen(roleName.name())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         "Thiếu role trong DB: " + roleName
                 ));
+    }
+
+    private VaiTroCongTy requireCompanyRole(EmployerCompanyRole companyRole) {
+        return vaiTroCongTyRepository.findByTenIgnoreCase(companyRole.name())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Thiếu vai trò công ty trong DB: " + companyRole
+                ));
+    }
+
+    private LoaiTaiLieu resolveOrCreateLoaiTaiLieu(String tenLoaiTaiLieu) {
+        return loaiTaiLieuRepository.findByTenIgnoreCase(tenLoaiTaiLieu)
+                .orElseGet(() -> {
+                    LoaiTaiLieu loaiTaiLieu = new LoaiTaiLieu();
+                    loaiTaiLieu.setTen(tenLoaiTaiLieu);
+                    loaiTaiLieu.setMoTa("Tự tạo từ luồng đăng ký OWNER");
+                    return loaiTaiLieuRepository.save(loaiTaiLieu);
+                });
     }
 
     private void ensureEmailNotExists(String email) {
@@ -333,8 +345,8 @@ public class AuthService {
         return cloudinaryStorageService.uploadProof(proofFile);
     }
 
-    private String buildDefaultCompanyName(Users owner) {
-        return "Cong ty cua " + owner.getLastName() + " " + owner.getFirstName();
+    private String buildDefaultCompanyName(NguoiDung owner) {
+        return "Cong ty cua " + owner.getHo() + " " + owner.getTen();
     }
 
     private String generateTempTaxCode() {
@@ -344,7 +356,7 @@ public class AuthService {
                     + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
                     + "-"
                     + ThreadLocalRandom.current().nextInt(1000, 9999);
-        } while (companyRepository.existsByTaxCode(tempTaxCode));
+        } while (companyRepository.existsByMaSoThue(tempTaxCode));
 
         return tempTaxCode;
     }
@@ -366,29 +378,33 @@ public class AuthService {
         }
     }
 
-    private String resolveProofFileType(MultipartFile proofFile) {
-        if (proofFile != null && StringUtils.hasText(proofFile.getContentType())) {
-            return proofFile.getContentType();
+    private String generateTemporaryPassword(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int index = SECURE_RANDOM.nextInt(TEMP_PASSWORD_ALPHABET.length());
+            sb.append(TEMP_PASSWORD_ALPHABET.charAt(index));
         }
-        return "application/octet-stream";
+        return sb.toString();
     }
 
-    private Long resolveProofFileSize(MultipartFile proofFile) {
-        if (proofFile != null && !proofFile.isEmpty()) {
-            return proofFile.getSize();
+    private Integer toIntId(Long id, String fieldName) {
+        if (id == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không được để trống");
         }
-        return null;
+        if (id > Integer.MAX_VALUE || id < Integer.MIN_VALUE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " vượt phạm vi Integer");
+        }
+        return id.intValue();
     }
 
-    private AuthResponse toAuthResponse(Users user, String accessToken) {
+    private AuthResponse toAuthResponse(NguoiDung user, String accessToken) {
         AuthResponse.UserInfo userInfo = AuthResponse.UserInfo.builder()
-                .id(user.getId())
+                .id(user.getId().longValue())
                 .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .role(user.getRole().getName().name())
-                .isActive(user.getIsActive())
-                .isLocked(user.getIsLocked())
+                .firstName(user.getTen())
+                .lastName(user.getHo())
+                .role(user.getVaiTroHeThong().getTen())
+                .isActive(user.getDangHoatDong())
                 .build();
 
         AuthResponse.TokenData tokenData = AuthResponse.TokenData.builder()

@@ -8,8 +8,8 @@ import javax.crypto.SecretKey;
 import org.springframework.stereotype.Service;
 
 import com.phuocloc.projectfinal.recruit.auth.config.JwtProperties;
-import com.phuocloc.projectfinal.recruit.auth.entity.Users;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -33,7 +33,7 @@ public class JwtService {
         this.signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateAccessToken(Users user) {
+    public String generateAccessToken(NguoiDung user) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusSeconds(jwtProperties.getAccessTokenExpirationSeconds());
 
@@ -41,7 +41,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(user.getEmail())
                 .claim("uid", user.getId())
-                .claim("role", user.getRole().getName().name())
+                .claim("role", user.getVaiTroHeThong().getTen())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
                 .signWith(signingKey)

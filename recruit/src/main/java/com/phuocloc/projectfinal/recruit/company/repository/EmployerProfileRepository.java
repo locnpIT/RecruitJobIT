@@ -1,15 +1,16 @@
 package com.phuocloc.projectfinal.recruit.company.repository;
 
-import com.phuocloc.projectfinal.recruit.company.entity.EmployerProfile;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTyId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface EmployerProfileRepository extends JpaRepository<EmployerProfile, Long> {
+public interface EmployerProfileRepository extends JpaRepository<ThanhVienCongTy, ThanhVienCongTyId> {
 
-    Optional<EmployerProfile> findByUser_Id(Long userId);
+    Optional<ThanhVienCongTy> findFirstByNguoiDung_IdAndVaiTroCongTy_TenIgnoreCase(Integer nguoiDungId, String vaiTro);
 
-    List<EmployerProfile> findByCompany_Id(Long companyId);
+    List<ThanhVienCongTy> findByChiNhanh_CongTy_Id(Integer congTyId);
 
-    List<EmployerProfile> findByCompany_IdAndIsActiveTrue(Long companyId);
+    List<ThanhVienCongTy> findByChiNhanh_CongTy_IdAndNguoiDung_DangHoatDongTrue(Integer congTyId);
 }
