@@ -11,31 +11,49 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 
+import com.phuocloc.projectfinal.recruit.auth.dto.shared.CompanyMemberInfo;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-
 
 @Getter
 @AllArgsConstructor
+@Builder
 public class AppUserPrinciple implements UserDetails {
     
-
     private final Long userId;
     private final String email;
     private final String passwordHash;
     private final Boolean active;
     private final RoleName role;
+    private final List<CompanyMemberInfo> companyMembers;
 
+
+    public static AppUserPrinciple fromUser(NguoiDung user, List<CompanyMemberInfo> companyMembers) {
+        RoleName roleName = parseRoleName(user.getVaiTroHeThong() == null ? null : user.getVaiTroHeThong().getTen());
+        return AppUserPrinciple.builder()
+                .userId(user.getId().longValue())
+                .email(user.getEmail())
+                .passwordHash(user.getMatKhauBam())
+                .active(user.getDangHoatDong())
+                .role(roleName)
+                .companyMembers(companyMembers != null ? companyMembers : List.of())
+                .build();
+    }
 
     public static AppUserPrinciple fromUser(NguoiDung user) {
-        RoleName roleName = RoleName.valueOf(user.getVaiTroHeThong().getTen().toUpperCase());
-        return new AppUserPrinciple(
-                user.getId().longValue(),
-                user.getEmail(),
-                user.getMatKhauBam(),
-                user.getDangHoatDong(),
-                roleName
-        );
+        return fromUser(user, List.of());
+    }
+
+    private static RoleName parseRoleName(String rawRole) {
+        if (rawRole == null) {
+            return RoleName.CANDIDATE;
+        }
+        try {
+            return RoleName.valueOf(rawRole.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return RoleName.CANDIDATE;
+        }
     }
 
 

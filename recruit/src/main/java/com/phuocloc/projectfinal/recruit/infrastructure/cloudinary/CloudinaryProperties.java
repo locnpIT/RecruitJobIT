@@ -15,4 +15,5 @@ public class CloudinaryProperties {
     private String apiKey;
     private String apiSecret;
     private String folder = "recruit/proofs";
+    private String logoFolder = "recruit/company-logos";
 }

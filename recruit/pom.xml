@@ -53,6 +53,16 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<!-- dependency for AOP / custom authorization annotations -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aop</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+		</dependency>
+
 		<!-- dependency for cloudinary -->
 		<dependency>
 			<groupId>com.cloudinary</groupId>
@@ -98,6 +108,14 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+		<!-- dependency for devtool -->
+		 <dependency>
+ 		   <groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		 </dependency>
 
 
 	</dependencies>

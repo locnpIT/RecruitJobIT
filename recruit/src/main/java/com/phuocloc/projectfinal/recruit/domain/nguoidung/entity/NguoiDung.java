@@ -1,19 +1,24 @@
 package com.phuocloc.projectfinal.recruit.domain.nguoidung.entity;
 
-import com.phuocloc.projectfinal.recruit.domain.shared.entity.BaseEntity;
 import com.phuocloc.projectfinal.recruit.domain.diadiem.entity.XaPhuong;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Getter
 @Setter
@@ -22,7 +27,22 @@ import java.time.LocalDate;
 @Builder
 @Entity
 @Table(name = "NguoiDung")
-public class NguoiDung extends BaseEntity {
+public class NguoiDung {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @CreationTimestamp
+    @Column(name = "ngayTao", nullable = false, updatable = false)
+    private LocalDateTime ngayTao;
+
+    @UpdateTimestamp
+    @Column(name = "ngayCapNhat", nullable = false)
+    private LocalDateTime ngayCapNhat;
+
+    @Column(name = "ngayXoa")
+    private LocalDateTime ngayXoa;
 
     @Column(name = "email")
     private String email;

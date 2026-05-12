@@ -1,17 +1,25 @@
 package com.phuocloc.projectfinal.recruit.domain.chat.entity;
 
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
-import com.phuocloc.projectfinal.recruit.domain.shared.entity.BaseEntity;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "CuocTroChuyen")
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class CuocTroChuyen extends BaseEntity {
+public class CuocTroChuyen {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @CreationTimestamp
+    @Column(name = "ngayTao", nullable = false, updatable = false)
+    private LocalDateTime ngayTao;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ungVienId")

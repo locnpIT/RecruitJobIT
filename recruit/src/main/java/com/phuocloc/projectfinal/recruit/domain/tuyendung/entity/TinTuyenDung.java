@@ -1,7 +1,6 @@
 package com.phuocloc.projectfinal.recruit.domain.tuyendung.entity;
 
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
-import com.phuocloc.projectfinal.recruit.domain.shared.entity.BaseEntity;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.CapDoKinhNghiem;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.LoaiHinhLamViec;
@@ -9,14 +8,30 @@ import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.NganhNghe;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "TinTuyenDung")
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class TinTuyenDung extends BaseEntity {
+public class TinTuyenDung {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @CreationTimestamp
+    @Column(name = "ngayTao", nullable = false, updatable = false)
+    private LocalDateTime ngayTao;
+
+    @UpdateTimestamp
+    @Column(name = "ngayCapNhat", nullable = false)
+    private LocalDateTime ngayCapNhat;
+
+    @Column(name = "ngayXoa")
+    private LocalDateTime ngayXoa;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nguoiDangId")

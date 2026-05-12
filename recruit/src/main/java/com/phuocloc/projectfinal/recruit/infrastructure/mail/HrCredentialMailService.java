@@ -12,16 +12,16 @@ public class HrCredentialMailService {
             String firstName,
             String lastName,
             String companyName,
-            String temporaryPassword
+            String password
     ) {
         // TODO: Tich hop Brevo/SMTP thuc te. Hien tai log de de quan sat trong qua trinh dev.
         log.info(
-                "[HR-CREDENTIALS] to={}, fullName={} {}, company={}, temporaryPassword={}",
+                "[HR-CREDENTIALS] to={}, fullName={} {}, company={}, password={}",
                 toEmail,
                 lastName,
                 firstName,
                 companyName,
-                temporaryPassword
+                password
         );
     }
 }

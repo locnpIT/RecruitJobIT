@@ -8,5 +8,7 @@ public interface RolesRepository extends JpaRepository<VaiTroHeThong, Integer> {
 
     Optional<VaiTroHeThong> findByTen(String ten);
 
+    Optional<VaiTroHeThong> findByTenIgnoreCase(String ten);
+
     boolean existsByTen(String ten);
 }

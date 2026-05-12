@@ -19,15 +19,19 @@ public class CreateEmployerRequest {
     
     @NotBlank(message = "Tên không được để trống")
     @Size(max = 100, message = "Tên không được vượt quá 100 ký tự")
-    private String firstName;
+    private String ten;
 
     @NotBlank(message = "Họ không được để trống")
     @Size(max = 100, message = "Họ không được vượt quá 100 ký tự")
-    private String lastName;
+    private String ho;
 
     @Size(max = 20, message = "Số điện thoại không được vượt quá 20 ký tự")
-    private String phoneNumber;
+    private String soDienThoai;
+
+    @NotBlank(message = "Vai trò công ty không được để trống")
+    @Size(max = 50, message = "Vai trò công ty không được vượt quá 50 ký tự")
+    private String vaiTroCongTy;
 
     @NotNull
-    private Long branchId;
+    private Long chiNhanhId;
 }

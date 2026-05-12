@@ -1,6 +1,9 @@
 package com.phuocloc.projectfinal.recruit.auth.service;
 
 import java.time.Instant;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -21,6 +24,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+/**
+ * Service thao tác JWT.
+ *
+ * <p>Chịu trách nhiệm sinh token, đọc claim và xác thực token hết hạn/hợp lệ.</p>
+ */
 public class JwtService {
     
 
@@ -29,11 +37,25 @@ public class JwtService {
 
     @PostConstruct
     void initSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecretBase64());
+        // Hỗ trợ cả secret base64 mới và secret raw cũ để tương thích môi trường legacy.
+        String configuredSecret = jwtProperties.getSecretBase64();
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(configuredSecret);
+        } catch (RuntimeException ex) {
+            // Backward-compatible: accept raw secret from legacy .env
+            keyBytes = configuredSecret.getBytes(StandardCharsets.UTF_8);
+        }
+
+        if (keyBytes.length < 32) {
+            keyBytes = sha256(configuredSecret);
+        }
+
         this.signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateAccessToken(NguoiDung user) {
+        // Claim tối thiểu gồm email, user id và role để backend có thể dựng principal lại từ token.
         Instant now = Instant.now();
         Instant expiresAt = now.plusSeconds(jwtProperties.getAccessTokenExpirationSeconds());
 
@@ -61,10 +83,15 @@ public class JwtService {
 
     public RoleName extractRoleFromToken(String token) {
         String role = String.valueOf(parseClaims(token).get("role"));
-        return RoleName.valueOf(role);
+        try {
+            return RoleName.valueOf(role);
+        } catch (IllegalArgumentException ex) {
+            return RoleName.CANDIDATE;
+        }
     }
 
     public boolean istokenValid(String token) {
+        // Chỉ kiểm tra token parse được và chưa hết hạn.
         try {
             Claims claims = parseClaims(token);
             return claims.getExpiration() != null && claims.getExpiration().after(new Date());
@@ -89,9 +116,13 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
     }
-    
 
-
-
-
+    private byte[] sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return digest.digest(value.getBytes(StandardCharsets.UTF_8));
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 algorithm is not available", ex);
+        }
+    }
 }

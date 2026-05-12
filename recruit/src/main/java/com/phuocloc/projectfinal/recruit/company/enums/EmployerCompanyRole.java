@@ -2,5 +2,6 @@ package com.phuocloc.projectfinal.recruit.company.enums;
 
 public enum EmployerCompanyRole {
     OWNER,
-    HR
+    HR,
+    MASTER_BRANCH
 }

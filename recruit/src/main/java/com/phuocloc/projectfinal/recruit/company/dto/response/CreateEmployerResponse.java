@@ -11,14 +11,15 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateEmployerResponse {
 
-    private Long employerProfileId;
-    private Long userId;
+    private Long hoSoNhaTuyenDungId;
+    private Long nguoiDungId;
     private String email;
-    private String firstName;
-    private String lastName;
-    private String phoneNumber;
-    private Long companyId;
-    private Long branchId;
-    private String companyRole;
-    private Boolean isActive;
+    private String ten;
+    private String ho;
+    private String soDienThoai;
+    private Long congTyId;
+    private Long chiNhanhId;
+    private String vaiTroHeThong;
+    private String vaiTroCongTy;
+    private Boolean dangHoatDong;
 }

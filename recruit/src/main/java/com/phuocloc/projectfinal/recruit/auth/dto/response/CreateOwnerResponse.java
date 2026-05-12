@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -11,29 +12,49 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateOwnerResponse {
 
-    private OwnerInfo owner;
-    private TokenData token;
+    private ThongTinChuSoHuu chuSoHuu;
+    private ThongTinCongTy congTy;
+    private List<ThongTinChiNhanh> chiNhanhs;
+    private AuthResponse.ThongTinPhienDangNhap phienDangNhap;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class OwnerInfo {
+    public static class ThongTinChuSoHuu {
         private Long id;
         private String email;
-        private String firstName;
-        private String lastName;
-        private String proofUrl;
-        private String role;
-        private Boolean isActive;
+        private String ten;
+        private String ho;
+        private String duongDanMinhChung;
+        private String vaiTroHeThong;
+        private String vaiTroCongTy;
+        private Boolean dangHoatDong;
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class TokenData {
-        private String accessToken;
-        private Long accessTokenExpiresIn;
+    public static class ThongTinCongTy {
+        private Long id;
+        private String ten;
+        private String maSoThue;
+        private String website;
+        private String moTa;
+        private String trangThai;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ThongTinChiNhanh {
+        private Long id;
+        private String ten;
+        private String diaChiChiTiet;
+        private Long xaPhuongId;
+        private String xaPhuongTen;
+        private Boolean laTruSoChinh;
     }
 }

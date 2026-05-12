@@ -10,6 +10,10 @@ public interface EmployerProfileRepository extends JpaRepository<ThanhVienCongTy
 
     Optional<ThanhVienCongTy> findFirstByNguoiDung_IdAndVaiTroCongTy_TenIgnoreCase(Integer nguoiDungId, String vaiTro);
 
+    List<ThanhVienCongTy> findByNguoiDung_IdAndNgayXoaIsNull(Integer nguoiDungId);
+
+    Optional<ThanhVienCongTy> findByNguoiDung_IdAndChiNhanh_IdAndNgayXoaIsNull(Integer nguoiDungId, Integer chiNhanhId);
+
     List<ThanhVienCongTy> findByChiNhanh_CongTy_Id(Integer congTyId);
 
     List<ThanhVienCongTy> findByChiNhanh_CongTy_IdAndNguoiDung_DangHoatDongTrue(Integer congTyId);
