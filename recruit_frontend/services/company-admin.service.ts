@@ -153,6 +153,41 @@ export interface CompanyAdminApplication {
   nguoiDungId: number | null;
   ungVienHoTen: string | null;
   ungVienEmail: string | null;
+  ungVienSoDienThoai: string | null;
+  ungVienAnhDaiDienUrl: string | null;
+  hoSoUngVienId: number | null;
+  gioiThieuBanThan: string | null;
+  mucTieuNgheNghiep: string | null;
+  hocVans?: CompanyAdminApplicationEducation[];
+  chungChis?: CompanyAdminApplicationCertificate[];
+  kyNangs?: CompanyAdminApplicationSkill[];
+}
+
+export interface CompanyAdminApplicationEducation {
+  id: number | null;
+  tenTruong: string | null;
+  chuyenNganh: string | null;
+  bacHoc: string | null;
+  thoiGianBatDau: string | null;
+  thoiGianKetThuc: string | null;
+  duongDanTep: string | null;
+  trangThai: string | null;
+}
+
+export interface CompanyAdminApplicationCertificate {
+  id: number | null;
+  loaiChungChiId: number | null;
+  loaiChungChiTen: string | null;
+  tenChungChi: string | null;
+  ngayBatDau: string | null;
+  ngayHetHan: string | null;
+  duongDanTep: string | null;
+  trangThai: string | null;
+}
+
+export interface CompanyAdminApplicationSkill {
+  id: number | null;
+  ten: string | null;
 }
 
 export interface CompanyAdminHrBranch {
@@ -317,6 +352,21 @@ export const companyAdminService = {
       params: { chiNhanhId },
     });
     return response.data.data as CompanyAdminApplication[];
+  },
+
+  getApplicationDetail: async (applicationId: number): Promise<CompanyAdminApplication> => {
+    const response = await apiClient.get(`/company-admin/applications/${applicationId}`);
+    return response.data.data as CompanyAdminApplication;
+  },
+
+  updateApplicationStatus: async (
+    applicationId: number,
+    trangThai: string
+  ): Promise<CompanyAdminApplication> => {
+    const response = await apiClient.patch(`/company-admin/applications/${applicationId}/status`, {
+      trangThai,
+    });
+    return response.data.data as CompanyAdminApplication;
   },
 
   getHrs: async (): Promise<CompanyAdminHrAccount[]> => {

@@ -9,6 +9,7 @@ import com.phuocloc.projectfinal.recruit.company.dto.request.RegisterCompanyPack
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyHrRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyInfoRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyJobRequest;
+import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateApplicationStatusRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminApplicationResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminHrResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminJobResponse;
@@ -205,6 +206,29 @@ public class CompanySubAdminController {
     ) {
         var data = companyAdminService.listApplications(principal, chiNhanhId);
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách ứng viên thành công", data));
+    }
+
+    @GetMapping("/applications/{applicationId}")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    // Lấy chi tiết một đơn ứng tuyển, bao gồm hồ sơ ứng viên, học vấn, chứng chỉ, kỹ năng và CV nếu có.
+    public ResponseEntity<SuccessResponse<CompanyAdminApplicationResponse>> getApplicationDetail(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long applicationId
+    ) {
+        var data = companyAdminService.getApplicationDetail(principal, applicationId);
+        return ResponseEntity.ok(new SuccessResponse<>("Lấy chi tiết đơn ứng tuyển thành công", data));
+    }
+
+    @PatchMapping("/applications/{applicationId}/status")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    // Cập nhật trạng thái pipeline tuyển dụng: PENDING, REVIEWING, ACCEPTED hoặc REJECTED.
+    public ResponseEntity<SuccessResponse<CompanyAdminApplicationResponse>> updateApplicationStatus(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long applicationId,
+            @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody UpdateApplicationStatusRequest request
+    ) {
+        var data = companyAdminService.updateApplicationStatus(principal, applicationId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật trạng thái đơn ứng tuyển thành công", data));
     }
 
     @PatchMapping("/company/info")

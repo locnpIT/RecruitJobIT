@@ -12,6 +12,7 @@ import { EducationPanel } from "./components/EducationPanel";
 import { CertificatePanel } from "./components/CertificatePanel";
 import { SummaryPanel } from "./components/SummaryPanel";
 import { ProfileHero } from "./components/ProfileHero";
+import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 import { authService, type UserProfileResponse } from "@/services/auth.service";
 import {
   candidateProfileService,
@@ -78,18 +79,53 @@ export default function ProfilePage() {
     mucTieuNgheNghiep: "",
   });
 
-  const user = useMemo<LocalUser | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = localStorage.getItem("user");
-      if (!raw) return null;
-      return JSON.parse(raw) as LocalUser;
-    } catch {
-      return null;
-    }
-  }, []);
+  const [user, setUser] = useState<LocalUser | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
+    // Profile là route private nhưng vẫn render bằng client component trong App Router.
+    // Đọc localStorage sau mount để tránh hydration mismatch, đồng thời kiểm tra token hết hạn
+    // trước khi gọi các API `/candidate/profile/**` nhằm tránh 403 do session cũ.
+    Promise.resolve().then(() => {
+      if (!isMounted) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token");
+        const expiresAt = token ? getJwtExpiryMs(token) : null;
+        if (!token || (expiresAt !== null && expiresAt <= Date.now())) {
+          clearAdminSession();
+          setUser(null);
+          setSessionChecked(true);
+          router.replace("/auth/login");
+          return;
+        }
+
+        const raw = localStorage.getItem("user");
+        setUser(raw ? (JSON.parse(raw) as LocalUser) : null);
+        setSessionChecked(true);
+      } catch {
+        clearAdminSession();
+        setUser(null);
+        setSessionChecked(true);
+        router.replace("/auth/login");
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
+
+  useEffect(() => {
+    // Không redirect khi chưa đọc xong session local, nếu không user hợp lệ sẽ bị đá về login quá sớm.
+    if (!sessionChecked) {
+      return;
+    }
+
     if (!user) {
       router.replace("/auth/login");
       return;
@@ -98,7 +134,7 @@ export default function ProfilePage() {
     if (user.vaiTro?.toUpperCase() !== "CANDIDATE") {
       router.replace("/");
     }
-  }, [router, user]);
+  }, [router, sessionChecked, user]);
 
   useEffect(() => {
     const loadAll = async () => {

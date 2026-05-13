@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
-import { clearAdminSession } from "@/lib/admin-session";
+import { useEffect, useMemo, useState } from "react";
+import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 
 // Header dùng chung cho khu public/auth/profile.
-// Component này đọc session local để đổi CTA theo vai trò hiện tại của người dùng.
+// Lưu ý SSR/hydration: không đọc localStorage trực tiếp trong render.
+// Nếu render server là "Đăng nhập" nhưng render client ngay lập tức là "Xin chào..." thì React sẽ báo hydration mismatch.
 type LocalUser = {
   id: number;
   email: string;
@@ -16,17 +17,40 @@ type LocalUser = {
 };
 
 export function HomeHeader() {
-  const user = useMemo<LocalUser | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    try {
-      const raw = localStorage.getItem("user");
-      if (!raw) return null;
-      return JSON.parse(raw) as LocalUser;
-    } catch {
-      return null;
-    }
+  const [user, setUser] = useState<LocalUser | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Đọc session sau khi component đã mount để server HTML và client HTML lần đầu giống nhau.
+    // Promise.resolve() cũng tránh rule React mới về setState đồng bộ ngay trong effect.
+    Promise.resolve().then(() => {
+      if (!isMounted) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token");
+        const expiresAt = token ? getJwtExpiryMs(token) : null;
+        // Nếu chỉ còn user trong localStorage nhưng token hết hạn, backend sẽ trả 403.
+        // Vì vậy header dọn session cũ trước khi chuyển UI sang trạng thái đã đăng nhập.
+        if (!token || (expiresAt !== null && expiresAt <= Date.now())) {
+          clearAdminSession();
+          setUser(null);
+          return;
+        }
+
+        const raw = localStorage.getItem("user");
+        setUser(raw ? (JSON.parse(raw) as LocalUser) : null);
+      } catch {
+        clearAdminSession();
+        setUser(null);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const role = user?.vaiTro?.toUpperCase() ?? null;
@@ -87,6 +111,14 @@ export function HomeHeader() {
             >
               {isCandidate ? "Hồ sơ" : "Vào hệ thống"}
             </Link>
+            {isCandidate ? (
+              <Link
+                href="/favorite-jobs"
+                className="hidden rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 sm:inline-flex"
+              >
+                Yêu thích
+              </Link>
+            ) : null}
             <button
               type="button"
               onClick={() => {

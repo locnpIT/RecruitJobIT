@@ -89,6 +89,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Metadata địa điểm cần public để form đăng ký hoạt động trước khi đăng nhập.
                         .requestMatchers(HttpMethod.GET, "/api/v1/locations/**").permitAll()
+                        // Tin tuyển dụng public chỉ trả về tin APPROVED + còn hạn, nên cho phép khách truy cập xem.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/public/jobs/**").permitAll()
                         .requestMatchers(
                                 // Các route auth public + webhook SePay phải được mở để hệ thống bên ngoài gọi tới.
                                 "/api/v1/auth/login",

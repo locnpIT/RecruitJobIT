@@ -9,6 +9,7 @@ import com.phuocloc.projectfinal.recruit.company.dto.request.CompanyProofUploadB
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyInfoRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyLogoRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyProofRequest;
+import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateApplicationStatusRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminApplicationResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminJobResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminMeResponse;
@@ -21,6 +22,9 @@ import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeRe
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentStatus;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
+import com.phuocloc.projectfinal.recruit.candidate.repository.ChungChiUngVienRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HocVanUngVienRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangUngVienRepository;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.DanhMucGoi;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.DangKyGoiCongTy;
@@ -36,6 +40,7 @@ import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.LoaiHinhLa
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.NganhNgheRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
+import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyBranchRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyProofDocumentRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyRepository;
@@ -81,6 +86,12 @@ public class CompanyAdminService {
             EmployerCompanyRole.MASTER_BRANCH.name(),
             EmployerCompanyRole.HR.name()
     );
+    private static final Set<String> APPLICATION_STATUSES = Set.of(
+            "PENDING",
+            "REVIEWING",
+            "ACCEPTED",
+            "REJECTED"
+    );
 
     private final CompanyAdminAccessService accessService;
     private final UsersRepository usersRepository;
@@ -92,6 +103,9 @@ public class CompanyAdminService {
     private final LoaiTaiLieuRepository loaiTaiLieuRepository;
     private final TinTuyenDungRepository tinTuyenDungRepository;
     private final DonUngTuyenRepository donUngTuyenRepository;
+    private final HocVanUngVienRepository hocVanUngVienRepository;
+    private final ChungChiUngVienRepository chungChiUngVienRepository;
+    private final KyNangUngVienRepository kyNangUngVienRepository;
     private final NganhNgheRepository nganhNgheRepository;
     private final LoaiHinhLamViecRepository loaiHinhLamViecRepository;
     private final CapDoKinhNghiemRepository capDoKinhNghiemRepository;
@@ -386,8 +400,26 @@ public class CompanyAdminService {
     public List<CompanyAdminApplicationResponse> listApplications(AppUserPrinciple principal, Integer chiNhanhId) {
         accessService.requireMembership(principal.getUserId().intValue(), chiNhanhId, COMPANY_ADMIN_ROLES);
         return donUngTuyenRepository.findByTinTuyenDung_ChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(chiNhanhId).stream()
-                .map(this::mapApplication)
+                .map(application -> mapApplication(application, false))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CompanyAdminApplicationResponse getApplicationDetail(AppUserPrinciple principal, Long applicationId) {
+        DonUngTuyen application = requireManagedApplication(principal, applicationId);
+        return mapApplication(application, true);
+    }
+
+    @Transactional
+    public CompanyAdminApplicationResponse updateApplicationStatus(
+            AppUserPrinciple principal,
+            Long applicationId,
+            UpdateApplicationStatusRequest request
+    ) {
+        DonUngTuyen application = requireManagedApplication(principal, applicationId);
+        String status = normalizeApplicationStatus(request == null ? null : request.getTrangThai());
+        application.setTrangThai(status);
+        return mapApplication(donUngTuyenRepository.save(application), true);
     }
 
     @Transactional(readOnly = true)
@@ -530,6 +562,40 @@ public class CompanyAdminService {
         return tinTuyenDung;
     }
 
+    private DonUngTuyen requireManagedApplication(AppUserPrinciple principal, Long applicationId) {
+        if (principal == null || principal.getUserId() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
+        }
+        if (applicationId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicationId không được để trống");
+        }
+        DonUngTuyen application = donUngTuyenRepository.findByIdAndNgayXoaIsNull(Math.toIntExact(applicationId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đơn ứng tuyển"));
+        if (application.getTinTuyenDung() == null
+                || application.getTinTuyenDung().getChiNhanh() == null
+                || application.getTinTuyenDung().getChiNhanh().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đơn ứng tuyển không hợp lệ");
+        }
+
+        accessService.requireMembership(
+                principal.getUserId().intValue(),
+                application.getTinTuyenDung().getChiNhanh().getId(),
+                COMPANY_ADMIN_ROLES
+        );
+        return application;
+    }
+
+    private String normalizeApplicationStatus(String status) {
+        String normalized = status == null ? "" : status.trim().toUpperCase(Locale.ROOT);
+        if (!APPLICATION_STATUSES.contains(normalized)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Trạng thái đơn ứng tuyển không hợp lệ. Chỉ hỗ trợ PENDING, REVIEWING, ACCEPTED, REJECTED"
+            );
+        }
+        return normalized;
+    }
+
     private boolean isOwnerMembership(ThanhVienCongTy membership) {
         return membership != null
                 && membership.getVaiTroCongTy() != null
@@ -590,8 +656,11 @@ public class CompanyAdminService {
                 .build();
     }
 
-    private CompanyAdminApplicationResponse mapApplication(DonUngTuyen donUngTuyen) {
-        return CompanyAdminApplicationResponse.builder()
+    private CompanyAdminApplicationResponse mapApplication(DonUngTuyen donUngTuyen, boolean includeProfileDetail) {
+        HoSoUngVien profile = donUngTuyen.getHoSoUngVien();
+        var user = profile == null ? null : profile.getNguoiDung();
+
+        CompanyAdminApplicationResponse.CompanyAdminApplicationResponseBuilder builder = CompanyAdminApplicationResponse.builder()
                 .id(donUngTuyen.getId() == null ? null : donUngTuyen.getId().longValue())
                 .trangThai(donUngTuyen.getTrangThai())
                 .cvUrl(donUngTuyen.getCvUrl())
@@ -619,17 +688,72 @@ public class CompanyAdminService {
                         ? null
                         : donUngTuyen.getTinTuyenDung().getId().longValue())
                 .tieuDeTinTuyenDung(donUngTuyen.getTinTuyenDung() == null ? null : donUngTuyen.getTinTuyenDung().getTieuDe())
-                .nguoiDungId(donUngTuyen.getHoSoUngVien() == null || donUngTuyen.getHoSoUngVien().getNguoiDung() == null
-                        || donUngTuyen.getHoSoUngVien().getNguoiDung().getId() == null
+                .nguoiDungId(user == null || user.getId() == null
                         ? null
-                        : donUngTuyen.getHoSoUngVien().getNguoiDung().getId().longValue())
-                .ungVienHoTen(donUngTuyen.getHoSoUngVien() == null || donUngTuyen.getHoSoUngVien().getNguoiDung() == null
+                        : user.getId().longValue())
+                .ungVienHoTen(user == null
                         ? null
-                        : buildFullName(donUngTuyen.getHoSoUngVien().getNguoiDung().getHo(), donUngTuyen.getHoSoUngVien().getNguoiDung().getTen()))
-                .ungVienEmail(donUngTuyen.getHoSoUngVien() == null || donUngTuyen.getHoSoUngVien().getNguoiDung() == null
+                        : buildFullName(user.getHo(), user.getTen()))
+                .ungVienEmail(user == null
                         ? null
-                        : donUngTuyen.getHoSoUngVien().getNguoiDung().getEmail())
-                .build();
+                        : user.getEmail())
+                .ungVienSoDienThoai(user == null ? null : user.getSoDienThoai())
+                .ungVienAnhDaiDienUrl(user == null ? null : user.getAnhDaiDienUrl())
+                .hoSoUngVienId(profile == null || profile.getId() == null ? null : profile.getId().longValue())
+                .gioiThieuBanThan(profile == null ? null : profile.getGioiThieuBanThan())
+                .mucTieuNgheNghiep(profile == null ? null : profile.getMucTieuNgheNghiep());
+
+        // List API giữ payload gọn; detail API mới trả đầy đủ học vấn/chứng chỉ/kỹ năng.
+        if (includeProfileDetail && profile != null && profile.getId() != null) {
+            builder
+                    .hocVans(mapEducationItems(profile.getId()))
+                    .chungChis(mapCertificateItems(profile.getId()))
+                    .kyNangs(mapSkillItems(profile.getId()));
+        }
+
+        return builder.build();
+    }
+
+    private List<CompanyAdminApplicationResponse.HocVanItem> mapEducationItems(Integer profileId) {
+        return hocVanUngVienRepository.findByHoSoUngVien_IdOrderByThoiGianBatDauDesc(profileId).stream()
+                .map(item -> CompanyAdminApplicationResponse.HocVanItem.builder()
+                        .id(item.getId() == null ? null : item.getId().longValue())
+                        .tenTruong(item.getTenTruong())
+                        .chuyenNganh(item.getChuyenNganh())
+                        .bacHoc(item.getBacHoc())
+                        .thoiGianBatDau(item.getThoiGianBatDau())
+                        .thoiGianKetThuc(item.getThoiGianKetThuc())
+                        .duongDanTep(item.getDuongDanTep())
+                        .trangThai(item.getTrangThai())
+                        .build())
+                .toList();
+    }
+
+    private List<CompanyAdminApplicationResponse.ChungChiItem> mapCertificateItems(Integer profileId) {
+        return chungChiUngVienRepository.findByHoSoUngVien_IdOrderByNgayBatDauDesc(profileId).stream()
+                .map(item -> CompanyAdminApplicationResponse.ChungChiItem.builder()
+                        .id(item.getId() == null ? null : item.getId().longValue())
+                        .loaiChungChiId(item.getLoaiChungChi() == null || item.getLoaiChungChi().getId() == null
+                                ? null
+                                : item.getLoaiChungChi().getId().longValue())
+                        .loaiChungChiTen(item.getLoaiChungChi() == null ? null : item.getLoaiChungChi().getTen())
+                        .tenChungChi(item.getTenChungChi())
+                        .ngayBatDau(item.getNgayBatDau())
+                        .ngayHetHan(item.getNgayHetHan())
+                        .duongDanTep(item.getDuongDanTep())
+                        .trangThai(item.getTrangThai())
+                        .build())
+                .toList();
+    }
+
+    private List<CompanyAdminApplicationResponse.KyNangItem> mapSkillItems(Integer profileId) {
+        return kyNangUngVienRepository.findByHoSoUngVien_Id(profileId).stream()
+                .filter(item -> item.getKyNang() != null)
+                .map(item -> CompanyAdminApplicationResponse.KyNangItem.builder()
+                        .id(item.getKyNang().getId() == null ? null : item.getKyNang().getId().longValue())
+                        .ten(item.getKyNang().getTen())
+                        .build())
+                .toList();
     }
 
     private CompanyPackagePlanResponse mapPackagePlan(DanhMucGoi goi) {
