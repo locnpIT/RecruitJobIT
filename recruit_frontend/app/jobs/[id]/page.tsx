@@ -9,6 +9,7 @@ import { HomeHeader } from "@/app/components/home/HomeHeader";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 import { authService } from "@/services/auth.service";
 import { candidateApplicationService } from "@/services/candidate-application.service";
+import { chatService } from "@/services/chat.service";
 import {
   candidateProfileService,
   type CandidateProfileListItem,
@@ -44,6 +45,8 @@ export default function JobDetailPage() {
   const [applyError, setApplyError] = useState("");
   const [applyNotice, setApplyNotice] = useState("");
   const [isCandidate, setIsCandidate] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatOpenError, setChatOpenError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -253,6 +256,30 @@ export default function JobDetailPage() {
     }
   };
 
+  // Mở chat từ trang job detail:
+  // - tạo hoặc lấy conversation nếu chưa có
+  // - điều hướng sang inbox candidate với deep-link conversationId.
+  const handleOpenChat = async () => {
+    if (!job?.id) {
+      return;
+    }
+    if (!isCandidate) {
+      window.location.href = "/auth/login";
+      return;
+    }
+
+    setChatLoading(true);
+    setChatOpenError("");
+    try {
+      const conversation = await chatService.openByJob(job.id);
+      window.location.assign(`/messages?conversationId=${conversation.id}`);
+    } catch {
+      setChatOpenError("Không thể mở cuộc trò chuyện với nhà tuyển dụng.");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <HomeHeader />
@@ -297,12 +324,19 @@ export default function JobDetailPage() {
                 favoriteLoading={favoriteLoading}
                 isApplied={hasApplied}
                 applicationLoading={applicationLoading}
+                chatLoading={chatLoading}
                 onToggleFavorite={handleToggleFavorite}
                 onApply={handleOpenApplyModal}
+                onOpenChat={handleOpenChat}
               />
             </section>
 
             <section className="mx-auto w-full max-w-6xl px-4 pb-10">
+              {chatOpenError ? (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
+                  {chatOpenError}
+                </div>
+              ) : null}
               {applyNotice ? (
                 <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
                   {applyNotice}

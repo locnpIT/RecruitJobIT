@@ -5,6 +5,7 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailRespon
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
+import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AdminJobService {
 
     private final TinTuyenDungRepository tinTuyenDungRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<AdminJobResponse> listJobs(String keyword, String company, String status, String industry, String location) {
@@ -66,6 +68,12 @@ public class AdminJobService {
         // Duyệt tin: reset lý do từ chối cũ (nếu có).
         job.setTrangThai("APPROVED");
         job.setLyDoTuChoi(null);
+        notificationService.createForUser(
+                job.getNguoiDang(),
+                "Tin tuyển dụng đã được duyệt",
+                "Tin \"" + safeJobTitle(job) + "\" đã được admin duyệt.",
+                "/company-admin/jobs"
+        );
         return mapJob(tinTuyenDungRepository.save(job));
     }
 
@@ -78,6 +86,12 @@ public class AdminJobService {
         }
         job.setTrangThai("REJECTED");
         job.setLyDoTuChoi(reason);
+        notificationService.createForUser(
+                job.getNguoiDang(),
+                "Tin tuyển dụng bị từ chối",
+                "Tin \"" + safeJobTitle(job) + "\" bị từ chối. Lý do: " + reason,
+                "/company-admin/jobs"
+        );
         return mapJob(tinTuyenDungRepository.save(job));
     }
 
@@ -85,6 +99,12 @@ public class AdminJobService {
     public AdminJobResponse hideJob(Long jobId) {
         TinTuyenDung job = requireJob(jobId);
         job.setTrangThai("HIDDEN");
+        notificationService.createForUser(
+                job.getNguoiDang(),
+                "Tin tuyển dụng đã bị ẩn",
+                "Tin \"" + safeJobTitle(job) + "\" đã bị ẩn bởi admin.",
+                "/company-admin/jobs"
+        );
         return mapJob(tinTuyenDungRepository.save(job));
     }
 
@@ -198,5 +218,12 @@ public class AdminJobService {
 
     private String trimToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
+    }
+
+    private String safeJobTitle(TinTuyenDung job) {
+        if (job == null || !StringUtils.hasText(job.getTieuDe())) {
+            return "không xác định";
+        }
+        return job.getTieuDe().trim();
     }
 }

@@ -11,6 +11,7 @@ import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.TepMinhChungCongTy;
 import com.phuocloc.projectfinal.recruit.domain.diadiem.entity.TinhThanh;
 import com.phuocloc.projectfinal.recruit.domain.diadiem.entity.XaPhuong;
+import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class AdminCompanyService {
     private final CompanyRepository companyRepository;
     private final CompanyBranchRepository companyBranchRepository;
     private final CompanyProofDocumentRepository companyProofDocumentRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<AdminCompanyResponse> listCompanies(String status) {
@@ -58,6 +60,12 @@ public class AdminCompanyService {
         company = companyRepository.save(company);
 
         updateProofDocuments(company.getId(), "APPROVED", null);
+        notificationService.createForUser(
+                company.getChuCongTy(),
+                "Công ty đã được duyệt",
+                "Công ty " + safeCompanyName(company) + " đã được admin duyệt.",
+                "/company-admin/settings"
+        );
         return mapCompany(company);
     }
 
@@ -75,6 +83,12 @@ public class AdminCompanyService {
         company = companyRepository.save(company);
 
         updateProofDocuments(company.getId(), "REJECTED", reason);
+        notificationService.createForUser(
+                company.getChuCongTy(),
+                "Công ty bị từ chối",
+                "Công ty " + safeCompanyName(company) + " bị từ chối. Lý do: " + reason,
+                "/company-admin/settings"
+        );
         return mapCompany(company);
     }
 
@@ -209,5 +223,12 @@ public class AdminCompanyService {
         }
         TinhThanh tinhThanh = xaPhuong.getTinhThanh();
         return tinhThanh.getTen();
+    }
+
+    private String safeCompanyName(CongTy company) {
+        if (company == null || !StringUtils.hasText(company.getTen())) {
+            return "của bạn";
+        }
+        return "\"" + company.getTen().trim() + "\"";
     }
 }

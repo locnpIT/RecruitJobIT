@@ -35,16 +35,19 @@ export default function CompanyAdminJobsPage() {
   const [nganhNgheOptions, setNganhNgheOptions] = useState<CompanyJobMetadataOption[]>([]);
   const [loaiHinhOptions, setLoaiHinhOptions] = useState<CompanyJobMetadataOption[]>([]);
   const [capDoOptions, setCapDoOptions] = useState<CompanyJobMetadataOption[]>([]);
+  const [kyNangOptions, setKyNangOptions] = useState<CompanyJobMetadataOption[]>([]);
   const [isUploadingCvTemplate, setIsUploadingCvTemplate] = useState(false);
   const [cvTemplateFileName, setCvTemplateFileName] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, watch, setValue } = useForm<JobFormValues>({
     defaultValues: {
       batBuocCV: false,
+      kyNangIds: [],
     },
   });
   const batBuocCv = watch("batBuocCV");
   const mauCvUrlValue = watch("mauCvUrl");
+  const selectedKyNangIds = watch("kyNangIds") ?? [];
   const chiNhanhField = register("chiNhanhId", { valueAsNumber: true });
   const batBuocCvField = register("batBuocCV", {
     onChange: (event) => {
@@ -85,6 +88,7 @@ export default function CompanyAdminJobsPage() {
             setNganhNgheOptions(metadata.nganhNghes ?? []);
             setLoaiHinhOptions(metadata.loaiHinhLamViecs ?? []);
             setCapDoOptions(metadata.capDoKinhNghiems ?? []);
+            setKyNangOptions(metadata.kyNangs ?? []);
           });
       })
       .finally(() => {
@@ -139,6 +143,7 @@ export default function CompanyAdminJobsPage() {
         luongToiDa: values.luongToiDa ? Number(values.luongToiDa) : undefined,
         soLuongTuyen: Number(values.soLuongTuyen),
         denHanLuc: values.denHanLuc ? new Date(values.denHanLuc).toISOString() : undefined,
+        kyNangIds: (values.kyNangIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0),
       };
       if (editingJobId != null) {
         const updated = await companyAdminService.updateJob(editingJobId, basePayload);
@@ -175,6 +180,7 @@ export default function CompanyAdminJobsPage() {
       luongToiDa: undefined,
       soLuongTuyen: 1,
       denHanLuc: "",
+      kyNangIds: [],
     });
     setCvTemplateFileName(null);
     setIsCreateModalOpen(true);
@@ -198,6 +204,9 @@ export default function CompanyAdminJobsPage() {
       luongToiDa: job.luongToiDa ?? undefined,
       soLuongTuyen: job.soLuongTuyen ?? 1,
       denHanLuc: job.denHanLuc ? new Date(job.denHanLuc).toISOString().slice(0, 16) : "",
+      kyNangIds: (job.kyNangs ?? [])
+        .map((item) => Number(item.id ?? 0))
+        .filter((id) => Number.isFinite(id) && id > 0),
     });
     setCvTemplateFileName(null);
     setIsCreateModalOpen(true);
@@ -320,6 +329,9 @@ export default function CompanyAdminJobsPage() {
         nganhNgheOptions={nganhNgheOptions}
         loaiHinhOptions={loaiHinhOptions}
         capDoOptions={capDoOptions}
+        kyNangOptions={kyNangOptions}
+        selectedKyNangIds={selectedKyNangIds}
+        onKyNangIdsChange={(nextIds) => setValue("kyNangIds", nextIds, { shouldDirty: true })}
         batBuocCv={batBuocCv}
         mauCvUrlValue={mauCvUrlValue}
         isUploadingCvTemplate={isUploadingCvTemplate}

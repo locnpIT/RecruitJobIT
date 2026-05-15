@@ -2,6 +2,7 @@ package com.phuocloc.projectfinal.recruit.publicjob.service;
 
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.KyNangTinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobDetailResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSummaryResponse;
@@ -35,6 +36,7 @@ public class PublicJobService {
     private static final int SIMILAR_LIMIT = 4;
 
     private final TinTuyenDungRepository tinTuyenDungRepository;
+    private final KyNangTinTuyenDungRepository kyNangTinTuyenDungRepository;
 
     @Transactional(readOnly = true)
     public List<PublicJobSummaryResponse> listJobs(String keyword, String location, Integer limit) {
@@ -67,6 +69,8 @@ public class PublicJobService {
                 .status("Đang tuyển dụng")
                 .company(resolveCompanyName(job))
                 .companyVerified(isCompanyApproved(resolveCompany(job)))
+                .nhaTuyenDungId(job.getNguoiDang() == null || job.getNguoiDang().getId() == null ? null : job.getNguoiDang().getId().longValue())
+                .nhaTuyenDungTen(resolveRecruiterName(job))
                 .industry(resolveIndustry(job))
                 .companySize("Đang cập nhật")
                 .website(resolveCompany(job) == null ? null : resolveCompany(job).getWebsite())
@@ -84,6 +88,7 @@ public class PublicJobService {
                 .batBuocCv(Boolean.TRUE.equals(job.getBatBuocCV()))
                 .mauCvUrl(job.getMauCvUrl())
                 .tags(buildTags(job))
+                .kyNangs(resolveJobSkills(job))
                 .description(splitContent(job.getMoTa()))
                 .requirements(splitContent(job.getYeuCau()))
                 .benefits(splitContent(job.getPhucLoi()))
@@ -178,6 +183,17 @@ public class PublicJobService {
                 .toList();
     }
 
+    private List<String> resolveJobSkills(TinTuyenDung job) {
+        if (job == null || job.getId() == null) {
+            return List.of();
+        }
+        return kyNangTinTuyenDungRepository.findByTinTuyenDungIdOrderByKyNangTenAsc(job.getId()).stream()
+                .filter(link -> link.getKyNang() != null && StringUtils.hasText(link.getKyNang().getTen()))
+                .map(link -> link.getKyNang().getTen())
+                .distinct()
+                .toList();
+    }
+
     private String resolveLocation(TinTuyenDung job) {
         if (job.getChiNhanh() == null || job.getChiNhanh().getXaPhuong() == null) {
             return "Đang cập nhật";
@@ -205,6 +221,19 @@ public class PublicJobService {
         return job.getNganhNghe() == null || !StringUtils.hasText(job.getNganhNghe().getTen())
                 ? "Đang cập nhật"
                 : job.getNganhNghe().getTen();
+    }
+
+    private String resolveRecruiterName(TinTuyenDung job) {
+        if (job.getNguoiDang() == null) {
+            return "Nhà tuyển dụng";
+        }
+        String fullName = ((job.getNguoiDang().getHo() == null ? "" : job.getNguoiDang().getHo().trim())
+                + " "
+                + (job.getNguoiDang().getTen() == null ? "" : job.getNguoiDang().getTen().trim())).trim();
+        if (StringUtils.hasText(fullName)) {
+            return fullName;
+        }
+        return StringUtils.hasText(job.getNguoiDang().getEmail()) ? job.getNguoiDang().getEmail() : "Nhà tuyển dụng";
     }
 
     private boolean isCompanyApproved(CongTy company) {

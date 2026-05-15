@@ -1,9 +1,46 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 
 // CTA cuối trang chủ cho nhóm ứng viên.
 // Mục tiêu là tạo một điểm chuyển đổi mạnh hơn sau khi người dùng đã xem xong homepage.
 export function CandidateCtaSection() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    Promise.resolve().then(() => {
+      if (!active) {
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token");
+        const expiresAt = token ? getJwtExpiryMs(token) : null;
+        // Session chỉ được tính là hợp lệ khi còn token và token chưa hết hạn.
+        if (!token || (expiresAt !== null && expiresAt <= Date.now())) {
+          clearAdminSession();
+          setIsLoggedIn(false);
+          return;
+        }
+
+        const rawUser = localStorage.getItem("user");
+        setIsLoggedIn(Boolean(rawUser));
+      } catch {
+        clearAdminSession();
+        setIsLoggedIn(false);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <section className="w-full py-12 md:py-16">
       <div className="relative overflow-hidden bg-white">
@@ -29,12 +66,14 @@ export function CandidateCtaSection() {
                 Tạo hồ sơ ngay
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link
-                href="/auth/login"
-                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
-              >
-                Đăng nhập
-              </Link>
+              {!isLoggedIn && (
+                <Link
+                  href="/auth/login"
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+                >
+                  Đăng nhập
+                </Link>
+              )}
             </div>
           </div>
         </div>

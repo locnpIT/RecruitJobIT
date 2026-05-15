@@ -39,6 +39,7 @@ export function JobsTable({ jobs, isLoadingJobs, onEdit, onDelete }: JobsTablePr
             <th className="py-3 font-normal">Ngành</th>
             <th className="py-3 font-normal">Trạng thái</th>
             <th className="py-3 font-normal">Chi nhánh</th>
+            <th className="py-3 font-normal">Kỹ năng</th>
             <th className="py-3 font-normal">Lương</th>
             <th className="py-3 font-normal">Số lượng</th>
             <th className="py-3 font-normal">Hành động</th>
@@ -51,6 +52,9 @@ export function JobsTable({ jobs, isLoadingJobs, onEdit, onDelete }: JobsTablePr
               <td className="py-3 text-slate-600">{job.nganhNgheTen ?? "--"}</td>
               <td className="py-3 text-slate-600">{job.trangThai ?? "--"}</td>
               <td className="py-3 text-slate-600">{job.chiNhanhTen ?? "--"}</td>
+              <td className="py-3 text-slate-600">
+                {job.kyNangs?.length ? job.kyNangs.map((skill) => skill.ten).filter(Boolean).join(", ") : "--"}
+              </td>
               <td className="py-3 text-slate-600">
                 {job.luongToiThieu ?? "--"} - {job.luongToiDa ?? "--"}
               </td>

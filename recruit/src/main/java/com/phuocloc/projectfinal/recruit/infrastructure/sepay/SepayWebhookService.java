@@ -3,6 +3,7 @@ package com.phuocloc.projectfinal.recruit.infrastructure.sepay;
 import com.phuocloc.projectfinal.recruit.company.repository.DangKyGoiCongTyRepository;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.DangKyGoiCongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.DanhMucGoi;
+import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -22,6 +23,7 @@ public class SepayWebhookService {
 
     private final DangKyGoiCongTyRepository dangKyGoiCongTyRepository;
     private final SepayProperties sepayProperties;
+    private final NotificationService notificationService;
 
     public void verifyWebhookSecret(String providedSecret, String authorizationHeader) {
         String expectedSecret = trimToNull(sepayProperties.getWebhookSecretKey());
@@ -82,8 +84,14 @@ public class SepayWebhookService {
         registration.setTrangThai("ACTIVE");
         registration.setBatDauLuc(start);
         registration.setHetHanLuc(start.plusDays(soNgayHieuLuc));
-
-        return dangKyGoiCongTyRepository.save(registration);
+        DangKyGoiCongTy saved = dangKyGoiCongTyRepository.save(registration);
+        notificationService.createForUser(
+                saved.getCongTy() == null ? null : saved.getCongTy().getChuCongTy(),
+                "Thanh toán gói thành công",
+                "Gói công ty đã được kích hoạt thành công.",
+                "/company-admin/packages"
+        );
+        return saved;
     }
 
     private Integer extractRegistrationId(SepayWebhookRequest request) {

@@ -1,5 +1,4 @@
 import { CandidateCtaSection } from "./components/home/CandidateCtaSection";
-import { featuredJobs, quickFilters, topCompanies } from "./components/home/data";
 import { FeaturedJobsSection } from "./components/home/FeaturedJobsSection";
 import { HeroSection } from "./components/home/HeroSection";
 import { HomeHeader } from "./components/home/HomeHeader";
@@ -13,9 +12,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <HomeHeader />
       <main>
-        <HeroSection quickFilters={quickFilters} />
-        <TopCompaniesSection companies={topCompanies} />
-        <FeaturedJobsSection jobs={featuredJobs} />
+        <HeroSection />
+        <TopCompaniesSection />
+        <FeaturedJobsSection />
         <CandidateCtaSection />
       </main>
       <HomeFooter />

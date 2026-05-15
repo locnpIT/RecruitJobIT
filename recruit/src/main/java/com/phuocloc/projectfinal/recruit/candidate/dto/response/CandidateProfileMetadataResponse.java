@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 public class CandidateProfileMetadataResponse {
     private List<OptionItem> kyNangs;
+    private List<OptionItem> nganhNghes;
     private List<OptionItem> loaiChungChis;
 
     @Getter

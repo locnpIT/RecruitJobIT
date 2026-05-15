@@ -22,6 +22,8 @@ export type PublicJobDetail = {
   status: string;
   company: string;
   companyVerified: boolean;
+  nhaTuyenDungId: number | null;
+  nhaTuyenDungTen: string | null;
   industry: string;
   companySize: string;
   website: string | null;
@@ -39,6 +41,7 @@ export type PublicJobDetail = {
   batBuocCv: boolean;
   mauCvUrl: string | null;
   tags: string[];
+  kyNangs: string[];
   description: string[];
   requirements: string[];
   benefits: string[];

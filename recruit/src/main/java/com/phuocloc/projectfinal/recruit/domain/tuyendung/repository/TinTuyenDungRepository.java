@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -55,5 +56,32 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
             """)
     Optional<TinTuyenDung> findPublicApprovedActiveJobById(Integer id, LocalDateTime now);
 
-    
+    @Query("""
+            SELECT ct.id AS companyId,
+                   ct.ten AS companyName,
+                   ct.logoUrl AS logoUrl,
+                   COUNT(t.id) AS activeJobCount
+            FROM TinTuyenDung t
+            JOIN t.chiNhanh cn
+            JOIN cn.congTy ct
+            WHERE t.ngayXoa IS NULL
+              AND UPPER(t.trangThai) = 'APPROVED'
+              AND (t.denHanLuc IS NULL OR t.denHanLuc >= :now)
+              AND ct.ngayXoa IS NULL
+              AND UPPER(ct.trangThai) = 'APPROVED'
+              AND EXISTS (
+                  SELECT 1
+                  FROM DangKyGoiCongTy dk
+                  WHERE dk.congTy = ct
+                    AND UPPER(dk.trangThai) = 'ACTIVE'
+                    AND UPPER(COALESCE(dk.trangThaiThanhToan, '')) IN ('PAID', 'SUCCESS', 'COMPLETED', 'DONE')
+                    AND dk.batDauLuc IS NOT NULL
+                    AND dk.hetHanLuc IS NOT NULL
+                    AND :now >= dk.batDauLuc
+                    AND :now <= dk.hetHanLuc
+              )
+            GROUP BY ct.id, ct.ten, ct.logoUrl
+            ORDER BY COUNT(t.id) DESC, MAX(t.ngayCapNhat) DESC
+            """)
+    List<PublicTopCompanyProjection> findPublicTopCompaniesWithActivePackage(LocalDateTime now, Pageable pageable);
 }

@@ -12,8 +12,10 @@ public class CandidateProfileResponse {
     private String gioiThieuBanThan;
     private String mucTieuNgheNghiep;
     private List<HocVanItem> hocVans;
+    private List<KinhNghiemItem> kinhNghiems;
     private List<ChungChiItem> chungChis;
     private List<KyNangItem> kyNangs;
+    private List<NganhNgheItem> nganhNghes;
 
     @Getter
     @Builder
@@ -26,6 +28,17 @@ public class CandidateProfileResponse {
         private LocalDate thoiGianKetThuc;
         private String duongDanTep;
         private String trangThai;
+    }
+
+    @Getter
+    @Builder
+    public static class KinhNghiemItem {
+        private Long id;
+        private String tenCongTy;
+        private String chucDanh;
+        private String moTaCongViec;
+        private LocalDate thoiGianBatDau;
+        private LocalDate thoiGianKetThuc;
     }
 
     @Getter
@@ -44,6 +57,13 @@ public class CandidateProfileResponse {
     @Getter
     @Builder
     public static class KyNangItem {
+        private Long id;
+        private String ten;
+    }
+
+    @Getter
+    @Builder
+    public static class NganhNgheItem {
         private Long id;
         private String ten;
     }

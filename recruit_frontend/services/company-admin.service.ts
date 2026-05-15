@@ -126,9 +126,15 @@ export interface CompanyAdminJob {
   lyDoTuChoi: string | null;
   denHanLuc: string | null;
   ngayTao: string | null;
+  kyNangs?: CompanyJobSkillItem[];
 }
 
 export interface CompanyJobMetadataOption {
+  id: number | null;
+  ten: string | null;
+}
+
+export interface CompanyJobSkillItem {
   id: number | null;
   ten: string | null;
 }
@@ -137,6 +143,7 @@ export interface CompanyJobMetadata {
   nganhNghes: CompanyJobMetadataOption[];
   loaiHinhLamViecs: CompanyJobMetadataOption[];
   capDoKinhNghiems: CompanyJobMetadataOption[];
+  kyNangs: CompanyJobMetadataOption[];
 }
 
 export interface CompanyAdminApplication {
@@ -242,6 +249,7 @@ export interface CreateCompanyJobPayload {
   luongToiDa?: number;
   soLuongTuyen: number;
   denHanLuc?: string;
+  kyNangIds?: number[];
 }
 
 export interface UpdateCompanyJobPayload {
@@ -258,6 +266,7 @@ export interface UpdateCompanyJobPayload {
   luongToiDa?: number;
   soLuongTuyen: number;
   denHanLuc?: string;
+  kyNangIds?: number[];
 }
 
 export const companyAdminService = {

@@ -8,7 +8,9 @@ import { HomeFooter } from "../components/home/HomeFooter";
 import { AvatarCard } from "./components/AvatarCard";
 import { ProfileInfoGrid } from "./components/ProfileInfoGrid";
 import { SkillsPanel } from "./components/SkillsPanel";
+import { IndustriesPanel } from "./components/IndustriesPanel";
 import { EducationPanel } from "./components/EducationPanel";
+import { WorkExperiencePanel } from "./components/WorkExperiencePanel";
 import { CertificatePanel } from "./components/CertificatePanel";
 import { SummaryPanel } from "./components/SummaryPanel";
 import { ProfileHero } from "./components/ProfileHero";
@@ -21,6 +23,7 @@ import {
   type CandidateProfile,
   type CandidateProfileListItem,
   type CandidateProfileMetadata,
+  type CandidateWorkExperienceItem,
 } from "@/services/candidate-profile.service";
 
 // Trang profile ứng viên.
@@ -53,6 +56,14 @@ const EMPTY_CERT = {
   duongDanTep: "",
 };
 
+const EMPTY_EXP = {
+  tenCongTy: "",
+  chucDanh: "",
+  moTaCongViec: "",
+  thoiGianBatDau: "",
+  thoiGianKetThuc: "",
+};
+
 export default function ProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -67,13 +78,17 @@ export default function ProfilePage() {
   const [uploadingEduProof, setUploadingEduProof] = useState(false);
   const [uploadingCertProof, setUploadingCertProof] = useState(false);
   const [submittingEdu, setSubmittingEdu] = useState(false);
+  const [submittingExp, setSubmittingExp] = useState(false);
   const [submittingCert, setSubmittingCert] = useState(false);
   const [savingSkills, setSavingSkills] = useState(false);
+  const [savingIndustries, setSavingIndustries] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
 
   const [eduForm, setEduForm] = useState(EMPTY_EDU);
   const [certForm, setCertForm] = useState(EMPTY_CERT);
+  const [expForm, setExpForm] = useState(EMPTY_EXP);
   const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
+  const [selectedIndustryIds, setSelectedIndustryIds] = useState<number[]>([]);
   const [summaryForm, setSummaryForm] = useState({
     gioiThieuBanThan: "",
     mucTieuNgheNghiep: "",
@@ -153,6 +168,7 @@ export default function ProfilePage() {
         setCandidateData(cp);
         setMetadata(meta);
         setSelectedSkillIds(cp?.kyNangs?.map((item) => item.id) ?? []);
+        setSelectedIndustryIds(cp?.nganhNghes?.map((item) => item.id) ?? []);
         setSummaryForm({
           gioiThieuBanThan: cp?.gioiThieuBanThan ?? "",
           mucTieuNgheNghiep: cp?.mucTieuNgheNghiep ?? "",
@@ -173,6 +189,7 @@ export default function ProfilePage() {
         const cp = await candidateProfileService.getProfileById(activeProfileId);
         setCandidateData(cp);
         setSelectedSkillIds(cp.kyNangs.map((item) => item.id));
+        setSelectedIndustryIds(cp.nganhNghes.map((item) => item.id));
         setSummaryForm({
           gioiThieuBanThan: cp.gioiThieuBanThan ?? "",
           mucTieuNgheNghiep: cp.mucTieuNgheNghiep ?? "",
@@ -325,6 +342,55 @@ export default function ProfilePage() {
     }
   };
 
+  const handleCreateWorkExperience = async () => {
+    if (!expForm.tenCongTy.trim()) {
+      toast.error("Tên công ty không được để trống.");
+      return;
+    }
+
+    try {
+      setSubmittingExp(true);
+      const created = activeProfileId
+        ? await candidateProfileService.createWorkExperienceByProfile(activeProfileId, {
+            tenCongTy: expForm.tenCongTy.trim(),
+            chucDanh: expForm.chucDanh.trim() || undefined,
+            moTaCongViec: expForm.moTaCongViec.trim() || undefined,
+            thoiGianBatDau: expForm.thoiGianBatDau || undefined,
+            thoiGianKetThuc: expForm.thoiGianKetThuc || undefined,
+          })
+        : await candidateProfileService.createWorkExperience({
+            tenCongTy: expForm.tenCongTy.trim(),
+            chucDanh: expForm.chucDanh.trim() || undefined,
+            moTaCongViec: expForm.moTaCongViec.trim() || undefined,
+            thoiGianBatDau: expForm.thoiGianBatDau || undefined,
+            thoiGianKetThuc: expForm.thoiGianKetThuc || undefined,
+          });
+      setCandidateData((prev) => (prev ? { ...prev, kinhNghiems: [created, ...prev.kinhNghiems] } : prev));
+      setExpForm(EMPTY_EXP);
+      toast.success("Đã thêm kinh nghiệm làm việc.");
+    } catch {
+      toast.error("Không thể thêm kinh nghiệm làm việc.");
+    } finally {
+      setSubmittingExp(false);
+    }
+  };
+
+  const handleDeleteWorkExperience = async (item: CandidateWorkExperienceItem) => {
+    try {
+      if (activeProfileId) {
+        await candidateProfileService.deleteWorkExperienceByProfile(activeProfileId, item.id);
+      } else {
+        await candidateProfileService.deleteWorkExperience(item.id);
+      }
+      setCandidateData((prev) =>
+        prev ? { ...prev, kinhNghiems: prev.kinhNghiems.filter((x) => x.id !== item.id) } : prev
+      );
+      toast.success("Đã xoá kinh nghiệm làm việc.");
+    } catch {
+      toast.error("Xoá kinh nghiệm làm việc thất bại.");
+    }
+  };
+
   const handleUploadCertificateProof = async (file: File) => {
     try {
       setUploadingCertProof(true);
@@ -368,6 +434,27 @@ export default function ProfilePage() {
       toast.error("Không thể cập nhật kỹ năng.");
     } finally {
       setSavingSkills(false);
+    }
+  };
+
+  const toggleIndustry = (industryId: number) => {
+    setSelectedIndustryIds((prev) =>
+      prev.includes(industryId) ? prev.filter((id) => id !== industryId) : [...prev, industryId]
+    );
+  };
+
+  const handleSaveIndustries = async () => {
+    try {
+      setSavingIndustries(true);
+      const updated = activeProfileId
+        ? await candidateProfileService.updateIndustriesByProfile(activeProfileId, selectedIndustryIds)
+        : await candidateProfileService.updateIndustries(selectedIndustryIds);
+      setCandidateData((prev) => (prev ? { ...prev, nganhNghes: updated } : prev));
+      toast.success("Đã cập nhật ngành nghề quan tâm.");
+    } catch {
+      toast.error("Không thể cập nhật ngành nghề.");
+    } finally {
+      setSavingIndustries(false);
     }
   };
 
@@ -470,6 +557,16 @@ export default function ProfilePage() {
           />
         </section>
 
+        <section className="mt-6">
+          <IndustriesPanel
+            metadata={metadata}
+            selectedIndustryIds={selectedIndustryIds}
+            saving={savingIndustries}
+            onToggleIndustry={toggleIndustry}
+            onSave={() => void handleSaveIndustries()}
+          />
+        </section>
+
         <section className="mt-6 grid gap-6">
           <EducationPanel
             form={eduForm}
@@ -480,6 +577,14 @@ export default function ProfilePage() {
             onCreate={() => void handleCreateEducation()}
             onDelete={(item) => void handleDeleteEducation(item)}
             onUploadProof={handleUploadEducationProof}
+          />
+          <WorkExperiencePanel
+            form={expForm}
+            submitting={submittingExp}
+            items={candidateData?.kinhNghiems ?? []}
+            onChange={setExpForm}
+            onCreate={() => void handleCreateWorkExperience()}
+            onDelete={(item) => void handleDeleteWorkExperience(item)}
           />
           <CertificatePanel
             form={certForm}

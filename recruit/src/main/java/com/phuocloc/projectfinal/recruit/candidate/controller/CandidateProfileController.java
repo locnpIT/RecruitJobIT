@@ -2,10 +2,12 @@ package com.phuocloc.projectfinal.recruit.candidate.controller;
 
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateKyNangUngVienRequest;
+import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateNganhNgheUngVienRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.CreateCandidateProfileRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateCandidateSummaryRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertChungChiRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertHocVanRequest;
+import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertKinhNghiemLamViecRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileListItemResponse;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileMetadataResponse;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileResponse;
@@ -166,6 +168,77 @@ public class CandidateProfileController {
         return ResponseEntity.ok(new SuccessResponse<>("Xoá học vấn thành công", null));
     }
 
+    @PostMapping("/experiences")
+    // Thêm một dòng kinh nghiệm làm việc vào hồ sơ mặc định.
+    public ResponseEntity<SuccessResponse<CandidateProfileResponse.KinhNghiemItem>> createExperience(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @Valid @RequestBody UpsertKinhNghiemLamViecRequest request
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.createKinhNghiem(principal.getUserId(), request);
+        return ResponseEntity.ok(new SuccessResponse<>("Tạo kinh nghiệm làm việc thành công", data));
+    }
+
+    @PostMapping("/{profileId}/experiences")
+    // Thêm kinh nghiệm làm việc vào đúng hồ sơ đang chọn.
+    public ResponseEntity<SuccessResponse<CandidateProfileResponse.KinhNghiemItem>> createExperienceByProfile(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId,
+            @Valid @RequestBody UpsertKinhNghiemLamViecRequest request
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.createKinhNghiem(principal.getUserId(), profileId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Tạo kinh nghiệm làm việc thành công", data));
+    }
+
+    @PatchMapping("/experiences/{experienceId}")
+    // Cập nhật kinh nghiệm làm việc trong hồ sơ mặc định.
+    public ResponseEntity<SuccessResponse<CandidateProfileResponse.KinhNghiemItem>> updateExperience(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long experienceId,
+            @Valid @RequestBody UpsertKinhNghiemLamViecRequest request
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.updateKinhNghiem(principal.getUserId(), experienceId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật kinh nghiệm làm việc thành công", data));
+    }
+
+    @PatchMapping("/{profileId}/experiences/{experienceId}")
+    // Cập nhật kinh nghiệm làm việc theo profileId để tránh sửa nhầm hồ sơ.
+    public ResponseEntity<SuccessResponse<CandidateProfileResponse.KinhNghiemItem>> updateExperienceByProfile(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId,
+            @PathVariable Long experienceId,
+            @Valid @RequestBody UpsertKinhNghiemLamViecRequest request
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.updateKinhNghiem(principal.getUserId(), profileId, experienceId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật kinh nghiệm làm việc thành công", data));
+    }
+
+    @DeleteMapping("/experiences/{experienceId}")
+    // Xóa kinh nghiệm làm việc khỏi hồ sơ mặc định.
+    public ResponseEntity<SuccessResponse<Void>> deleteExperience(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long experienceId
+    ) {
+        requireCandidate(principal);
+        candidateProfileService.deleteKinhNghiem(principal.getUserId(), experienceId);
+        return ResponseEntity.ok(new SuccessResponse<>("Xoá kinh nghiệm làm việc thành công", null));
+    }
+
+    @DeleteMapping("/{profileId}/experiences/{experienceId}")
+    // Xóa kinh nghiệm làm việc khỏi hồ sơ cụ thể theo profileId.
+    public ResponseEntity<SuccessResponse<Void>> deleteExperienceByProfile(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId,
+            @PathVariable Long experienceId
+    ) {
+        requireCandidate(principal);
+        candidateProfileService.deleteKinhNghiem(principal.getUserId(), profileId, experienceId);
+        return ResponseEntity.ok(new SuccessResponse<>("Xoá kinh nghiệm làm việc thành công", null));
+    }
+
     @PostMapping("/certificates")
     // Thêm chứng chỉ vào hồ sơ mặc định.
     public ResponseEntity<SuccessResponse<CandidateProfileResponse.ChungChiItem>> createCertificate(
@@ -258,6 +331,29 @@ public class CandidateProfileController {
         requireCandidate(principal);
         var data = candidateProfileService.updateSkills(principal.getUserId(), profileId, request);
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật kỹ năng thành công", data));
+    }
+
+    @PutMapping("/industries")
+    public ResponseEntity<SuccessResponse<List<CandidateProfileResponse.NganhNgheItem>>> updateIndustries(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @Valid @RequestBody UpdateNganhNgheUngVienRequest request
+    ) {
+        // Cập nhật ngành nghề quan tâm theo kiểu replace-all.
+        requireCandidate(principal);
+        var data = candidateProfileService.updateIndustries(principal.getUserId(), request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật ngành nghề thành công", data));
+    }
+
+    @PutMapping("/{profileId}/industries")
+    // Cập nhật ngành nghề quan tâm cho hồ sơ được chọn.
+    public ResponseEntity<SuccessResponse<List<CandidateProfileResponse.NganhNgheItem>>> updateIndustriesByProfile(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId,
+            @Valid @RequestBody UpdateNganhNgheUngVienRequest request
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.updateIndustries(principal.getUserId(), profileId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật ngành nghề thành công", data));
     }
 
     @PatchMapping("/summary")

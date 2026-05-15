@@ -1,6 +1,7 @@
 package com.phuocloc.projectfinal.recruit.company.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,4 +37,14 @@ public class CompanyAdminJobResponse {
     private String lyDoTuChoi;
     private LocalDateTime denHanLuc;
     private LocalDateTime ngayTao;
+    private List<KyNangItem> kyNangs;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class KyNangItem {
+        private Long id;
+        private String ten;
+    }
 }

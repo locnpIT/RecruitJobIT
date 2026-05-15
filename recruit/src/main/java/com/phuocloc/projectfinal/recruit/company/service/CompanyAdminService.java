@@ -24,6 +24,7 @@ import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
 import com.phuocloc.projectfinal.recruit.candidate.repository.ChungChiUngVienRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.HocVanUngVienRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangUngVienRepository;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.DanhMucGoi;
@@ -33,12 +34,14 @@ import com.phuocloc.projectfinal.recruit.domain.congty.entity.LoaiTaiLieu;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.TepMinhChungCongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.CapDoKinhNghiem;
+import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.KyNang;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.LoaiHinhLamViec;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.NganhNghe;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.CapDoKinhNghiemRepository;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.LoaiHinhLamViecRepository;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.NganhNgheRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.KyNangTinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyBranchRepository;
@@ -48,15 +51,21 @@ import com.phuocloc.projectfinal.recruit.company.repository.DangKyGoiCongTyRepos
 import com.phuocloc.projectfinal.recruit.company.repository.DanhMucGoiRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.LoaiTaiLieuRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.DonUngTuyenRepository;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.KyNangTinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.infrastructure.sepay.SepayPaymentService;
 import com.phuocloc.projectfinal.recruit.infrastructure.sepay.SepayCheckoutForm;
+import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -103,13 +112,16 @@ public class CompanyAdminService {
     private final LoaiTaiLieuRepository loaiTaiLieuRepository;
     private final TinTuyenDungRepository tinTuyenDungRepository;
     private final DonUngTuyenRepository donUngTuyenRepository;
+    private final KyNangTinTuyenDungRepository kyNangTinTuyenDungRepository;
     private final HocVanUngVienRepository hocVanUngVienRepository;
     private final ChungChiUngVienRepository chungChiUngVienRepository;
+    private final KyNangRepository kyNangRepository;
     private final KyNangUngVienRepository kyNangUngVienRepository;
     private final NganhNgheRepository nganhNgheRepository;
     private final LoaiHinhLamViecRepository loaiHinhLamViecRepository;
     private final CapDoKinhNghiemRepository capDoKinhNghiemRepository;
     private final SepayPaymentService sepayPaymentService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public CompanyAdminMeResponse getMe(AppUserPrinciple principal) {
@@ -247,24 +259,20 @@ public class CompanyAdminService {
 
     @Transactional(readOnly = true)
     public CompanyJobMetadataResponse getJobMetadata() {
+        // Metadata cho form tạo/sửa tin tuyển dụng.
+        // Bao gồm cả kỹ năng để frontend render checklist, lưu vào bảng mapping KyNangTinTuyenDung.
         return CompanyJobMetadataResponse.builder()
                 .nganhNghes(nganhNgheRepository.findAll().stream()
-                        .map(item -> CompanyJobMetadataResponse.OptionItem.builder()
-                                .id(item.getId() == null ? null : item.getId().longValue())
-                                .ten(item.getTen())
-                                .build())
+                        .map(this::mapMetadataOption)
                         .toList())
                 .loaiHinhLamViecs(loaiHinhLamViecRepository.findAll().stream()
-                        .map(item -> CompanyJobMetadataResponse.OptionItem.builder()
-                                .id(item.getId() == null ? null : item.getId().longValue())
-                                .ten(item.getTen())
-                                .build())
+                        .map(this::mapMetadataOption)
                         .toList())
                 .capDoKinhNghiems(capDoKinhNghiemRepository.findAll().stream()
-                        .map(item -> CompanyJobMetadataResponse.OptionItem.builder()
-                                .id(item.getId() == null ? null : item.getId().longValue())
-                                .ten(item.getTen())
-                                .build())
+                        .map(this::mapMetadataOption)
+                        .toList())
+                .kyNangs(kyNangRepository.findAllByOrderByTenAsc().stream()
+                        .map(this::mapMetadataOption)
                         .toList())
                 .build();
     }
@@ -316,8 +324,11 @@ public class CompanyAdminService {
     @Transactional(readOnly = true)
     public List<CompanyAdminJobResponse> listJobs(AppUserPrinciple principal, Integer chiNhanhId) {
         accessService.requireMembership(principal.getUserId().intValue(), chiNhanhId, COMPANY_ADMIN_ROLES);
-        return tinTuyenDungRepository.findByChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(chiNhanhId).stream()
-                .map(this::mapJob)
+        List<TinTuyenDung> jobs = tinTuyenDungRepository.findByChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(chiNhanhId);
+        // Load kỹ năng theo batch để tránh N+1 query khi chi nhánh có nhiều tin.
+        Map<Integer, List<CompanyAdminJobResponse.KyNangItem>> jobSkillMap = mapJobSkillsByJobIds(jobs);
+        return jobs.stream()
+                .map(job -> mapJob(job, jobSkillMap.getOrDefault(job.getId(), List.of())))
                 .toList();
     }
 
@@ -356,8 +367,10 @@ public class CompanyAdminService {
         tinTuyenDung.setTrangThai("DRAFT");
         tinTuyenDung.setDenHanLuc(request.getDenHanLuc());
         tinTuyenDung = tinTuyenDungRepository.save(tinTuyenDung);
+        // Lưu danh sách kỹ năng yêu cầu của tin vào bảng mapping.
+        replaceJobSkills(tinTuyenDung, request.getKyNangIds());
 
-        return mapJob(tinTuyenDung);
+        return mapJob(tinTuyenDung, mapJobSkills(tinTuyenDung.getId()));
     }
 
     @Transactional
@@ -385,8 +398,10 @@ public class CompanyAdminService {
         tinTuyenDung.setSoLuongTuyen(request.getSoLuongTuyen());
         tinTuyenDung.setDenHanLuc(request.getDenHanLuc());
         tinTuyenDung = tinTuyenDungRepository.save(tinTuyenDung);
+        // Update kỹ năng theo chiến lược replace-all: dữ liệu trong request là nguồn sự thật.
+        replaceJobSkills(tinTuyenDung, request.getKyNangIds());
 
-        return mapJob(tinTuyenDung);
+        return mapJob(tinTuyenDung, mapJobSkills(tinTuyenDung.getId()));
     }
 
     @Transactional
@@ -419,7 +434,22 @@ public class CompanyAdminService {
         DonUngTuyen application = requireManagedApplication(principal, applicationId);
         String status = normalizeApplicationStatus(request == null ? null : request.getTrangThai());
         application.setTrangThai(status);
-        return mapApplication(donUngTuyenRepository.save(application), true);
+        DonUngTuyen saved = donUngTuyenRepository.save(application);
+
+        HoSoUngVien profile = saved.getHoSoUngVien();
+        Integer candidateUserId = profile != null && profile.getNguoiDung() != null ? profile.getNguoiDung().getId() : null;
+        String jobTitle = saved.getTinTuyenDung() == null ? "Tin tuyển dụng" : saved.getTinTuyenDung().getTieuDe();
+        String link = saved.getTinTuyenDung() != null && saved.getTinTuyenDung().getId() != null
+                ? "/jobs/" + saved.getTinTuyenDung().getId()
+                : "/jobs";
+        notificationService.createForUserId(
+                candidateUserId,
+                "Cập nhật trạng thái đơn ứng tuyển",
+                "Đơn ứng tuyển vào \"" + (jobTitle == null ? "Tin tuyển dụng" : jobTitle) + "\" đã chuyển sang trạng thái " + status + ".",
+                link
+        );
+
+        return mapApplication(saved, true);
     }
 
     @Transactional(readOnly = true)
@@ -613,7 +643,7 @@ public class CompanyAdminService {
                         && companyId.equals(membership.getChiNhanh().getCongTy().getId()));
     }
 
-    private CompanyAdminJobResponse mapJob(TinTuyenDung tinTuyenDung) {
+    private CompanyAdminJobResponse mapJob(TinTuyenDung tinTuyenDung, List<CompanyAdminJobResponse.KyNangItem> kyNangs) {
         return CompanyAdminJobResponse.builder()
                 .id(tinTuyenDung.getId() == null ? null : tinTuyenDung.getId().longValue())
                 .tieuDe(tinTuyenDung.getTieuDe())
@@ -653,7 +683,127 @@ public class CompanyAdminService {
                 .lyDoTuChoi(tinTuyenDung.getLyDoTuChoi())
                 .denHanLuc(tinTuyenDung.getDenHanLuc())
                 .ngayTao(tinTuyenDung.getNgayTao())
+                .kyNangs(kyNangs)
                 .build();
+    }
+
+    // Convert các thực thể danh mục về DTO option chung cho frontend.
+    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(NganhNghe entity) {
+        return CompanyJobMetadataResponse.OptionItem.builder()
+                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .ten(entity.getTen())
+                .build();
+    }
+
+    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(LoaiHinhLamViec entity) {
+        return CompanyJobMetadataResponse.OptionItem.builder()
+                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .ten(entity.getTen())
+                .build();
+    }
+
+    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(CapDoKinhNghiem entity) {
+        return CompanyJobMetadataResponse.OptionItem.builder()
+                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .ten(entity.getTen())
+                .build();
+    }
+
+    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(KyNang entity) {
+        return CompanyJobMetadataResponse.OptionItem.builder()
+                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .ten(entity.getTen())
+                .build();
+    }
+
+    // Lấy toàn bộ kỹ năng theo danh sách tin tuyển dụng để giảm số query khi render bảng.
+    private Map<Integer, List<CompanyAdminJobResponse.KyNangItem>> mapJobSkillsByJobIds(List<TinTuyenDung> jobs) {
+        List<Integer> jobIds = jobs.stream()
+                .map(TinTuyenDung::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (jobIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Integer, List<CompanyAdminJobResponse.KyNangItem>> result = new HashMap<>();
+        List<KyNangTinTuyenDung> links = kyNangTinTuyenDungRepository.findByTinTuyenDungIdsOrderByKyNangTenAsc(jobIds);
+        for (KyNangTinTuyenDung link : links) {
+            if (link.getTinTuyenDung() == null || link.getTinTuyenDung().getId() == null || link.getKyNang() == null) {
+                continue;
+            }
+            Integer jobId = link.getTinTuyenDung().getId();
+            result.computeIfAbsent(jobId, ignored -> new ArrayList<>())
+                    .add(CompanyAdminJobResponse.KyNangItem.builder()
+                            .id(link.getKyNang().getId() == null ? null : link.getKyNang().getId().longValue())
+                            .ten(link.getKyNang().getTen())
+                            .build());
+        }
+        return result;
+    }
+
+    private List<CompanyAdminJobResponse.KyNangItem> mapJobSkills(Integer jobId) {
+        if (jobId == null) {
+            return List.of();
+        }
+        return kyNangTinTuyenDungRepository.findByTinTuyenDungIdOrderByKyNangTenAsc(jobId).stream()
+                .filter(link -> link.getKyNang() != null)
+                .map(link -> CompanyAdminJobResponse.KyNangItem.builder()
+                        .id(link.getKyNang().getId() == null ? null : link.getKyNang().getId().longValue())
+                        .ten(link.getKyNang().getTen())
+                        .build())
+                .toList();
+    }
+
+    // Đồng bộ kỹ năng của tin tuyển dụng theo chiến lược replace-all.
+    // Mỗi lần create/update job, bảng mapping sẽ phản ánh đúng dữ liệu người dùng vừa gửi.
+    private void replaceJobSkills(TinTuyenDung tinTuyenDung, List<Integer> requestedSkillIds) {
+        if (tinTuyenDung == null || tinTuyenDung.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tin tuyển dụng không hợp lệ");
+        }
+
+        List<KyNang> skills = resolveSkills(requestedSkillIds);
+        kyNangTinTuyenDungRepository.deleteByTinTuyenDung_Id(tinTuyenDung.getId());
+        if (skills.isEmpty()) {
+            return;
+        }
+
+        List<KyNangTinTuyenDung> links = skills.stream()
+                .map(skill -> new KyNangTinTuyenDung(tinTuyenDung, skill))
+                .toList();
+        kyNangTinTuyenDungRepository.saveAll(links);
+    }
+
+    // Validate id kỹ năng và loại bỏ duplicate giữ theo thứ tự chọn từ frontend.
+    private List<KyNang> resolveSkills(List<Integer> skillIds) {
+        LinkedHashSet<Integer> dedup = skillIds == null
+                ? new LinkedHashSet<>()
+                : skillIds.stream()
+                .filter(Objects::nonNull)
+                .map(id -> Math.max(id, 0))
+                .filter(id -> id > 0)
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        if (dedup.isEmpty()) {
+            return List.of();
+        }
+
+        List<KyNang> skills = kyNangRepository.findAllById(dedup);
+        if (skills.size() != dedup.size()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Một hoặc nhiều kỹ năng không tồn tại");
+        }
+
+        // Sắp xếp theo thứ tự người dùng gửi lên để frontend nhận lại đúng kỳ vọng.
+        Map<Integer, KyNang> byId = skills.stream()
+                .filter(skill -> skill.getId() != null)
+                .collect(java.util.stream.Collectors.toMap(KyNang::getId, skill -> skill));
+        List<KyNang> ordered = new ArrayList<>();
+        for (Integer requestedId : dedup) {
+            KyNang skill = byId.get(requestedId);
+            if (skill != null) {
+                ordered.add(skill);
+            }
+        }
+        return ordered;
     }
 
     private CompanyAdminApplicationResponse mapApplication(DonUngTuyen donUngTuyen, boolean includeProfileDetail) {

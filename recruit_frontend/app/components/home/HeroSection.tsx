@@ -4,14 +4,10 @@ import { useEffect, useState } from "react";
 import { ChevronDown, MapPin, Search } from "lucide-react";
 import { locationService, type Province } from "@/services/location.service";
 
-type HeroSectionProps = {
-  quickFilters: string[];
-};
-
 // Hero section của homepage.
 // Đây là khối entry-point để người dùng hiểu value proposition và thực hiện tìm việc nhanh.
 
-export function HeroSection({ quickFilters }: HeroSectionProps) {
+export function HeroSection() {
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState("");
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
@@ -57,7 +53,7 @@ export function HeroSection({ quickFilters }: HeroSectionProps) {
         backgroundPosition: "center center",
       }}
     >
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 md:py-14">
+      <div className="mx-auto w-full max-w-6xl px-4 py-14 md:py-20">
         <div className="grid gap-8 lg:grid-cols-[1.35fr_0.65fr]">
           <div>
             <p className="text-sm font-medium text-slate-500">
@@ -117,21 +113,6 @@ export function HeroSection({ quickFilters }: HeroSectionProps) {
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-slate-500">
-                  Tìm kiếm nhanh:
-                </span>
-
-                {quickFilters.map((filter) => (
-                  <button
-                    key={filter}
-                    type="button"
-                    className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
             </div>
 
             

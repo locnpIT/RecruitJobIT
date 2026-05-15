@@ -13,6 +13,15 @@ export interface CandidateEducationItem {
   trangThai: string | null;
 }
 
+export interface CandidateWorkExperienceItem {
+  id: number;
+  tenCongTy: string;
+  chucDanh: string | null;
+  moTaCongViec: string | null;
+  thoiGianBatDau: string | null;
+  thoiGianKetThuc: string | null;
+}
+
 export interface CandidateCertificateItem {
   id: number;
   loaiChungChiId: number | null;
@@ -29,13 +38,20 @@ export interface CandidateSkillItem {
   ten: string;
 }
 
+export interface CandidateIndustryItem {
+  id: number;
+  ten: string;
+}
+
 export interface CandidateProfile {
   hoSoUngVienId: number;
   gioiThieuBanThan: string | null;
   mucTieuNgheNghiep: string | null;
   hocVans: CandidateEducationItem[];
+  kinhNghiems: CandidateWorkExperienceItem[];
   chungChis: CandidateCertificateItem[];
   kyNangs: CandidateSkillItem[];
+  nganhNghes: CandidateIndustryItem[];
 }
 
 export interface CandidateOptionItem {
@@ -45,6 +61,7 @@ export interface CandidateOptionItem {
 
 export interface CandidateProfileMetadata {
   kyNangs: CandidateOptionItem[];
+  nganhNghes: CandidateOptionItem[];
   loaiChungChis: CandidateOptionItem[];
 }
 
@@ -71,6 +88,14 @@ export interface UpsertCertificatePayload {
   ngayBatDau?: string;
   ngayHetHan?: string;
   duongDanTep?: string;
+}
+
+export interface UpsertWorkExperiencePayload {
+  tenCongTy: string;
+  chucDanh?: string;
+  moTaCongViec?: string;
+  thoiGianBatDau?: string;
+  thoiGianKetThuc?: string;
 }
 
 export const candidateProfileService = {
@@ -125,6 +150,44 @@ export const candidateProfileService = {
     await apiClient.delete(`/candidate/profile/${profileId}/educations/${educationId}`);
   },
 
+  createWorkExperience: async (payload: UpsertWorkExperiencePayload): Promise<CandidateWorkExperienceItem> => {
+    const response = await apiClient.post("/candidate/profile/experiences", payload);
+    return response.data.data as CandidateWorkExperienceItem;
+  },
+
+  createWorkExperienceByProfile: async (
+    profileId: number,
+    payload: UpsertWorkExperiencePayload
+  ): Promise<CandidateWorkExperienceItem> => {
+    const response = await apiClient.post(`/candidate/profile/${profileId}/experiences`, payload);
+    return response.data.data as CandidateWorkExperienceItem;
+  },
+
+  updateWorkExperience: async (
+    experienceId: number,
+    payload: UpsertWorkExperiencePayload
+  ): Promise<CandidateWorkExperienceItem> => {
+    const response = await apiClient.patch(`/candidate/profile/experiences/${experienceId}`, payload);
+    return response.data.data as CandidateWorkExperienceItem;
+  },
+
+  updateWorkExperienceByProfile: async (
+    profileId: number,
+    experienceId: number,
+    payload: UpsertWorkExperiencePayload
+  ): Promise<CandidateWorkExperienceItem> => {
+    const response = await apiClient.patch(`/candidate/profile/${profileId}/experiences/${experienceId}`, payload);
+    return response.data.data as CandidateWorkExperienceItem;
+  },
+
+  deleteWorkExperience: async (experienceId: number): Promise<void> => {
+    await apiClient.delete(`/candidate/profile/experiences/${experienceId}`);
+  },
+
+  deleteWorkExperienceByProfile: async (profileId: number, experienceId: number): Promise<void> => {
+    await apiClient.delete(`/candidate/profile/${profileId}/experiences/${experienceId}`);
+  },
+
   createCertificate: async (payload: UpsertCertificatePayload): Promise<CandidateCertificateItem> => {
     const response = await apiClient.post("/candidate/profile/certificates", payload);
     return response.data.data as CandidateCertificateItem;
@@ -156,6 +219,16 @@ export const candidateProfileService = {
   updateSkillsByProfile: async (profileId: number, kyNangIds: number[]): Promise<CandidateSkillItem[]> => {
     const response = await apiClient.put(`/candidate/profile/${profileId}/skills`, { kyNangIds });
     return response.data.data as CandidateSkillItem[];
+  },
+
+  updateIndustries: async (nganhNgheIds: number[]): Promise<CandidateIndustryItem[]> => {
+    const response = await apiClient.put("/candidate/profile/industries", { nganhNgheIds });
+    return response.data.data as CandidateIndustryItem[];
+  },
+
+  updateIndustriesByProfile: async (profileId: number, nganhNgheIds: number[]): Promise<CandidateIndustryItem[]> => {
+    const response = await apiClient.put(`/candidate/profile/${profileId}/industries`, { nganhNgheIds });
+    return response.data.data as CandidateIndustryItem[];
   },
 
   updateSummary: async (payload: {

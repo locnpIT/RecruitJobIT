@@ -11,6 +11,7 @@ public class CompanyJobMetadataResponse {
     private List<OptionItem> nganhNghes;
     private List<OptionItem> loaiHinhLamViecs;
     private List<OptionItem> capDoKinhNghiems;
+    private List<OptionItem> kyNangs;
 
     @Getter
     @Builder

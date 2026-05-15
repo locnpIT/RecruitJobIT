@@ -91,6 +91,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/locations/**").permitAll()
                         // Tin tuyển dụng public chỉ trả về tin APPROVED + còn hạn, nên cho phép khách truy cập xem.
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/jobs/**").permitAll()
+                        // Top companies public dùng cho homepage.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/public/companies/**").permitAll()
+                        // Handshake websocket chat dùng query token riêng nên phải mở public tại đây.
+                        .requestMatchers("/ws/chat/**").permitAll()
                         .requestMatchers(
                                 // Các route auth public + webhook SePay phải được mở để hệ thống bên ngoài gọi tới.
                                 "/api/v1/auth/login",

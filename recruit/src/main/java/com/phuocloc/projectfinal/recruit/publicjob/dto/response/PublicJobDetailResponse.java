@@ -14,6 +14,8 @@ public class PublicJobDetailResponse {
     private String status;
     private String company;
     private Boolean companyVerified;
+    private Long nhaTuyenDungId;
+    private String nhaTuyenDungTen;
     private String industry;
     private String companySize;
     private String website;
@@ -31,6 +33,7 @@ public class PublicJobDetailResponse {
     private Boolean batBuocCv;
     private String mauCvUrl;
     private List<String> tags;
+    private List<String> kyNangs;
     private List<String> description;
     private List<String> requirements;
     private List<String> benefits;

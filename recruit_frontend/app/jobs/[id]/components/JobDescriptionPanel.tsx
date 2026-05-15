@@ -9,6 +9,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import type { PublicJobDetail } from "@/services/public-job.service";
+import { JobSkillsPanel } from "./JobSkillsPanel";
 
 type JobDescriptionPanelProps = {
   job: PublicJobDetail;
@@ -65,6 +66,14 @@ export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
 
         <section id="section-3" className="border-t border-slate-200 pt-7">
           <h2 className="text-lg font-semibold text-slate-950">Thông tin công việc</h2>
+          <div className="mt-4">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">
+              Kỹ năng yêu cầu
+            </p>
+            <div className="mt-2">
+              <JobSkillsPanel skills={job.kyNangs ?? []} />
+            </div>
+          </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {infoItems.map((item) => {
               const Icon = item.icon;

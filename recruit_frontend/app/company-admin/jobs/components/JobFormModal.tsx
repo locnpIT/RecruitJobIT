@@ -5,6 +5,7 @@ import type { UseFormRegisterReturn } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import type { CompanyAdminBranch, CompanyJobMetadataOption } from "@/services/company-admin.service";
+import { JobSkillsMultiSelect } from "./JobSkillsMultiSelect";
 
 // Modal tạo/cập nhật tin tuyển dụng của công ty.
 // Nhận state từ page container và chỉ đảm nhiệm phần nhập liệu + phát submit event.
@@ -23,6 +24,7 @@ type JobFormValues = {
   luongToiDa?: number;
   soLuongTuyen: number;
   denHanLuc?: string;
+  kyNangIds: number[];
 };
 
 type JobFormModalProps = {
@@ -38,6 +40,9 @@ type JobFormModalProps = {
   nganhNgheOptions: CompanyJobMetadataOption[];
   loaiHinhOptions: CompanyJobMetadataOption[];
   capDoOptions: CompanyJobMetadataOption[];
+  kyNangOptions: CompanyJobMetadataOption[];
+  selectedKyNangIds: number[];
+  onKyNangIdsChange: (nextIds: number[]) => void;
   batBuocCv?: boolean;
   mauCvUrlValue?: string;
   isUploadingCvTemplate: boolean;
@@ -60,6 +65,9 @@ export function JobFormModal({
   nganhNgheOptions,
   loaiHinhOptions,
   capDoOptions,
+  kyNangOptions,
+  selectedKyNangIds,
+  onKyNangIdsChange,
   batBuocCv,
   mauCvUrlValue,
   isUploadingCvTemplate,
@@ -137,6 +145,11 @@ export function JobFormModal({
               ))}
             </select>
           </div>
+          <JobSkillsMultiSelect
+            options={kyNangOptions}
+            selectedIds={selectedKyNangIds}
+            onChange={onKyNangIdsChange}
+          />
           <Field label="Số lượng tuyển" inputProps={register("soLuongTuyen", { valueAsNumber: true })} placeholder="2" type="number" />
           <Field label="Lương tối thiểu" inputProps={register("luongToiThieu", { valueAsNumber: true })} placeholder="15000000" type="number" />
           <Field label="Lương tối đa" inputProps={register("luongToiDa", { valueAsNumber: true })} placeholder="25000000" type="number" />
