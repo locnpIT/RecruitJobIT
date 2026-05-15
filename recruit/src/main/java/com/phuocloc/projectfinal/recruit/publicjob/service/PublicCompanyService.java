@@ -41,7 +41,7 @@ public class PublicCompanyService {
         return PublicTopCompanyResponse.builder()
                 .id(projection.getCompanyId() == null ? null : projection.getCompanyId().longValue())
                 .ten(projection.getCompanyName())
-                .logoUrl(projection.getLogoUrl())
+                .duongDanLogo(projection.getLogoUrl())
                 .build();
     }
 }

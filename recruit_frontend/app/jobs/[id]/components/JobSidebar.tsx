@@ -33,35 +33,35 @@ export function JobSidebar({
       <section className="rounded-lg border border-slate-200 bg-white p-5">
         <div className="flex gap-4">
           <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-slate-900 text-lg font-bold text-white">
-            {job.company.slice(0, 1)}
+            {job.congTy.slice(0, 1)}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-slate-950">{job.company}</h2>
-              {job.companyVerified ? <ShieldCheck className="h-4 w-4 text-slate-900" /> : null}
+              <h2 className="font-semibold text-slate-950">{job.congTy}</h2>
+              {job.congTyDaXacMinh ? <ShieldCheck className="h-4 w-4 text-slate-900" /> : null}
             </div>
             <div className="mt-3 space-y-2 text-sm text-slate-600">
               <p className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
-                {job.industry}
+                {job.nganhNghe}
               </p>
               <p className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                {job.companySize}
+                {job.quyMoCongTy}
               </p>
               <p className="flex items-center gap-2">
                 <Globe2 className="h-4 w-4" />
-                {job.website}
+                {job.websiteCongTy}
               </p>
               <p className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                {job.location}
+                {job.diaDiem}
               </p>
             </div>
           </div>
         </div>
 
-        <p className="mt-5 text-sm leading-6 text-slate-600">{job.companyDescription}</p>
+        <p className="mt-5 text-sm leading-6 text-slate-600">{job.moTaCongTy}</p>
 
         <Link
           href="/auth/login"
@@ -105,7 +105,7 @@ export function JobSidebar({
       <section className="rounded-lg border border-slate-200 bg-white p-5">
         <h2 className="font-semibold text-slate-950">Việc làm tương tự</h2>
         <div className="mt-4 divide-y divide-slate-100">
-          {job.similarJobs.map((item) => (
+          {job.viecLamTuongTu.map((item) => (
             <Link
               key={item.id}
               href={`/jobs/${item.id}`}

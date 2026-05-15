@@ -121,7 +121,7 @@ export default function JobDetailPage() {
       .getFavoriteStatus(job.id)
       .then((data) => {
         if (isMounted) {
-          setIsFavorite(Boolean(data.favorite));
+          setIsFavorite(Boolean(data.daYeuThich));
         }
       })
       .catch(() => {
@@ -180,7 +180,7 @@ export default function JobDetailPage() {
       const response = isFavorite
         ? await publicJobService.removeFavorite(job.id)
         : await publicJobService.addFavorite(job.id);
-      setIsFavorite(Boolean(response.favorite));
+      setIsFavorite(Boolean(response.daYeuThich));
     } finally {
       setFavoriteLoading(false);
     }

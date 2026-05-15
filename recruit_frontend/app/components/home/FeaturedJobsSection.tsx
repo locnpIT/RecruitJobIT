@@ -14,7 +14,7 @@ export function FeaturedJobsSection() {
     let isMounted = true;
 
     publicJobService
-      .listJobs({ limit: 4 })
+      .listJobs({ gioiHan: 4 })
       .then((data) => {
         if (isMounted) {
           setPublicJobs(data);

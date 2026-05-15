@@ -7,15 +7,15 @@ type TopCompanyCardProps = {
 };
 
 // Card hiển thị tối giản đúng scope PM chốt: logo + tên công ty.
-// Fallback initials giúp UI không vỡ nếu logoUrl trống hoặc link ảnh lỗi phía nguồn.
+// Fallback initials giúp UI không vỡ nếu duongDanLogo trống hoặc link ảnh lỗi phía nguồn.
 export function TopCompanyCard({ company }: TopCompanyCardProps) {
   return (
     <article className="w-[260px] shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md bg-white text-sm font-bold text-slate-700">
-          {company.logoUrl ? (
+          {company.duongDanLogo ? (
             <Image
-              src={company.logoUrl}
+              src={company.duongDanLogo}
               alt={`Logo ${company.ten}`}
               width={48}
               height={48}

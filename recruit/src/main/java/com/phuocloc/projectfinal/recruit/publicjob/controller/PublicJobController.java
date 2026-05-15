@@ -29,13 +29,22 @@ public class PublicJobController {
     @GetMapping
     // Lấy danh sách tin đang hiển thị public, dùng cho homepage/search job.
     public ResponseEntity<SuccessResponse<List<PublicJobSummaryResponse>>> listJobs(
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(required = false) String diaDiem,
+            @RequestParam(required = false) Integer gioiHan,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) Integer limit
     ) {
+        // Ưu tiên tên tham số Việt hóa.
+        // Giữ thêm keyword/location/limit để tương thích ngược với client cũ trong giai đoạn chuyển đổi.
+        String safeTuKhoa = tuKhoa != null ? tuKhoa : keyword;
+        String safeDiaDiem = diaDiem != null ? diaDiem : location;
+        Integer safeGioiHan = gioiHan != null ? gioiHan : limit;
+
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Lấy danh sách tin tuyển dụng public thành công",
-                publicJobService.listJobs(keyword, location, limit)
+                publicJobService.listJobs(safeTuKhoa, safeDiaDiem, safeGioiHan)
         ));
     }
 

@@ -9,5 +9,5 @@ public class PublicTopCompanyResponse {
 
     private Long id;
     private String ten;
-    private String logoUrl;
+    private String duongDanLogo;
 }

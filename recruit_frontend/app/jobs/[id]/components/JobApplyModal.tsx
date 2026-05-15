@@ -47,8 +47,8 @@ export function JobApplyModal({
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
               Ứng tuyển
             </p>
-            <h2 className="mt-1 text-lg font-semibold text-slate-950">{job.title}</h2>
-            <p className="mt-1 text-sm text-slate-500">{job.company}</p>
+            <h2 className="mt-1 text-lg font-semibold text-slate-950">{job.tieuDe}</h2>
+            <p className="mt-1 text-sm text-slate-500">{job.congTy}</p>
           </div>
           <button
             type="button"

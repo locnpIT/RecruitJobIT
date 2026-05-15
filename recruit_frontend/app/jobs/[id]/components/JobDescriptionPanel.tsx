@@ -21,14 +21,14 @@ const tabs = ["Mô tả công việc", "Yêu cầu ứng viên", "Phúc lợi", 
 // Tách khỏi page để sau này có thể map trực tiếp từ API detail mà không làm page bị dài.
 export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
   const infoItems = [
-    { label: "Cấp bậc", value: job.level, icon: UserRound },
-    { label: "Ngành nghề", value: job.industry, icon: BriefcaseBusiness },
-    { label: "Kinh nghiệm", value: job.experience, icon: CalendarClock },
-    { label: "Học vấn", value: job.education, icon: GraduationCap },
-    { label: "Hình thức làm việc", value: job.workType, icon: ListChecks },
-    { label: "Số lượng tuyển", value: job.headcount, icon: UsersRound },
-    { label: "Giới tính", value: job.gender, icon: UserRound },
-    { label: "Cập nhật", value: job.updatedAt, icon: CalendarClock },
+    { label: "Cấp bậc", value: job.capDo, icon: UserRound },
+    { label: "Ngành nghề", value: job.nganhNghe, icon: BriefcaseBusiness },
+    { label: "Kinh nghiệm", value: job.kinhNghiem, icon: CalendarClock },
+    { label: "Học vấn", value: job.hocVan, icon: GraduationCap },
+    { label: "Hình thức làm việc", value: job.loaiHinhLamViec, icon: ListChecks },
+    { label: "Số lượng tuyển", value: job.soLuongTuyen, icon: UsersRound },
+    { label: "Giới tính", value: job.gioiTinh, icon: UserRound },
+    { label: "Cập nhật", value: job.capNhatLuc, icon: CalendarClock },
   ];
 
   return (
@@ -54,15 +54,15 @@ export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
           id="section-0"
           icon={BriefcaseBusiness}
           title="Mô tả công việc"
-          items={job.description}
+          items={job.moTa}
         />
         <JobTextSection
           id="section-1"
           icon={UserRound}
           title="Yêu cầu ứng viên"
-          items={job.requirements}
+          items={job.yeuCau}
         />
-        <JobTextSection id="section-2" icon={Medal} title="Phúc lợi" items={job.benefits} />
+        <JobTextSection id="section-2" icon={Medal} title="Phúc lợi" items={job.phucLoi} />
 
         <section id="section-3" className="border-t border-slate-200 pt-7">
           <h2 className="text-lg font-semibold text-slate-950">Thông tin công việc</h2>

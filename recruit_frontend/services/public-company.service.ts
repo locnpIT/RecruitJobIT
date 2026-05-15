@@ -3,12 +3,12 @@ import apiClient from "@/lib/api-client";
 export type PublicTopCompany = {
   id: number;
   ten: string;
-  logoUrl: string | null;
+  duongDanLogo: string | null;
 };
 
 export const publicCompanyService = {
-  listTopCompanies: async (limit = 8): Promise<PublicTopCompany[]> => {
-    const response = await apiClient.get("/public/companies/top", { params: { limit } });
+  listTopCompanies: async (gioiHan = 8): Promise<PublicTopCompany[]> => {
+    const response = await apiClient.get("/public/companies/top", { params: { gioiHan } });
     return response.data.data as PublicTopCompany[];
   },
 };

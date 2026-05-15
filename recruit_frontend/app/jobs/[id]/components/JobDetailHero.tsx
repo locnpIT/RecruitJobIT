@@ -26,34 +26,34 @@ export function JobDetailHero({ job, isFavorite, favoriteLoading, onToggleFavori
 
           <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {job.status}
+            {job.trangThai}
           </div>
 
           <h1 className="mt-4 max-w-3xl text-3xl font-bold leading-tight tracking-[-0.03em] text-slate-950 md:text-5xl">
-            {job.title}
+            {job.tieuDe}
           </h1>
 
           <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-600">
             <span className="inline-flex items-center gap-2">
               <Users className="h-4 w-4" />
-              {job.company}
+              {job.congTy}
             </span>
             <span className="inline-flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              {job.location}
+              {job.diaDiem}
             </span>
             <span className="inline-flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              {job.workType}
+              {job.loaiHinhLamViec}
             </span>
             <span className="inline-flex items-center gap-2">
               <ShieldCheck className="h-4 w-4" />
-              {job.postedAt}
+              {job.dangLuc}
             </span>
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            {job.tags.map((tag) => (
+            {job.the.map((tag) => (
               <span
                 key={tag}
                 className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700"

@@ -17,7 +17,7 @@ export default function JobsPage() {
     let isMounted = true;
 
     publicJobService
-      .listJobs({ limit: 30 })
+      .listJobs({ gioiHan: 30 })
       .then((data) => {
         if (!isMounted) {
           return;

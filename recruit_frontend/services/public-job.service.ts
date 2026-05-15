@@ -18,46 +18,46 @@ export type PublicJobSummary = {
 export type PublicJobDetail = {
   id: number;
   maTin: string | null;
-  title: string;
-  status: string;
-  company: string;
-  companyVerified: boolean;
+  tieuDe: string;
+  trangThai: string;
+  congTy: string;
+  congTyDaXacMinh: boolean;
   nhaTuyenDungId: number | null;
   nhaTuyenDungTen: string | null;
-  industry: string;
-  companySize: string;
-  website: string | null;
-  location: string;
-  salary: string;
-  level: string;
-  workType: string;
-  experience: string;
-  deadline: string;
-  postedAt: string;
-  education: string;
-  headcount: string;
-  gender: string;
-  updatedAt: string;
+  nganhNghe: string;
+  quyMoCongTy: string;
+  websiteCongTy: string | null;
+  diaDiem: string;
+  mucLuong: string;
+  capDo: string;
+  loaiHinhLamViec: string;
+  kinhNghiem: string;
+  hanNop: string;
+  dangLuc: string;
+  hocVan: string;
+  soLuongTuyen: string;
+  gioiTinh: string;
+  capNhatLuc: string;
   batBuocCv: boolean;
   mauCvUrl: string | null;
-  tags: string[];
+  the: string[];
   kyNangs: string[];
-  description: string[];
-  requirements: string[];
-  benefits: string[];
-  companyDescription: string;
-  similarJobs: PublicJobSummary[];
+  moTa: string[];
+  yeuCau: string[];
+  phucLoi: string[];
+  moTaCongTy: string;
+  viecLamTuongTu: PublicJobSummary[];
 };
 
 export type FavoriteJobStatus = {
-  jobId: number;
-  favorite: boolean;
+  tinTuyenDungId: number;
+  daYeuThich: boolean;
 };
 
 type ListJobsParams = {
-  keyword?: string;
-  location?: string;
-  limit?: number;
+  tuKhoa?: string;
+  diaDiem?: string;
+  gioiHan?: number;
 };
 
 // Service public job dùng cho homepage và trang chi tiết job.

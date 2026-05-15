@@ -44,8 +44,8 @@ public class CandidateFavoriteJobService {
         Integer safeJobId = toIntId(jobId);
         boolean favorite = favoriteRepository.existsByNguoiDung_IdAndTinTuyenDung_Id(candidateId, safeJobId);
         return FavoriteJobStatusResponse.builder()
-                .jobId(jobId)
-                .favorite(favorite)
+                .tinTuyenDungId(jobId)
+                .daYeuThich(favorite)
                 .build();
     }
 
@@ -60,8 +60,8 @@ public class CandidateFavoriteJobService {
             favoriteRepository.save(new NguoiDungTinTuyenDung(user, job, null));
         }
         return FavoriteJobStatusResponse.builder()
-                .jobId(jobId)
-                .favorite(true)
+                .tinTuyenDungId(jobId)
+                .daYeuThich(true)
                 .build();
     }
 
@@ -72,8 +72,8 @@ public class CandidateFavoriteJobService {
         favoriteRepository.findByNguoiDung_IdAndTinTuyenDung_Id(candidateId, safeJobId)
                 .ifPresent(favoriteRepository::delete);
         return FavoriteJobStatusResponse.builder()
-                .jobId(jobId)
-                .favorite(false)
+                .tinTuyenDungId(jobId)
+                .daYeuThich(false)
                 .build();
     }
 

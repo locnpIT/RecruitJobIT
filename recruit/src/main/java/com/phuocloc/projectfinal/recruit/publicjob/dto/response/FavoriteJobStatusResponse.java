@@ -7,6 +7,6 @@ import lombok.Getter;
 @Builder
 public class FavoriteJobStatusResponse {
 
-    private Long jobId;
-    private Boolean favorite;
+    private Long tinTuyenDungId;
+    private Boolean daYeuThich;
 }
