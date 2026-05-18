@@ -15,6 +15,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Entity ánh xạ dữ liệu cho XaPhuong.
+ * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

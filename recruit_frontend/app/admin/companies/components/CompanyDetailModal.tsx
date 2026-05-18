@@ -23,9 +23,9 @@ export function CompanyDetailModal({
         <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Chi tiết công ty</p>
-            <h2 className="mt-1 text-xl font-semibold text-slate-900">{company.company.ten}</h2>
+            <h2 className="mt-1 text-xl font-semibold text-slate-900">{company.congTy.ten}</h2>
             <p className="mt-1 text-sm text-slate-600">
-              {company.company.maSoThue} · {company.company.trangThai}
+              {company.congTy.maSoThue} · {company.congTy.trangThai}
             </p>
           </div>
           <button
@@ -41,16 +41,16 @@ export function CompanyDetailModal({
         <div className="grid gap-6 p-5 lg:grid-cols-[1fr_320px]">
           <div className="space-y-6">
             <Section title="Thông tin công ty">
-              <InfoRow label="Website" value={company.company.website ?? "--"} />
-              <InfoRow label="Trạng thái" value={company.company.trangThai ?? "--"} />
-              <InfoRow label="Lý do từ chối" value={company.company.lyDoTuChoi ?? "--"} />
+              <InfoRow label="Website" value={company.congTy.website ?? "--"} />
+              <InfoRow label="Trạng thái" value={company.congTy.trangThai ?? "--"} />
+              <InfoRow label="Lý do từ chối" value={company.congTy.lyDoTuChoi ?? "--"} />
             </Section>
 
             <Section title="Chủ công ty">
-              <InfoRow label="Họ tên" value={company.owner?.hoTen ?? "--"} />
-              <InfoRow label="Email" value={company.owner?.email ?? "--"} />
-              <InfoRow label="Số điện thoại" value={company.owner?.soDienThoai ?? "--"} />
-              <InfoRow label="Hoạt động" value={company.owner?.dangHoatDong ? "Có" : "Không"} />
+              <InfoRow label="Họ tên" value={company.chuCongTy?.hoTen ?? "--"} />
+              <InfoRow label="Email" value={company.chuCongTy?.email ?? "--"} />
+              <InfoRow label="Số điện thoại" value={company.chuCongTy?.soDienThoai ?? "--"} />
+              <InfoRow label="Hoạt động" value={company.chuCongTy?.dangHoatDong ? "Có" : "Không"} />
             </Section>
 
             <Section title="Chi nhánh">
@@ -66,7 +66,7 @@ export function CompanyDetailModal({
                     </tr>
                   </thead>
                   <tbody>
-                    {company.branches.map((branch) => (
+                    {company.chiNhanhs.map((branch) => (
                       <tr key={branch.id ?? branch.ten} className="border-b border-slate-100 align-top">
                         <td className="py-2 pr-4 font-medium text-slate-900">{branch.ten ?? "--"}</td>
                         <td className="py-2 pr-4 text-slate-600">{branch.diaChiChiTiet ?? "--"}</td>
@@ -84,8 +84,8 @@ export function CompanyDetailModal({
           <div className="space-y-4">
             <Section title="Minh chứng">
               <div className="space-y-3">
-                {company.proofDocuments.length ? (
-                  company.proofDocuments.map((doc) => (
+                {company.taiLieuMinhChungs.length ? (
+                  company.taiLieuMinhChungs.map((doc) => (
                     <div key={doc.id ?? doc.tenTep} className="border border-slate-200 px-3 py-3">
                       <p className="text-sm font-medium text-slate-900">{doc.tenTep ?? "--"}</p>
                       <p className="mt-1 text-xs text-slate-500">
@@ -114,7 +114,7 @@ export function CompanyDetailModal({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  disabled={isMutating || company.company.trangThai === "APPROVED"}
+                  disabled={isMutating || company.congTy.trangThai === "APPROVED"}
                   onClick={() => void onApprove()}
                   className="flex-1 border border-emerald-300 px-3 py-2 text-sm font-medium text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
@@ -122,7 +122,7 @@ export function CompanyDetailModal({
                 </button>
                 <button
                   type="button"
-                  disabled={isMutating || company.company.trangThai === "REJECTED"}
+                  disabled={isMutating || company.congTy.trangThai === "REJECTED"}
                   onClick={() => void onReject()}
                   className="flex-1 border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >

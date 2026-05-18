@@ -3,7 +3,7 @@ import apiClient from "@/lib/api-client";
 export type PublicTopCompany = {
   id: number;
   ten: string;
-  duongDanLogo: string | null;
+  logoUrl: string | null;
 };
 
 export const publicCompanyService = {

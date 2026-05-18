@@ -230,8 +230,8 @@ export default function JobsAdminPage() {
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-md border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">{detail.summary.tieuDe ?? "Chi tiết tin"}</h3>
-                <p className="mt-1 text-sm text-slate-500">{detail.summary.congTyTen ?? "-"} • {detail.summary.diaDiem ?? "-"}</p>
+                <h3 className="text-base font-semibold text-slate-900">{detail.tongQuan.tieuDe ?? "Chi tiết tin"}</h3>
+                <p className="mt-1 text-sm text-slate-500">{detail.tongQuan.congTyTen ?? "-"} • {detail.tongQuan.diaDiem ?? "-"}</p>
               </div>
               <button type="button" className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-600" onClick={() => setDetailOpen(false)}>Đóng</button>
             </div>

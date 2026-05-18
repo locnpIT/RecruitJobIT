@@ -4,6 +4,10 @@ import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Entity ánh xạ dữ liệu cho KetQuaPhuHopViecLam.
+ * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
+ */
 @Entity
 @Table(name = "KetQuaPhuHopViecLam")
 @Data

@@ -4,6 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
+/**
+ * Mô hình phản hồi API cho SuccessResponse.
+ * Giữ dữ liệu trả về ổn định để frontend tiêu thụ dễ dàng.
+ */
 @Getter
 @Setter
 public class SuccessResponse<T> {

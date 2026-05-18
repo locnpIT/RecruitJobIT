@@ -19,6 +19,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+/**
+ * Service duyệt minh chứng hồ sơ ứng viên (học vấn, chứng chỉ) cho admin.
+ *
+ * <p>Thiết kế hiện tại bám schema có sẵn:
+ * chỉ dùng trường `trangThai` để APPROVED/REJECTED, không lưu lý do từ chối.</p>
+ */
 public class AdminCandidateProofService {
 
     private static final String TYPE_EDUCATION = "EDUCATION";
@@ -30,6 +36,9 @@ public class AdminCandidateProofService {
     private final HocVanUngVienRepository hocVanUngVienRepository;
     private final ChungChiUngVienRepository chungChiUngVienRepository;
 
+    /**
+     * Lấy danh sách minh chứng theo trạng thái để render bảng duyệt cho admin.
+     */
     public List<AdminCandidateProofResponse> listProofs(String status) {
         String normalizedStatus = StringUtils.hasText(status) ? status.trim().toUpperCase(Locale.ROOT) : STATUS_PENDING;
         List<AdminCandidateProofResponse> result = new ArrayList<>();
@@ -58,6 +67,9 @@ public class AdminCandidateProofService {
         return updateStatus(type, proofId, STATUS_REJECTED);
     }
 
+    /**
+     * Cập nhật trạng thái duyệt cho một minh chứng theo loại (EDUCATION/CERTIFICATE).
+     */
     private AdminCandidateProofResponse updateStatus(String type, Long proofId, String status) {
         String normalizedType = normalizeType(type);
         Integer id = toInt(proofId);

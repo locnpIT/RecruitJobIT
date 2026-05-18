@@ -145,7 +145,7 @@ export default function JobDetailPage() {
       .getApplicationStatus(job.id)
       .then((data) => {
         if (isMounted) {
-          setHasApplied(Boolean(data.applied));
+          setHasApplied(Boolean(data.daUngTuyen));
         }
       })
       .catch(() => {
@@ -227,7 +227,7 @@ export default function JobDetailPage() {
       setApplyError("Vui lòng chọn hồ sơ ứng viên.");
       return;
     }
-    if (job.batBuocCv && !cvFile) {
+    if (job.batBuocCV && !cvFile) {
       setApplyError("Tin này bắt buộc nộp file CV.");
       return;
     }
@@ -236,7 +236,7 @@ export default function JobDetailPage() {
     setApplyError("");
     try {
       let cvUrl: string | undefined;
-      if (job.batBuocCv && cvFile) {
+      if (job.batBuocCV && cvFile) {
         const signature = await authService.getCloudinarySignature("proof");
         cvUrl = await authService.uploadToCloudinary(cvFile, signature);
       }
@@ -258,7 +258,7 @@ export default function JobDetailPage() {
 
   // Mở chat từ trang job detail:
   // - tạo hoặc lấy conversation nếu chưa có
-  // - điều hướng sang inbox candidate với deep-link conversationId.
+  // - điều hướng sang inbox candidate với deep-link cuocTroChuyenId.
   const handleOpenChat = async () => {
     if (!job?.id) {
       return;
@@ -272,7 +272,7 @@ export default function JobDetailPage() {
     setChatOpenError("");
     try {
       const conversation = await chatService.openByJob(job.id);
-      window.location.assign(`/messages?conversationId=${conversation.id}`);
+      window.location.assign(`/messages?cuocTroChuyenId=${conversation.id}`);
     } catch {
       setChatOpenError("Không thể mở cuộc trò chuyện với nhà tuyển dụng.");
     } finally {

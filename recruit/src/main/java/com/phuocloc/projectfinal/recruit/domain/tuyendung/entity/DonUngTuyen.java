@@ -7,6 +7,10 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+/**
+ * Entity ánh xạ dữ liệu cho DonUngTuyen.
+ * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
+ */
 @Entity
 @Table(name = "DonUngTuyen")
 @Data

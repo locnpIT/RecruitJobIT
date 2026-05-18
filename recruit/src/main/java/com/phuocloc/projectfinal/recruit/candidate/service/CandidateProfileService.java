@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.candidate.service;
 
+import com.phuocloc.projectfinal.recruit.ai.service.CandidateProfileEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateKyNangUngVienRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateNganhNgheUngVienRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.CreateCandidateProfileRequest;
@@ -46,7 +47,9 @@ import org.springframework.web.server.ResponseStatusException;
  *
  * <p>Service này triển khai toàn bộ CRUD cho hồ sơ ứng viên và các thành phần con
  * (học vấn, chứng chỉ, kỹ năng), đồng thời đảm bảo ownership thông qua
- * {@link CandidateProfileAccessService}.</p>
+ * {@link CandidateProfileAccessService}.
+ * Sau mỗi thao tác mutate, service cũng trigger đồng bộ chỉ mục nhúng hồ sơ
+ * để semantic search luôn bám sát dữ liệu profile mới nhất.</p>
  */
 public class CandidateProfileService {
 
@@ -64,6 +67,7 @@ public class CandidateProfileService {
     private final NganhNgheUngVienRepository nganhNgheUngVienRepository;
     private final NganhNgheRepository nganhNgheRepository;
     private final LoaiChungChiRepository loaiChungChiRepository;
+    private final CandidateProfileEmbeddingIndexService chiMucNhungHoSoUngVienService;
 
     @Transactional(readOnly = true)
     public CandidateProfileResponse getProfile(Long userId) {
@@ -77,7 +81,7 @@ public class CandidateProfileService {
         return accessService.listProfiles(userId).stream()
                 .map(profile -> CandidateProfileListItemResponse.builder()
                         .id(profile.getId() == null ? null : profile.getId().longValue())
-                        .title(buildProfileTitle(profile))
+                        .tieuDe(buildProfileTitle(profile))
                         .mucTieuNgheNghiep(profile.getMucTieuNgheNghiep())
                         .gioiThieuBanThan(profile.getGioiThieuBanThan())
                         .ngayCapNhat(profile.getNgayCapNhat())
@@ -93,10 +97,11 @@ public class CandidateProfileService {
         profile.setGioiThieuBanThan(accessService.trimToNull(request == null ? null : request.getGioiThieuBanThan()));
         profile.setMucTieuNgheNghiep(accessService.trimToNull(request == null ? null : request.getMucTieuNgheNghiep()));
         profile = candidateProfileRepository.save(profile);
+        dongBoChiMucHoSo(profile);
 
         return CandidateProfileListItemResponse.builder()
                 .id(profile.getId() == null ? null : profile.getId().longValue())
-                .title(buildProfileTitle(profile))
+                .tieuDe(buildProfileTitle(profile))
                 .mucTieuNgheNghiep(profile.getMucTieuNgheNghiep())
                 .gioiThieuBanThan(profile.getGioiThieuBanThan())
                 .ngayCapNhat(profile.getNgayCapNhat())
@@ -123,7 +128,9 @@ public class CandidateProfileService {
         HoSoUngVien profile = accessService.requireProfile(userId);
         HocVanUngVien entity = new HocVanUngVien();
         applyHocVan(entity, profile, request);
-        return candidateProfileMapper.mapHocVan(hocVanUngVienRepository.save(entity));
+        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapHocVan(saved);
     }
 
     @Transactional
@@ -131,7 +138,9 @@ public class CandidateProfileService {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
         HocVanUngVien entity = new HocVanUngVien();
         applyHocVan(entity, profile, request);
-        return candidateProfileMapper.mapHocVan(hocVanUngVienRepository.save(entity));
+        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapHocVan(saved);
     }
 
     @Transactional
@@ -141,7 +150,9 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         applyHocVan(entity, profile, request);
-        return candidateProfileMapper.mapHocVan(hocVanUngVienRepository.save(entity));
+        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapHocVan(saved);
     }
 
     @Transactional
@@ -151,7 +162,9 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         applyHocVan(entity, profile, request);
-        return candidateProfileMapper.mapHocVan(hocVanUngVienRepository.save(entity));
+        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapHocVan(saved);
     }
 
     @Transactional
@@ -161,6 +174,7 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         hocVanUngVienRepository.delete(entity);
+        dongBoChiMucHoSo(profile);
     }
 
     @Transactional
@@ -170,6 +184,7 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         hocVanUngVienRepository.delete(entity);
+        dongBoChiMucHoSo(profile);
     }
 
     @Transactional
@@ -177,7 +192,9 @@ public class CandidateProfileService {
         HoSoUngVien profile = accessService.requireProfile(userId);
         KinhNghiemLamViecUngVien entity = new KinhNghiemLamViecUngVien();
         applyKinhNghiem(entity, profile, request);
-        return candidateProfileMapper.mapKinhNghiem(kinhNghiemLamViecUngVienRepository.save(entity));
+        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapKinhNghiem(saved);
     }
 
     @Transactional
@@ -185,7 +202,9 @@ public class CandidateProfileService {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
         KinhNghiemLamViecUngVien entity = new KinhNghiemLamViecUngVien();
         applyKinhNghiem(entity, profile, request);
-        return candidateProfileMapper.mapKinhNghiem(kinhNghiemLamViecUngVienRepository.save(entity));
+        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapKinhNghiem(saved);
     }
 
     @Transactional
@@ -195,7 +214,9 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         applyKinhNghiem(entity, profile, request);
-        return candidateProfileMapper.mapKinhNghiem(kinhNghiemLamViecUngVienRepository.save(entity));
+        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapKinhNghiem(saved);
     }
 
     @Transactional
@@ -205,7 +226,9 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         applyKinhNghiem(entity, profile, request);
-        return candidateProfileMapper.mapKinhNghiem(kinhNghiemLamViecUngVienRepository.save(entity));
+        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapKinhNghiem(saved);
     }
 
     @Transactional
@@ -215,6 +238,7 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         kinhNghiemLamViecUngVienRepository.delete(entity);
+        dongBoChiMucHoSo(profile);
     }
 
     @Transactional
@@ -224,6 +248,7 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         kinhNghiemLamViecUngVienRepository.delete(entity);
+        dongBoChiMucHoSo(profile);
     }
 
     @Transactional
@@ -231,7 +256,9 @@ public class CandidateProfileService {
         HoSoUngVien profile = accessService.requireProfile(userId);
         ChungChiUngVien entity = new ChungChiUngVien();
         applyChungChi(entity, profile, request);
-        return candidateProfileMapper.mapChungChi(chungChiUngVienRepository.save(entity));
+        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapChungChi(saved);
     }
 
     @Transactional
@@ -239,7 +266,9 @@ public class CandidateProfileService {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
         ChungChiUngVien entity = new ChungChiUngVien();
         applyChungChi(entity, profile, request);
-        return candidateProfileMapper.mapChungChi(chungChiUngVienRepository.save(entity));
+        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapChungChi(saved);
     }
 
     @Transactional
@@ -249,7 +278,9 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         applyChungChi(entity, profile, request);
-        return candidateProfileMapper.mapChungChi(chungChiUngVienRepository.save(entity));
+        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapChungChi(saved);
     }
 
     @Transactional
@@ -259,7 +290,9 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         applyChungChi(entity, profile, request);
-        return candidateProfileMapper.mapChungChi(chungChiUngVienRepository.save(entity));
+        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
+        dongBoChiMucHoSo(profile);
+        return candidateProfileMapper.mapChungChi(saved);
     }
 
     @Transactional
@@ -269,6 +302,7 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         chungChiUngVienRepository.delete(entity);
+        dongBoChiMucHoSo(profile);
     }
 
     @Transactional
@@ -278,6 +312,7 @@ public class CandidateProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
         accessService.ensureOwner(profile, entity.getHoSoUngVien());
         chungChiUngVienRepository.delete(entity);
+        dongBoChiMucHoSo(profile);
     }
 
     @Transactional
@@ -302,6 +337,7 @@ public class CandidateProfileService {
             newLinks.add(link);
         }
         kyNangUngVienRepository.saveAll(newLinks);
+        dongBoChiMucHoSo(profile);
         return newLinks.stream().map(link -> candidateProfileMapper.mapKyNang(link.getKyNang())).toList();
     }
 
@@ -328,6 +364,7 @@ public class CandidateProfileService {
         HoSoUngVien profile = accessService.requireProfile(userId);
         profile.setGioiThieuBanThan(accessService.trimToNull(request == null ? null : request.getGioiThieuBanThan()));
         profile.setMucTieuNgheNghiep(accessService.trimToNull(request == null ? null : request.getMucTieuNgheNghiep()));
+        dongBoChiMucHoSo(profile);
         return mapProfile(profile);
     }
 
@@ -336,6 +373,7 @@ public class CandidateProfileService {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
         profile.setGioiThieuBanThan(accessService.trimToNull(request == null ? null : request.getGioiThieuBanThan()));
         profile.setMucTieuNgheNghiep(accessService.trimToNull(request == null ? null : request.getMucTieuNgheNghiep()));
+        dongBoChiMucHoSo(profile);
         return mapProfile(profile);
     }
 
@@ -359,6 +397,7 @@ public class CandidateProfileService {
             newLinks.add(link);
         }
         kyNangUngVienRepository.saveAll(newLinks);
+        dongBoChiMucHoSo(profile);
         return newLinks.stream().map(link -> candidateProfileMapper.mapKyNang(link.getKyNang())).toList();
     }
 
@@ -382,6 +421,7 @@ public class CandidateProfileService {
             newLinks.add(link);
         }
         nganhNgheUngVienRepository.saveAll(newLinks);
+        dongBoChiMucHoSo(profile);
         return newLinks.stream().map(link -> candidateProfileMapper.mapNganhNghe(link.getNganhNghe())).toList();
     }
 
@@ -461,6 +501,16 @@ public class CandidateProfileService {
                 .kyNangs(kyNangs)
                 .nganhNghes(nganhNghes)
                 .build();
+    }
+
+    /**
+     * Hook đồng bộ semantic index cho hồ sơ ứng viên.
+     *
+     * <p>Giữ thành helper riêng để mọi điểm mutate gọi cùng một chỗ,
+     * tránh bỏ sót luồng update chỉ mục khi mở rộng tính năng sau này.</p>
+     */
+    private void dongBoChiMucHoSo(HoSoUngVien profile) {
+        chiMucNhungHoSoUngVienService.dongBoChiMuc(profile);
     }
 
     

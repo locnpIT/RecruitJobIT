@@ -110,7 +110,6 @@ export function AdminDashboardClient() {
     { label: "Duyệt công ty", href: "/admin/companies", hint: "Xử lý doanh nghiệp đang chờ duyệt" },
     { label: "Duyệt tin tuyển dụng", href: "/admin/jobs", hint: "Rà soát tin mới được gửi" },
     { label: "Người dùng bị khóa", href: "/admin/users?status=INACTIVE", hint: "Kiểm tra và mở khóa tài khoản" },
-    { label: "Báo cáo hệ thống", href: "/admin/reports", hint: "Theo dõi chỉ số vận hành" },
   ];
 
   return (

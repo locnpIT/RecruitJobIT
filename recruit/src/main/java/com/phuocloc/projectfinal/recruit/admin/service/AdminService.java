@@ -3,9 +3,11 @@ package com.phuocloc.projectfinal.recruit.admin.service;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.CreatePackageRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewCompanyRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewJobRequest;
+import com.phuocloc.projectfinal.recruit.admin.dto.request.UpsertCatalogItemRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdatePackageRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdateAdminSettingsRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdateUserStatusRequest;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCatalogItemResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCompanyDetailResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCompanyResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCandidateProofResponse;
@@ -44,6 +46,7 @@ public class AdminService {
     private final AdminReportService adminReportService;
     private final AdminSettingsService adminSettingsService;
     private final AdminCandidateProofService adminCandidateProofService;
+    private final AdminCatalogService adminCatalogService;
 
     @Transactional(readOnly = true)
     public AdminDashboardStatsResponse getStats() {
@@ -172,5 +175,85 @@ public class AdminService {
     @Transactional
     public AdminSettingsResponse updateSettings(UpdateAdminSettingsRequest request) {
         return adminSettingsService.updateSettings(request);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminCatalogItemResponse> listSystemRoles() {
+        return adminCatalogService.listSystemRoles();
+    }
+
+    @Transactional
+    public AdminCatalogItemResponse createSystemRole(UpsertCatalogItemRequest request) {
+        return adminCatalogService.createSystemRole(request);
+    }
+
+    @Transactional
+    public AdminCatalogItemResponse updateSystemRole(Long id, UpsertCatalogItemRequest request) {
+        return adminCatalogService.updateSystemRole(id, request);
+    }
+
+    @Transactional
+    public void deleteSystemRole(Long id) {
+        adminCatalogService.deleteSystemRole(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminCatalogItemResponse> listCompanyRoles() {
+        return adminCatalogService.listCompanyRoles();
+    }
+
+    @Transactional
+    public AdminCatalogItemResponse createCompanyRole(UpsertCatalogItemRequest request) {
+        return adminCatalogService.createCompanyRole(request);
+    }
+
+    @Transactional
+    public AdminCatalogItemResponse updateCompanyRole(Long id, UpsertCatalogItemRequest request) {
+        return adminCatalogService.updateCompanyRole(id, request);
+    }
+
+    @Transactional
+    public void deleteCompanyRole(Long id) {
+        adminCatalogService.deleteCompanyRole(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminCatalogItemResponse> listProofTypes() {
+        return adminCatalogService.listProofTypes();
+    }
+
+    @Transactional
+    public AdminCatalogItemResponse createProofType(UpsertCatalogItemRequest request) {
+        return adminCatalogService.createProofType(request);
+    }
+
+    @Transactional
+    public AdminCatalogItemResponse updateProofType(Long id, UpsertCatalogItemRequest request) {
+        return adminCatalogService.updateProofType(id, request);
+    }
+
+    @Transactional
+    public void deleteProofType(Long id) {
+        adminCatalogService.deleteProofType(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminCatalogItemResponse> listCertificateTypes() {
+        return adminCatalogService.listCertificateTypes();
+    }
+
+    @Transactional
+    public AdminCatalogItemResponse createCertificateType(UpsertCatalogItemRequest request) {
+        return adminCatalogService.createCertificateType(request);
+    }
+
+    @Transactional
+    public AdminCatalogItemResponse updateCertificateType(Long id, UpsertCatalogItemRequest request) {
+        return adminCatalogService.updateCertificateType(id, request);
+    }
+
+    @Transactional
+    public void deleteCertificateType(Long id) {
+        adminCatalogService.deleteCertificateType(id);
     }
 }

@@ -43,12 +43,12 @@ type JobFormModalProps = {
   kyNangOptions: CompanyJobMetadataOption[];
   selectedKyNangIds: number[];
   onKyNangIdsChange: (nextIds: number[]) => void;
-  batBuocCv?: boolean;
+  batBuocCV?: boolean;
   mauCvUrlValue?: string;
   isUploadingCvTemplate: boolean;
   cvTemplateFileName: string | null;
   onUploadCvTemplate: (file: File | null) => void;
-  batBuocCvField: UseFormRegisterReturn;
+  batBuocCVField: UseFormRegisterReturn;
   isSubmitting: boolean;
 };
 
@@ -68,12 +68,12 @@ export function JobFormModal({
   kyNangOptions,
   selectedKyNangIds,
   onKyNangIdsChange,
-  batBuocCv,
+  batBuocCV,
   mauCvUrlValue,
   isUploadingCvTemplate,
   cvTemplateFileName,
   onUploadCvTemplate,
-  batBuocCvField,
+  batBuocCVField,
   isSubmitting,
 }: JobFormModalProps) {
   if (!open) return null;
@@ -168,11 +168,11 @@ export function JobFormModal({
           <Field label="Hạn nộp" inputProps={register("denHanLuc")} type="datetime-local" />
 
           <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input type="checkbox" {...batBuocCvField} />
+            <input type="checkbox" {...batBuocCVField} />
             Bắt buộc đính kèm CV
           </label>
 
-          {batBuocCv ? (
+          {batBuocCV ? (
             <div className="space-y-2 rounded-md border border-slate-200 p-3">
               <p className="text-sm font-medium text-slate-800">Mẫu CV bắt buộc</p>
               <input

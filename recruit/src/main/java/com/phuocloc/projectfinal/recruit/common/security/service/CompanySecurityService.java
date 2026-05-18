@@ -6,6 +6,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service("companySecurityService")
+/**
+ * Helper phân quyền ở tầng Spring Security expression.
+ *
+ * <p>Service này thường được gọi từ `@PreAuthorize` để kiểm tra
+ * vai trò công ty theo chi nhánh ngay trong controller layer.</p>
+ */
 public class CompanySecurityService {
 
     /**
@@ -21,8 +27,8 @@ public class CompanySecurityService {
         AppUserPrinciple principal = (AppUserPrinciple) authentication.getPrincipal();
 
         return principal.getCompanyMembers().stream()
-                .filter(m -> branchId == null || m.getBranchId().equals(branchId))
-                .anyMatch(m -> isAuthorized(m.getCompanyRole(), requiredRole));
+                .filter(m -> branchId == null || m.getChiNhanhId().equals(branchId))
+                .anyMatch(m -> isAuthorized(m.getVaiTroCongTy(), requiredRole));
     }
 
     private boolean isAuthorized(String userRole, String requiredRole) {

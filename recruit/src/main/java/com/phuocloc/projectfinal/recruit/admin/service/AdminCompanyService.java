@@ -101,8 +101,8 @@ public class AdminCompanyService {
                 .toList();
 
         return AdminCompanyDetailResponse.builder()
-                .company(mapCompany(company))
-                .owner(AdminCompanyDetailResponse.Owner.builder()
+                .congTy(mapCompany(company))
+                .chuCongTy(AdminCompanyDetailResponse.Owner.builder()
                         .id(company.getChuCongTy() == null || company.getChuCongTy().getId() == null
                                 ? null
                                 : company.getChuCongTy().getId().longValue())
@@ -113,7 +113,7 @@ public class AdminCompanyService {
                         .soDienThoai(company.getChuCongTy() == null ? null : company.getChuCongTy().getSoDienThoai())
                         .dangHoatDong(company.getChuCongTy() != null && Boolean.TRUE.equals(company.getChuCongTy().getDangHoatDong()))
                         .build())
-                .branches(branches.stream()
+                .chiNhanhs(branches.stream()
                         .map(branch -> AdminCompanyDetailResponse.Branch.builder()
                                 .id(branch.getId() == null ? null : branch.getId().longValue())
                                 .ten(branch.getTen())
@@ -125,7 +125,7 @@ public class AdminCompanyService {
                                 .ngayTao(branch.getNgayTao())
                                 .build())
                         .toList())
-                .proofDocuments(documents.stream()
+                .taiLieuMinhChungs(documents.stream()
                         .map(document -> AdminCompanyDetailResponse.ProofDocument.builder()
                                 .id(document.getId() == null ? null : document.getId().longValue())
                                 .tenTep(document.getTenTep())

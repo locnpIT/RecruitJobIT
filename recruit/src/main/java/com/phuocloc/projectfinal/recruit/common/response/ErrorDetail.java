@@ -8,6 +8,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Mô hình phản hồi API cho ErrorDetail.
+ * Giữ dữ liệu trả về ổn định để frontend tiêu thụ dễ dàng.
+ */
 @Getter
 @Setter
 @Builder

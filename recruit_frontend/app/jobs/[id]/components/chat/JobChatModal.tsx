@@ -45,7 +45,7 @@ export function JobChatModal({
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Chat tuyển dụng</p>
               <h2 className="mt-1 text-lg font-semibold text-slate-950">
-                {conversation?.nhaTuyenDungDisplayName ?? "Nhà tuyển dụng"}
+                {conversation?.nhaTuyenDungHienThiTen ?? "Nhà tuyển dụng"}
               </h2>
             </div>
           </div>

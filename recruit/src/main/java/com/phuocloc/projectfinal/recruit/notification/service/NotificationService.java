@@ -42,12 +42,12 @@ public class NotificationService {
 
         Page<ThongBao> notificationPage = thongBaoRepository.findByNguoiDung_IdAndNgayXoaIsNullOrderByNgayTaoDesc(safeUserId, pageable);
         return NotificationListResponse.builder()
-                .items(notificationPage.getContent().stream().map(this::mapItem).toList())
-                .page(notificationPage.getNumber())
-                .size(notificationPage.getSize())
-                .totalElements(notificationPage.getTotalElements())
-                .totalPages(notificationPage.getTotalPages())
-                .hasNext(notificationPage.hasNext())
+                .danhSach(notificationPage.getContent().stream().map(this::mapItem).toList())
+                .trang(notificationPage.getNumber())
+                .kichThuoc(notificationPage.getSize())
+                .tongPhanTu(notificationPage.getTotalElements())
+                .tongSoTrang(notificationPage.getTotalPages())
+                .conTrangSau(notificationPage.hasNext())
                 .build();
     }
 

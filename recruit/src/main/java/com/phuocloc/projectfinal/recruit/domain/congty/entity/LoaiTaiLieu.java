@@ -3,6 +3,10 @@ package com.phuocloc.projectfinal.recruit.domain.congty.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Entity ánh xạ dữ liệu cho LoaiTaiLieu.
+ * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
+ */
 @Entity
 @Table(name = "LoaiTaiLieu")
 @Data

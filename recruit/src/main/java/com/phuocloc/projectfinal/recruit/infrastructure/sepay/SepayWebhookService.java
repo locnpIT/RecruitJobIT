@@ -17,6 +17,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+/**
+ * Xử lý webhook thanh toán từ SePay cho luồng kích hoạt gói công ty.
+ *
+ * <p>Service này đảm nhiệm:
+ * xác thực secret webhook, resolve đăng ký gói từ nội dung chuyển khoản,
+ * kiểm tra số tiền và kích hoạt thời hạn gói theo dữ liệu package hiện có.</p>
+ */
 public class SepayWebhookService {
 
     private static final Pattern DIGITS_PATTERN = Pattern.compile("(\\d+)");
@@ -25,6 +32,9 @@ public class SepayWebhookService {
     private final SepayProperties sepayProperties;
     private final NotificationService notificationService;
 
+    /**
+     * Xác thực secret nhận từ header trước khi cho phép xử lý payload webhook.
+     */
     public void verifyWebhookSecret(String providedSecret, String authorizationHeader) {
         String expectedSecret = trimToNull(sepayProperties.getWebhookSecretKey());
         if (!StringUtils.hasText(expectedSecret)) {
@@ -56,6 +66,12 @@ public class SepayWebhookService {
         return null;
     }
 
+    /**
+     * Xử lý một webhook "tiền vào":
+     * - tìm đăng ký gói tương ứng
+     * - validate amount
+     * - chuyển trạng thái sang PAID/ACTIVE và tính thời hạn hiệu lực.
+     */
     @Transactional
     public DangKyGoiCongTy handleWebhook(SepayWebhookRequest request) {
         if (request == null) {

@@ -2,6 +2,7 @@ package com.phuocloc.projectfinal.recruit.domain.tuyendung.repository;
 
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +11,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+/**
+ * Repository truy cập dữ liệu cho TinTuyenDungRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Integer> {
 
     @Query("SELECT t FROM TinTuyenDung t WHERE t.chiNhanh.id = :chiNhanhId AND t.ngayXoa IS NULL ORDER BY t.ngayTao desc")
@@ -55,6 +60,24 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
               AND UPPER(ct.trangThai) = 'APPROVED'
             """)
     Optional<TinTuyenDung> findPublicApprovedActiveJobById(Integer id, LocalDateTime now);
+
+    @Query("""
+            SELECT t FROM TinTuyenDung t
+            LEFT JOIN FETCH t.chiNhanh cn
+            LEFT JOIN FETCH cn.congTy ct
+            LEFT JOIN FETCH cn.xaPhuong xp
+            LEFT JOIN FETCH xp.tinhThanh tt
+            LEFT JOIN FETCH t.nganhNghe nn
+            LEFT JOIN FETCH t.loaiHinhLamViec lh
+            LEFT JOIN FETCH t.capDoKinhNghiem cd
+            WHERE t.id IN :ids
+              AND t.ngayXoa IS NULL
+              AND UPPER(t.trangThai) = 'APPROVED'
+              AND (t.denHanLuc IS NULL OR t.denHanLuc >= :now)
+              AND ct.ngayXoa IS NULL
+              AND UPPER(ct.trangThai) = 'APPROVED'
+            """)
+    List<TinTuyenDung> findPublicApprovedActiveJobsByIds(Collection<Integer> ids, LocalDateTime now);
 
     @Query("""
             SELECT ct.id AS companyId,

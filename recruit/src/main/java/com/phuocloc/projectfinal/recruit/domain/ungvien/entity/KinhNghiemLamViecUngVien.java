@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 
+/**
+ * Entity ánh xạ dữ liệu cho KinhNghiemLamViecUngVien.
+ * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
+ */
 @Entity
 @Table(name = "KinhNghiemLamViecUngVien")
 @Data

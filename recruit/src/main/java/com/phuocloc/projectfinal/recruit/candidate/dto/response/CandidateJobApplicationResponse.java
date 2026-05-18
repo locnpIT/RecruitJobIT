@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * DTO trả dữ liệu từ server cho API CandidateJobApplicationResponse.
+ * Giữ response rõ ràng để frontend dễ hiển thị và bảo trì.
+ */
 @Getter
 @Builder
 public class CandidateJobApplicationResponse {
@@ -14,7 +18,7 @@ public class CandidateJobApplicationResponse {
     private Long hoSoUngVienId;
     private String trangThai;
     private String cvUrl;
-    private Boolean batBuocCv;
+    private Boolean batBuocCV;
     private String mauCvUrl;
     private LocalDateTime ngayTao;
 }

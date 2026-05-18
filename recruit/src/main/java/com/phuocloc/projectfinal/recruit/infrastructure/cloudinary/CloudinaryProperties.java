@@ -5,6 +5,10 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+/**
+ * Thành phần lõi CloudinaryProperties của hệ thống tuyển dụng.
+ * Giữ vai trò hạ tầng/miền dùng chung giữa các module.
+ */
 @Getter
 @Setter
 @Component

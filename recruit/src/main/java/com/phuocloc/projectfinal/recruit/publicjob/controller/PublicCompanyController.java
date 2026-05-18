@@ -23,13 +23,11 @@ public class PublicCompanyController {
 
     @GetMapping("/top")
     public ResponseEntity<SuccessResponse<List<PublicTopCompanyResponse>>> listTopCompanies(
-            @RequestParam(required = false) Integer gioiHan,
-            @RequestParam(required = false) Integer limit
+            @RequestParam(required = false) Integer gioiHan
     ) {
-        Integer safeGioiHan = gioiHan != null ? gioiHan : limit;
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Lấy danh sách công ty nổi bật thành công",
-                publicCompanyService.listTopCompanies(safeGioiHan)
+                publicCompanyService.listTopCompanies(gioiHan)
         ));
     }
 }

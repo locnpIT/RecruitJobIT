@@ -56,6 +56,23 @@ app:
     checkout-error-url: ${APP_SEPAY_CHECKOUT_ERROR_URL:}
     checkout-cancel-url: ${APP_SEPAY_CHECKOUT_CANCEL_URL:}
     checkout-payment-method: ${APP_SEPAY_CHECKOUT_PAYMENT_METHOD:}
+  qdrant:
+    enabled: ${APP_QDRANT_ENABLED:false}
+    url: ${APP_QDRANT_URL:http://localhost:6333}
+    api-key: ${APP_QDRANT_API_KEY:}
+    timeout-millis: ${APP_QDRANT_TIMEOUT_MILLIS:5000}
+    vector-size: ${APP_QDRANT_VECTOR_SIZE:256}
+    kho-ho-so-ung-vien: ${APP_QDRANT_KHO_HO_SO_UNG_VIEN:chi_muc_nhung_ho_so_ung_vien}
+    kho-don-ung-tuyen: ${APP_QDRANT_KHO_DON_UNG_TUYEN:chi_muc_nhung_don_ung_tuyen}
+    kho-tin-tuyen-dung: ${APP_QDRANT_KHO_TIN_TUYEN_DUNG:chi_muc_nhung_tin_tuyen_dung}
+  elasticsearch:
+    enabled: ${APP_ELASTICSEARCH_ENABLED:false}
+    url: ${APP_ELASTICSEARCH_URL:http://localhost:9200}
+    api-key: ${APP_ELASTICSEARCH_API_KEY:}
+    username: ${APP_ELASTICSEARCH_USERNAME:}
+    password: ${APP_ELASTICSEARCH_PASSWORD:}
+    timeout-millis: ${APP_ELASTICSEARCH_TIMEOUT_MILLIS:5000}
+    job-index: ${APP_ELASTICSEARCH_JOB_INDEX:public_job_search}
 
 server:
   port: 8080

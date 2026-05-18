@@ -9,6 +9,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Repository truy cập dữ liệu cho ThongBaoRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface ThongBaoRepository extends JpaRepository<ThongBao, Integer> {
 
     Page<ThongBao> findByNguoiDung_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer nguoiDungId, Pageable pageable);

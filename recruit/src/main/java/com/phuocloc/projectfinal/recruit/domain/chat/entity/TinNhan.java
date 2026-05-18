@@ -6,6 +6,10 @@ import java.time.LocalDateTime;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
+/**
+ * Entity ánh xạ dữ liệu cho TinNhan.
+ * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
+ */
 @Entity
 @Table(name = "TinNhan")
 @Data

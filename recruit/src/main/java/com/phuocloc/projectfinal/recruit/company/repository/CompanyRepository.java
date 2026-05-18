@@ -7,6 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
+/**
+ * Repository truy cập dữ liệu cho CompanyRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface CompanyRepository extends JpaRepository<CongTy, Integer>, JpaSpecificationExecutor<CongTy> {
 
     Optional<CongTy> findByMaSoThue(String maSoThue);

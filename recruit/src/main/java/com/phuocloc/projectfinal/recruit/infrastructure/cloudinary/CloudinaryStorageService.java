@@ -14,15 +14,28 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+/**
+ * Service trung gian làm việc với Cloudinary.
+ *
+ * <p>Gồm 2 nhóm nghiệp vụ:
+ * cấp chữ ký upload an toàn cho frontend và upload file proof trực tiếp từ backend
+ * cho các luồng cần server-side upload.</p>
+ */
 public class CloudinaryStorageService {
 
     private final Cloudinary cloudinary;
     private final CloudinaryProperties properties;
 
+    /**
+     * Mặc định tạo chữ ký cho mục đích upload minh chứng (`proof`).
+     */
     public Map<String, Object> generateSignature() {
         return generateSignature("proof");
     }
 
+    /**
+     * Tạo chữ ký Cloudinary theo purpose (`proof` hoặc `logo`) để frontend upload trực tiếp.
+     */
     public Map<String, Object> generateSignature(String purpose) {
         long timestamp = System.currentTimeMillis() / 1000;
         Map<String, Object> params = new java.util.HashMap<>();
@@ -44,6 +57,9 @@ public class CloudinaryStorageService {
         }
     }
 
+    /**
+     * Upload file minh chứng từ backend lên Cloudinary và trả về `secure_url`.
+     */
     public String uploadProof(MultipartFile file) {
         try {
             Map<?, ?> result = cloudinary.uploader().upload(

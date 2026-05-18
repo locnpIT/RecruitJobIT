@@ -27,7 +27,7 @@ export function ProfileHero({
         >
           {profiles.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.title}
+              {item.tieuDe}
             </option>
           ))}
         </select>

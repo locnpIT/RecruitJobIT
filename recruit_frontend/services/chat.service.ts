@@ -3,11 +3,11 @@ import apiClient from "@/lib/api-client";
 export type ChatConversation = {
   id: number;
   ungVienId: number | null;
-  ungVienDisplayName: string | null;
-  ungVienAvatarUrl: string | null;
+  ungVienHienThiTen: string | null;
+  ungVienAnhDaiDienUrl: string | null;
   nhaTuyenDungId: number | null;
-  nhaTuyenDungDisplayName: string | null;
-  nhaTuyenDungAvatarUrl: string | null;
+  nhaTuyenDungHienThiTen: string | null;
+  nhaTuyenDungAnhDaiDienUrl: string | null;
   tinNhanGanNhat: string | null;
   tinNhanGanNhatLuc: string | null;
   soTinChuaDoc: number;
@@ -16,20 +16,20 @@ export type ChatConversation = {
 
 export type ChatMessage = {
   id: number;
-  conversationId: number;
-  senderId: number;
-  senderDisplayName: string | null;
+  cuocTroChuyenId: number;
+  nguoiGuiId: number;
+  nguoiGuiHienThiTen: string | null;
   noiDung: string;
   daDoc: boolean;
-  mine: boolean;
+  cuaToi: boolean;
   ngayTao: string | null;
 };
 
 export type ChatRealtimeEvent = {
-  type: "NEW_MESSAGE" | "MESSAGES_READ";
-  conversationId: number;
-  message?: ChatMessage | null;
-  readerId?: number | null;
+  loai: "NEW_MESSAGE" | "MESSAGES_READ";
+  cuocTroChuyenId: number;
+  tinNhan?: ChatMessage | null;
+  nguoiDocId?: number | null;
 };
 
 export type CreateChatMessagePayload = {
@@ -52,16 +52,16 @@ export const chatService = {
     return response.data.data as ChatConversation[];
   },
 
-  listMessages: async (conversationId: number | string): Promise<ChatMessage[]> => {
-    const response = await apiClient.get(`/chats/conversations/${conversationId}/messages`);
+  listMessages: async (cuocTroChuyenId: number | string): Promise<ChatMessage[]> => {
+    const response = await apiClient.get(`/chats/conversations/${cuocTroChuyenId}/messages`);
     return response.data.data as ChatMessage[];
   },
 
   sendMessage: async (
-    conversationId: number | string,
+    cuocTroChuyenId: number | string,
     payload: CreateChatMessagePayload
   ): Promise<ChatMessage> => {
-    const response = await apiClient.post(`/chats/conversations/${conversationId}/messages`, payload);
+    const response = await apiClient.post(`/chats/conversations/${cuocTroChuyenId}/messages`, payload);
     return response.data.data as ChatMessage;
   },
 };

@@ -6,6 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
 
+/**
+ * DTO trả dữ liệu từ server cho API CreateOwnerResponse.
+ * Giữ response rõ ràng để frontend dễ hiển thị và bảo trì.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

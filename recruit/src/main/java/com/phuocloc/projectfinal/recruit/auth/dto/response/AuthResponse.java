@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * DTO trả dữ liệu từ server cho API AuthResponse.
+ * Giữ response rõ ràng để frontend dễ hiển thị và bảo trì.
+ */
 @Getter
 @Setter
 public class AuthResponse {

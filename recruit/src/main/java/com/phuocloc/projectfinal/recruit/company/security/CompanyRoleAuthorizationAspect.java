@@ -18,6 +18,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Thành phần bảo mật phụ trách CompanyRoleAuthorizationAspect.
+ * Hỗ trợ xác thực/ủy quyền theo quy tắc của hệ thống.
+ */
 @Aspect
 @Component
 @RequiredArgsConstructor

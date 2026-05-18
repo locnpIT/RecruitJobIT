@@ -7,6 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Thành phần lõi CloudinaryConfig của hệ thống tuyển dụng.
+ * Giữ vai trò hạ tầng/miền dùng chung giữa các module.
+ */
 @Configuration
 @RequiredArgsConstructor
 public class CloudinaryConfig {

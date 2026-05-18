@@ -108,31 +108,31 @@ export default function CompanyAdminMessagesPage() {
       token,
       onEvent: (event: ChatRealtimeEvent) => {
         // Dù đang đứng room nào, preview danh sách conversation vẫn cần cập nhật message mới nhất.
-        if (event.type === "NEW_MESSAGE" && event.message) {
+        if (event.loai === "NEW_MESSAGE" && event.tinNhan) {
           setConversations((current) =>
             current.map((conversation) =>
-              conversation.id === event.conversationId
+              conversation.id === event.cuocTroChuyenId
                 ? {
                     ...conversation,
-                    tinNhanGanNhat: event.message?.noiDung ?? conversation.tinNhanGanNhat,
-                    tinNhanGanNhatLuc: event.message?.ngayTao ?? conversation.tinNhanGanNhatLuc,
+                    tinNhanGanNhat: event.tinNhan?.noiDung ?? conversation.tinNhanGanNhat,
+                    tinNhanGanNhatLuc: event.tinNhan?.ngayTao ?? conversation.tinNhanGanNhatLuc,
                   }
                 : conversation
             )
           );
         }
 
-        if (event.conversationId !== selectedConversation.id) {
+        if (event.cuocTroChuyenId !== selectedConversation.id) {
           return;
         }
         // Chỉ append vào thread hiện tại khi event thuộc đúng room đang mở.
-        if (event.type === "NEW_MESSAGE" && event.message) {
+        if (event.loai === "NEW_MESSAGE" && event.tinNhan) {
           setMessages((current) => {
-            const exists = current.some((item) => item.id === event.message?.id);
+            const exists = current.some((item) => item.id === event.tinNhan?.id);
             if (exists) {
               return current;
             }
-            return [...current, event.message];
+            return [...current, event.tinNhan];
           });
         }
       },

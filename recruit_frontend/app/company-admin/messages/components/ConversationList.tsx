@@ -11,8 +11,8 @@ type ConversationListProps = {
 function resolvePartnerName(conversation: ChatConversation, currentUserId: number | null) {
   const isCandidateView = currentUserId != null && currentUserId === conversation.ungVienId;
   return isCandidateView
-    ? conversation.nhaTuyenDungDisplayName || "Nhà tuyển dụng"
-    : conversation.ungVienDisplayName || "Ứng viên";
+    ? conversation.nhaTuyenDungHienThiTen || "Nhà tuyển dụng"
+    : conversation.ungVienHienThiTen || "Ứng viên";
 }
 
 // Danh sách hội thoại bên trái màn hình company-admin/messages.

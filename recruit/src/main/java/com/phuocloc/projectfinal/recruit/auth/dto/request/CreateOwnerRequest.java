@@ -15,6 +15,10 @@ import lombok.Setter;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * DTO nhận dữ liệu đầu vào từ client cho API CreateOwnerRequest.
+ * Chỉ chứa dữ liệu trao đổi, không chứa nghiệp vụ xử lý.
+ */
 @Getter
 @Setter
 public class CreateOwnerRequest {

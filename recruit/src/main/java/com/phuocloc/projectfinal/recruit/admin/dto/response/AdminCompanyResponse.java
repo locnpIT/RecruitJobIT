@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * DTO trả dữ liệu từ server cho API AdminCompanyResponse.
+ * Giữ response rõ ràng để frontend dễ hiển thị và bảo trì.
+ */
 @Data
 @Builder
 public class AdminCompanyResponse {

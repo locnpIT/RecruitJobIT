@@ -6,6 +6,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+/**
+ * Repository truy cập dữ liệu cho CuocTroChuyenRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface CuocTroChuyenRepository extends JpaRepository<CuocTroChuyen, Integer> {
 
     // Conversation là duy nhất theo cặp (ứng viên, nhà tuyển dụng) theo thiết kế DB hiện tại.

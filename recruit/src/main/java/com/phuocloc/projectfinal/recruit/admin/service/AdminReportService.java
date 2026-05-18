@@ -69,12 +69,12 @@ public class AdminReportService {
                             .mapToInt(a -> 1)
                             .sum();
                     return AdminReportResponse.TopCompany.builder()
-                            .name(entry.getKey())
-                            .jobs(jobCount)
-                            .applications(appCount)
+                            .ten(entry.getKey())
+                            .soTin(jobCount)
+                            .soDon(appCount)
                             .build();
                 })
-                .sorted((a, b) -> Integer.compare(b.getJobs(), a.getJobs()))
+                .sorted((a, b) -> Integer.compare(b.getSoTin(), a.getSoTin()))
                 .limit(5)
                 .toList();
 
@@ -83,7 +83,7 @@ public class AdminReportService {
         int pendingReviewTasks = (int) jobs.stream().filter(j -> "PENDING".equalsIgnoreCase(j.getTrangThai())).count();
 
         return AdminReportResponse.builder()
-                .metrics(List.of(
+                .chiSo(List.of(
                         metric("User mới", String.valueOf(newUsers), "Trong " + days + " ngày gần nhất"),
                         metric("Công ty mới", String.valueOf(newCompanies), "Trong " + days + " ngày gần nhất"),
                         metric("Tin tuyển dụng mới", String.valueOf(newJobs), "Trong " + days + " ngày gần nhất"),
@@ -91,19 +91,19 @@ public class AdminReportService {
                         metric("Tỷ lệ duyệt công ty", formatPercent(companyApproveRate), "Dựa trên dữ liệu hiện có"),
                         metric("Tỷ lệ duyệt tin", formatPercent(jobApproveRate), "Dựa trên dữ liệu hiện có")
                 ))
-                .trendData(trendData)
-                .topCompanies(topCompanies)
-                .systemStatus(AdminReportResponse.SystemStatus.builder()
-                        .apiUptime("99.90%")
-                        .averageLatency("190ms")
-                        .pendingReviewTasks(pendingReviewTasks)
-                        .openIncidents(0)
+                .duLieuXuHuong(trendData)
+                .topCongTy(topCompanies)
+                .trangThaiHeThong(AdminReportResponse.SystemStatus.builder()
+                        .tyLeOnDinhApi("99.90%")
+                        .doTreTrungBinh("190ms")
+                        .tacVuChoDuyet(pendingReviewTasks)
+                        .suCoDangMo(0)
                         .build())
                 .build();
     }
 
     private AdminReportResponse.Metric metric(String label, String value, String note) {
-        return AdminReportResponse.Metric.builder().label(label).value(value).note(note).build();
+        return AdminReportResponse.Metric.builder().label(label).value(value).ghiChu(note).build();
     }
 
     private int parseDays(String range) {

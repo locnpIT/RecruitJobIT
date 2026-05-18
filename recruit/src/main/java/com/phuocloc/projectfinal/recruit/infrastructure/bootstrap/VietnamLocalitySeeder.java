@@ -20,6 +20,10 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Seeder khởi tạo dữ liệu nền cho VietnamLocalitySeeder.
+ * Chạy khi khởi động để đảm bảo dữ liệu chuẩn ban đầu.
+ */
 @Component
 public class VietnamLocalitySeeder implements ApplicationRunner {
 

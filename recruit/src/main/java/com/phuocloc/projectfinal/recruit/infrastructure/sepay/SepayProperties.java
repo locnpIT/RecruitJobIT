@@ -5,6 +5,10 @@ import org.springframework.stereotype.Component;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Thành phần lõi SepayProperties của hệ thống tuyển dụng.
+ * Giữ vai trò hạ tầng/miền dùng chung giữa các module.
+ */
 @Getter
 @Setter
 @Component

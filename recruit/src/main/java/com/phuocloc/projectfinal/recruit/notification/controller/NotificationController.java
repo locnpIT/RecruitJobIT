@@ -33,11 +33,11 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<SuccessResponse<NotificationListResponse>> list(
             @AuthenticationPrincipal AppUserPrinciple principal,
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size
+            @RequestParam(required = false) Integer trang,
+            @RequestParam(required = false) Integer kichThuoc
     ) {
         requireAuthenticated(principal);
-        var data = notificationService.listMyNotifications(principal.getUserId(), page, size);
+        var data = notificationService.listMyNotifications(principal.getUserId(), trang, kichThuoc);
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách thông báo thành công", data));
     }
 

@@ -4,37 +4,41 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * DTO trả dữ liệu từ server cho API AdminReportResponse.
+ * Giữ response rõ ràng để frontend dễ hiển thị và bảo trì.
+ */
 @Getter
 @Builder
 public class AdminReportResponse {
 
-    private List<Metric> metrics;
-    private List<Integer> trendData;
-    private List<TopCompany> topCompanies;
-    private SystemStatus systemStatus;
+    private List<Metric> chiSo;
+    private List<Integer> duLieuXuHuong;
+    private List<TopCompany> topCongTy;
+    private SystemStatus trangThaiHeThong;
 
     @Getter
     @Builder
     public static class Metric {
         private String label;
         private String value;
-        private String note;
+        private String ghiChu;
     }
 
     @Getter
     @Builder
     public static class TopCompany {
-        private String name;
-        private int jobs;
-        private int applications;
+        private String ten;
+        private int soTin;
+        private int soDon;
     }
 
     @Getter
     @Builder
     public static class SystemStatus {
-        private String apiUptime;
-        private String averageLatency;
-        private int pendingReviewTasks;
-        private int openIncidents;
+        private String tyLeOnDinhApi;
+        private String doTreTrungBinh;
+        private int tacVuChoDuyet;
+        private int suCoDangMo;
     }
 }

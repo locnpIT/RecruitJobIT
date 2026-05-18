@@ -127,6 +127,13 @@
 			<optional>true</optional>
 		 </dependency>
 
+		<!-- dependency for extracting text from uploaded CV PDF files -->
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+
 
 	</dependencies>
 

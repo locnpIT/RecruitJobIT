@@ -8,6 +8,10 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Cấu hình ứng dụng cho thành phần JwtProperties.
+ * Tập trung các bean/thuộc tính để các module dùng thống nhất.
+ */
 @Setter
 @Getter
 @Component

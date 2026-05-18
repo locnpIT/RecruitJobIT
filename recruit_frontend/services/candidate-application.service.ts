@@ -7,15 +7,15 @@ export type CandidateJobApplication = {
   hoSoUngVienId: number;
   trangThai: string;
   cvUrl: string | null;
-  batBuocCv: boolean;
+  batBuocCV: boolean;
   mauCvUrl: string | null;
   ngayTao: string | null;
 };
 
 export type CandidateJobApplicationStatus = {
-  jobId: number;
-  applied: boolean;
-  application: CandidateJobApplication | null;
+  tinTuyenDungId: number;
+  daUngTuyen: boolean;
+  donUngTuyen: CandidateJobApplication | null;
 };
 
 export type CreateJobApplicationPayload = {

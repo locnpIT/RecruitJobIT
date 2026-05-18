@@ -6,6 +6,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+/**
+ * Repository truy cập dữ liệu cho TinNhanRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface TinNhanRepository extends JpaRepository<TinNhan, Integer> {
 
     // Lấy toàn bộ lịch sử tin theo thứ tự tăng dần để frontend render dạng timeline.

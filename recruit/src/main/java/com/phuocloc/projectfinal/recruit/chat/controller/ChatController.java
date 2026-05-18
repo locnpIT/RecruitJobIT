@@ -60,27 +60,27 @@ public class ChatController {
     // Lấy lịch sử tin nhắn của một room (đồng thời đánh dấu đã đọc phía đối phương).
     public ResponseEntity<SuccessResponse<List<ChatMessageResponse>>> listMessages(
             @AuthenticationPrincipal AppUserPrinciple principal,
-            @PathVariable Long conversationId
+            @PathVariable("conversationId") Long cuocTroChuyenId
     ) {
         requireAuthenticated(principal);
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Lấy danh sách tin nhắn thành công",
-                chatService.listMessages(principal.getUserId(), conversationId)
+                chatService.listMessages(principal.getUserId(), cuocTroChuyenId)
         ));
     }
 
     @PostMapping("/conversations/{conversationId}/messages")
-    // Gửi một message mới vào room.
+    // Gửi một tin nhắn mới vào room.
     public ResponseEntity<SuccessResponse<ChatMessageResponse>> sendMessage(
             @AuthenticationPrincipal AppUserPrinciple principal,
-            @PathVariable Long conversationId,
+            @PathVariable("conversationId") Long cuocTroChuyenId,
             @RequestBody CreateChatMessageRequest request
     ) {
         requireAuthenticated(principal);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(
                 HttpStatus.CREATED,
                 "Gửi tin nhắn thành công",
-                chatService.sendMessage(principal.getUserId(), conversationId, request)
+                chatService.sendMessage(principal.getUserId(), cuocTroChuyenId, request)
         ));
     }
 

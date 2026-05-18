@@ -21,7 +21,7 @@ export default function CandidateMessagesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedConversationId = useMemo(() => {
-    const raw = searchParams.get("conversationId");
+    const raw = searchParams.get("cuocTroChuyenId");
     if (!raw) {
       return null;
     }
@@ -98,7 +98,7 @@ export default function CandidateMessagesPage() {
           return;
         }
 
-        // Nếu URL có conversationId thì ưu tiên mở đúng room đó.
+        // Nếu URL có cuocTroChuyenId thì ưu tiên mở đúng room đó.
         const preferred = requestedConversationId == null
           ? null
           : data.find((item) => item.id === requestedConversationId) ?? null;
@@ -167,32 +167,32 @@ export default function CandidateMessagesPage() {
     socketRef.current = connectChatWebSocket({
       token,
       onEvent: (event: ChatRealtimeEvent) => {
-        if (event.type === "NEW_MESSAGE" && event.message) {
+        if (event.loai === "NEW_MESSAGE" && event.tinNhan) {
           // Update preview cho danh sách conversation bất kể room đang mở.
           setConversations((current) =>
             current.map((conversation) =>
-              conversation.id === event.conversationId
+              conversation.id === event.cuocTroChuyenId
                 ? {
                     ...conversation,
-                    tinNhanGanNhat: event.message?.noiDung ?? conversation.tinNhanGanNhat,
-                    tinNhanGanNhatLuc: event.message?.ngayTao ?? conversation.tinNhanGanNhatLuc,
+                    tinNhanGanNhat: event.tinNhan?.noiDung ?? conversation.tinNhanGanNhat,
+                    tinNhanGanNhatLuc: event.tinNhan?.ngayTao ?? conversation.tinNhanGanNhatLuc,
                   }
                 : conversation
             )
           );
         }
 
-        if (event.conversationId !== selectedConversation.id) {
+        if (event.cuocTroChuyenId !== selectedConversation.id) {
           return;
         }
 
-        if (event.type === "NEW_MESSAGE" && event.message) {
+        if (event.loai === "NEW_MESSAGE" && event.tinNhan) {
           setMessages((current) => {
-            const exists = current.some((item) => item.id === event.message?.id);
+            const exists = current.some((item) => item.id === event.tinNhan?.id);
             if (exists) {
               return current;
             }
-            return [...current, event.message];
+            return [...current, event.tinNhan];
           });
         }
       },

@@ -5,14 +5,18 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * DTO trả dữ liệu từ server cho API AdminCompanyDetailResponse.
+ * Giữ response rõ ràng để frontend dễ hiển thị và bảo trì.
+ */
 @Data
 @Builder
 public class AdminCompanyDetailResponse {
 
-    private AdminCompanyResponse company;
-    private Owner owner;
-    private List<Branch> branches;
-    private List<ProofDocument> proofDocuments;
+    private AdminCompanyResponse congTy;
+    private Owner chuCongTy;
+    private List<Branch> chiNhanhs;
+    private List<ProofDocument> taiLieuMinhChungs;
 
     @Data
     @Builder

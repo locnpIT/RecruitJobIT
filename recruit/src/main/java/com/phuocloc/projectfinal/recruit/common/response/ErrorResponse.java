@@ -9,6 +9,10 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 
+/**
+ * Mô hình phản hồi API cho ErrorResponse.
+ * Giữ dữ liệu trả về ổn định để frontend tiêu thụ dễ dàng.
+ */
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)

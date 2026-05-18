@@ -14,7 +14,7 @@ public class AdminJobDetailResponse {
     /**
      * Phần tóm tắt dùng chung với bảng danh sách.
      */
-    private AdminJobResponse summary;
+    private AdminJobResponse tongQuan;
 
     /**
      * Các field nội dung dài chỉ cần khi mở drawer/modal chi tiết.
@@ -22,7 +22,7 @@ public class AdminJobDetailResponse {
     private String moTa;
     private String yeuCau;
     private String phucLoi;
-    private Boolean batBuocCv;
+    private Boolean batBuocCV;
     private String mauCvUrl;
 
 }

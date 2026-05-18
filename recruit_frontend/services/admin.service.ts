@@ -82,10 +82,10 @@ export interface AdminCompanyDetailOwner {
 }
 
 export interface AdminCompanyDetail {
-  company: AdminCompany;
-  owner: AdminCompanyDetailOwner;
-  branches: AdminCompanyDetailBranch[];
-  proofDocuments: AdminCompanyDetailProofDocument[];
+  congTy: AdminCompany;
+  chuCongTy: AdminCompanyDetailOwner;
+  chiNhanhs: AdminCompanyDetailBranch[];
+  taiLieuMinhChungs: AdminCompanyDetailProofDocument[];
 }
 
 export interface AdminPackage {
@@ -111,44 +111,15 @@ export interface AdminPackageSubscription {
   coHieuLuc: boolean | null;
 }
 
-export interface AdminReportMetric {
-  label: string;
-  value: string;
-  note: string;
+export interface AdminCatalogItem {
+  id: number | null;
+  ten: string | null;
+  moTa: string | null;
 }
 
-export interface AdminReportTopCompany {
-  name: string;
-  jobs: number;
-  applications: number;
-}
-
-export interface AdminReportSystemStatus {
-  apiUptime: string;
-  averageLatency: string;
-  pendingReviewTasks: number;
-  openIncidents: number;
-}
-
-export interface AdminReportResponse {
-  metrics: AdminReportMetric[];
-  trendData: number[];
-  topCompanies: AdminReportTopCompany[];
-  systemStatus: AdminReportSystemStatus;
-}
-
-export interface AdminSettings {
-  systemName: string;
-  timezone: string;
-  requireTaxCode: boolean;
-  requireLegalProof: boolean;
-  bannedKeywords: string;
-  reviewSlaHours: number;
-  alertEmail: string;
-  dailyReportAlertThreshold: number;
-  adminTwoFactorEnabled: boolean;
-  lockAfterFiveFailedAttempts: boolean;
-  forcePasswordRotation90Days: boolean;
+export interface UpsertAdminCatalogItemPayload {
+  ten: string;
+  moTa?: string;
 }
 
 export interface AdminJob {
@@ -168,11 +139,11 @@ export interface AdminJob {
 }
 
 export interface AdminJobDetail {
-  summary: AdminJob;
+  tongQuan: AdminJob;
   moTa: string | null;
   yeuCau: string | null;
   phucLoi: string | null;
-  batBuocCv: boolean | null;
+  batBuocCV: boolean | null;
   mauCvUrl: string | null;
 }
 
@@ -320,18 +291,79 @@ export const adminService = {
     return response.data.data as AdminCandidateProof;
   },
 
-  getReports: async (params?: { range?: string }): Promise<AdminReportResponse> => {
-    const response = await apiClient.get("/admin/reports", { params });
-    return response.data.data as AdminReportResponse;
+  listSystemRoles: async (): Promise<AdminCatalogItem[]> => {
+    const response = await apiClient.get("/admin/system-roles");
+    return response.data.data as AdminCatalogItem[];
   },
 
-  getSettings: async (): Promise<AdminSettings> => {
-    const response = await apiClient.get("/admin/settings");
-    return response.data.data as AdminSettings;
+  createSystemRole: async (payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
+    const response = await apiClient.post("/admin/system-roles", payload);
+    return response.data.data as AdminCatalogItem;
   },
 
-  updateSettings: async (payload: AdminSettings): Promise<AdminSettings> => {
-    const response = await apiClient.patch("/admin/settings", payload);
-    return response.data.data as AdminSettings;
+  updateSystemRole: async (id: number, payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
+    const response = await apiClient.patch(`/admin/system-roles/${id}`, payload);
+    return response.data.data as AdminCatalogItem;
+  },
+
+  deleteSystemRole: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/system-roles/${id}`);
+  },
+
+  listCompanyRoles: async (): Promise<AdminCatalogItem[]> => {
+    const response = await apiClient.get("/admin/company-roles");
+    return response.data.data as AdminCatalogItem[];
+  },
+
+  createCompanyRole: async (payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
+    const response = await apiClient.post("/admin/company-roles", payload);
+    return response.data.data as AdminCatalogItem;
+  },
+
+  updateCompanyRole: async (id: number, payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
+    const response = await apiClient.patch(`/admin/company-roles/${id}`, payload);
+    return response.data.data as AdminCatalogItem;
+  },
+
+  deleteCompanyRole: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/company-roles/${id}`);
+  },
+
+  listProofTypes: async (): Promise<AdminCatalogItem[]> => {
+    const response = await apiClient.get("/admin/proof-types");
+    return response.data.data as AdminCatalogItem[];
+  },
+
+  createProofType: async (payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
+    const response = await apiClient.post("/admin/proof-types", payload);
+    return response.data.data as AdminCatalogItem;
+  },
+
+  updateProofType: async (id: number, payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
+    const response = await apiClient.patch(`/admin/proof-types/${id}`, payload);
+    return response.data.data as AdminCatalogItem;
+  },
+
+  deleteProofType: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/proof-types/${id}`);
+  },
+
+  listCertificateTypes: async (): Promise<AdminCatalogItem[]> => {
+    const response = await apiClient.get("/admin/certificate-types");
+    return response.data.data as AdminCatalogItem[];
+  },
+
+  createCertificateType: async (payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
+    const response = await apiClient.post("/admin/certificate-types", payload);
+    return response.data.data as AdminCatalogItem;
+  },
+
+  updateCertificateType: async (id: number, payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
+    const response = await apiClient.patch(`/admin/certificate-types/${id}`, payload);
+    return response.data.data as AdminCatalogItem;
+  },
+
+  deleteCertificateType: async (id: number): Promise<void> => {
+    await apiClient.delete(`/admin/certificate-types/${id}`);
   },
 };

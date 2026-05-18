@@ -12,6 +12,10 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Seeder khởi tạo dữ liệu nền cho RoleDataSeeder.
+ * Chạy khi khởi động để đảm bảo dữ liệu chuẩn ban đầu.
+ */
 @Component
 public class RoleDataSeeder implements ApplicationRunner {
 

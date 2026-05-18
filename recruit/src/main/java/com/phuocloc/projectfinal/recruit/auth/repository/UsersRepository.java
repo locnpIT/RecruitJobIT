@@ -7,6 +7,10 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+/**
+ * Repository truy cập dữ liệu cho UsersRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface UsersRepository extends JpaRepository<NguoiDung, Integer> {
 
     @EntityGraph(attributePaths = {"vaiTroHeThong", "xaPhuong"})

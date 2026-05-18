@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.phuocloc.projectfinal.recruit.common.response.ApiResponse;
 
+/**
+ * Thành phần lõi GlobalExceptionHandler của hệ thống tuyển dụng.
+ * Giữ vai trò hạ tầng/miền dùng chung giữa các module.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

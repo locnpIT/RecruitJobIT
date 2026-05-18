@@ -4,16 +4,20 @@ import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * DTO trả dữ liệu từ server cho API ChatMessageResponse.
+ * Giữ response rõ ràng để frontend dễ hiển thị và bảo trì.
+ */
 @Getter
 @Builder
 public class ChatMessageResponse {
 
     private Long id;
-    private Long conversationId;
-    private Long senderId;
-    private String senderDisplayName;
+    private Long cuocTroChuyenId;
+    private Long nguoiGuiId;
+    private String nguoiGuiHienThiTen;
     private String noiDung;
     private Boolean daDoc;
-    private Boolean mine;
+    private Boolean cuaToi;
     private LocalDateTime ngayTao;
 }

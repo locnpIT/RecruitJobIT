@@ -122,10 +122,10 @@ export function HomeHeader() {
           if (!active) {
             return;
           }
-          setUnreadCount(countData.unreadCount ?? 0);
-          setLatestNotifications(listData.items ?? []);
-          setNotificationPage(listData.page ?? 0);
-          setNotificationHasNext(Boolean(listData.hasNext));
+          setUnreadCount(countData.soChuaDoc ?? 0);
+          setLatestNotifications(listData.danhSach ?? []);
+          setNotificationPage(listData.trang ?? 0);
+          setNotificationHasNext(Boolean(listData.conTrangSau));
         } catch {
           if (!active) {
             return;
@@ -166,11 +166,11 @@ export function HomeHeader() {
       const listData = await notificationService.list(nextPage, NOTIFICATION_PAGE_SIZE);
       setLatestNotifications((current) => {
         const existingIds = new Set(current.map((item) => item.id));
-        const nextItems = (listData.items ?? []).filter((item) => !existingIds.has(item.id));
+        const nextItems = (listData.danhSach ?? []).filter((item) => !existingIds.has(item.id));
         return [...current, ...nextItems];
       });
-      setNotificationPage(listData.page ?? nextPage);
-      setNotificationHasNext(Boolean(listData.hasNext));
+      setNotificationPage(listData.trang ?? nextPage);
+      setNotificationHasNext(Boolean(listData.conTrangSau));
     } catch {
       // ignore
     } finally {
@@ -287,7 +287,7 @@ export function HomeHeader() {
                       onClick={async () => {
                         try {
                           const result = await notificationService.markAllRead();
-                          if ((result.updatedCount ?? 0) > 0) {
+                          if ((result.soDaCapNhat ?? 0) > 0) {
                             setUnreadCount(0);
                             setLatestNotifications((current) => current.map((item) => ({ ...item, daDoc: true })));
                           }

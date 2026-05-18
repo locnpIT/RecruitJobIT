@@ -5,6 +5,10 @@ import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.KyNangUngVienId;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * Repository truy cập dữ liệu cho KyNangUngVienRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface KyNangUngVienRepository extends JpaRepository<KyNangUngVien, KyNangUngVienId> {
     List<KyNangUngVien> findByHoSoUngVien_Id(Integer hoSoUngVienId);
     void deleteByHoSoUngVien_Id(Integer hoSoUngVienId);

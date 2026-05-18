@@ -2,6 +2,8 @@ package com.phuocloc.projectfinal.recruit.publicjob.controller;
 
 import com.phuocloc.projectfinal.recruit.common.response.SuccessResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobDetailResponse;
+import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSearchMetadataResponse;
+import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSearchResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSummaryResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobService;
 import java.util.List;
@@ -31,20 +33,11 @@ public class PublicJobController {
     public ResponseEntity<SuccessResponse<List<PublicJobSummaryResponse>>> listJobs(
             @RequestParam(required = false) String tuKhoa,
             @RequestParam(required = false) String diaDiem,
-            @RequestParam(required = false) Integer gioiHan,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) Integer limit
+            @RequestParam(required = false) Integer gioiHan
     ) {
-        // Ưu tiên tên tham số Việt hóa.
-        // Giữ thêm keyword/location/limit để tương thích ngược với client cũ trong giai đoạn chuyển đổi.
-        String safeTuKhoa = tuKhoa != null ? tuKhoa : keyword;
-        String safeDiaDiem = diaDiem != null ? diaDiem : location;
-        Integer safeGioiHan = gioiHan != null ? gioiHan : limit;
-
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Lấy danh sách tin tuyển dụng public thành công",
-                publicJobService.listJobs(safeTuKhoa, safeDiaDiem, safeGioiHan)
+                publicJobService.listJobs(tuKhoa, diaDiem, gioiHan)
         ));
     }
 
@@ -56,6 +49,40 @@ public class PublicJobController {
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Lấy chi tiết tin tuyển dụng public thành công",
                 publicJobService.getJobDetail(jobId)
+        ));
+    }
+
+    @GetMapping("/search")
+    // API search chuyên dụng cho trang /jobs, hỗ trợ keyword + filter + phân trang.
+    public ResponseEntity<SuccessResponse<PublicJobSearchResponse>> searchJobs(
+            @RequestParam(required = false) String tuKhoa,
+            @RequestParam(required = false) String diaDiem,
+            @RequestParam(required = false) Integer nganhNgheId,
+            @RequestParam(required = false) Integer loaiHinhLamViecId,
+            @RequestParam(required = false) Integer capDoKinhNghiemId,
+            @RequestParam(required = false) Integer trang,
+            @RequestParam(required = false) Integer kichThuoc
+    ) {
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Tìm kiếm tin tuyển dụng public thành công",
+                publicJobService.searchJobs(
+                        tuKhoa,
+                        diaDiem,
+                        nganhNgheId,
+                        loaiHinhLamViecId,
+                        capDoKinhNghiemId,
+                        trang,
+                        kichThuoc
+                )
+        ));
+    }
+
+    @GetMapping("/search/metadata")
+    // Danh mục filter cho frontend search jobs.
+    public ResponseEntity<SuccessResponse<PublicJobSearchMetadataResponse>> getSearchMetadata() {
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Lấy metadata tìm kiếm tin tuyển dụng thành công",
+                publicJobService.getSearchMetadata()
         ));
     }
 }

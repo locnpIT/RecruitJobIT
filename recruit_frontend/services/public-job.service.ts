@@ -38,7 +38,7 @@ export type PublicJobDetail = {
   soLuongTuyen: string;
   gioiTinh: string;
   capNhatLuc: string;
-  batBuocCv: boolean;
+  batBuocCV: boolean;
   mauCvUrl: string | null;
   the: string[];
   kyNangs: string[];
@@ -60,6 +60,35 @@ type ListJobsParams = {
   gioiHan?: number;
 };
 
+export type SearchJobsParams = {
+  tuKhoa?: string;
+  diaDiem?: string;
+  nganhNgheId?: number;
+  loaiHinhLamViecId?: number;
+  capDoKinhNghiemId?: number;
+  trang?: number;
+  kichThuoc?: number;
+};
+
+export type PublicJobSearchResponse = {
+  danhSach: PublicJobSummary[];
+  tongSo: number;
+  trang: number;
+  kichThuoc: number;
+  conTrangSau: boolean;
+};
+
+export type PublicJobSearchMetadataOption = {
+  id: number;
+  ten: string;
+};
+
+export type PublicJobSearchMetadata = {
+  nganhNghes: PublicJobSearchMetadataOption[];
+  loaiHinhLamViecs: PublicJobSearchMetadataOption[];
+  capDoKinhNghiems: PublicJobSearchMetadataOption[];
+};
+
 // Service public job dùng cho homepage và trang chi tiết job.
 // Tất cả API `/public/jobs` chỉ trả về tin APPROVED + còn hạn theo rule backend.
 export const publicJobService = {
@@ -71,6 +100,16 @@ export const publicJobService = {
   getJobDetail: async (jobId: string | number): Promise<PublicJobDetail> => {
     const response = await apiClient.get(`/public/jobs/${jobId}`);
     return response.data.data as PublicJobDetail;
+  },
+
+  searchJobs: async (params: SearchJobsParams = {}): Promise<PublicJobSearchResponse> => {
+    const response = await apiClient.get("/public/jobs/search", { params });
+    return response.data.data as PublicJobSearchResponse;
+  },
+
+  getSearchMetadata: async (): Promise<PublicJobSearchMetadata> => {
+    const response = await apiClient.get("/public/jobs/search/metadata");
+    return response.data.data as PublicJobSearchMetadata;
   },
 
   getFavoriteStatus: async (jobId: string | number): Promise<FavoriteJobStatus> => {

@@ -1,11 +1,13 @@
 package com.phuocloc.projectfinal.recruit.admin.service;
 
+import com.phuocloc.projectfinal.recruit.ai.service.JobEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewJobRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
+import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobElasticsearchIndexService;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,8 @@ public class AdminJobService {
 
     private final TinTuyenDungRepository tinTuyenDungRepository;
     private final NotificationService notificationService;
+    private final JobEmbeddingIndexService chiMucNhungTinTuyenDungService;
+    private final PublicJobElasticsearchIndexService publicJobElasticsearchIndexService;
 
     @Transactional(readOnly = true)
     public List<AdminJobResponse> listJobs(String keyword, String company, String status, String industry, String location) {
@@ -53,11 +57,11 @@ public class AdminJobService {
     public AdminJobDetailResponse getJobDetail(Long jobId) {
         TinTuyenDung job = requireJob(jobId);
         AdminJobDetailResponse response = new AdminJobDetailResponse();
-        response.setSummary(mapJob(job));
+        response.setTongQuan(mapJob(job));
         response.setMoTa(job.getMoTa());
         response.setYeuCau(job.getYeuCau());
         response.setPhucLoi(job.getPhucLoi());
-        response.setBatBuocCv(job.getBatBuocCV());
+        response.setBatBuocCV(job.getBatBuocCV());
         response.setMauCvUrl(job.getMauCvUrl());
         return response;
     }
@@ -74,7 +78,10 @@ public class AdminJobService {
                 "Tin \"" + safeJobTitle(job) + "\" đã được admin duyệt.",
                 "/company-admin/jobs"
         );
-        return mapJob(tinTuyenDungRepository.save(job));
+        TinTuyenDung saved = tinTuyenDungRepository.save(job);
+        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(saved);
+        publicJobElasticsearchIndexService.dongBoHoacXoa(saved);
+        return mapJob(saved);
     }
 
     @Transactional
@@ -92,7 +99,10 @@ public class AdminJobService {
                 "Tin \"" + safeJobTitle(job) + "\" bị từ chối. Lý do: " + reason,
                 "/company-admin/jobs"
         );
-        return mapJob(tinTuyenDungRepository.save(job));
+        TinTuyenDung saved = tinTuyenDungRepository.save(job);
+        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(saved);
+        publicJobElasticsearchIndexService.dongBoHoacXoa(saved);
+        return mapJob(saved);
     }
 
     @Transactional
@@ -105,7 +115,10 @@ public class AdminJobService {
                 "Tin \"" + safeJobTitle(job) + "\" đã bị ẩn bởi admin.",
                 "/company-admin/jobs"
         );
-        return mapJob(tinTuyenDungRepository.save(job));
+        TinTuyenDung saved = tinTuyenDungRepository.save(job);
+        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(saved);
+        publicJobElasticsearchIndexService.dongBoHoacXoa(saved);
+        return mapJob(saved);
     }
 
     private TinTuyenDung requireJob(Long jobId) {

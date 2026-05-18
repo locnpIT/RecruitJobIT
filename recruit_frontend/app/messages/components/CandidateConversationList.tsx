@@ -11,8 +11,8 @@ type CandidateConversationListProps = {
 function resolveRecruiterName(conversation: ChatConversation, currentUserId: number | null) {
   const isCandidateView = currentUserId != null && currentUserId === conversation.ungVienId;
   return isCandidateView
-    ? conversation.nhaTuyenDungDisplayName || "Nhà tuyển dụng"
-    : conversation.ungVienDisplayName || "Người dùng";
+    ? conversation.nhaTuyenDungHienThiTen || "Nhà tuyển dụng"
+    : conversation.ungVienHienThiTen || "Người dùng";
 }
 
 // Danh sách conversation cho candidate inbox.

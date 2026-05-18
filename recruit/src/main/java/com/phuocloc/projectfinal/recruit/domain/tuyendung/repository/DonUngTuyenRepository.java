@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * Repository truy cập dữ liệu cho DonUngTuyenRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface DonUngTuyenRepository extends JpaRepository<DonUngTuyen, Integer> {
 
     List<DonUngTuyen> findByTinTuyenDung_ChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer chiNhanhId);

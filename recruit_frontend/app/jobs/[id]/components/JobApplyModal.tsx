@@ -18,7 +18,7 @@ type JobApplyModalProps = {
 };
 
 // Modal ứng tuyển cho candidate.
-// Rule UI bám backend: luôn chọn hồ sơ; nếu job.batBuocCv=true thì bắt chọn file CV để upload Cloudinary.
+// Rule UI bám backend: luôn chọn hồ sơ; nếu job.batBuocCV=true thì bắt chọn file CV để upload Cloudinary.
 export function JobApplyModal({
   open,
   job,
@@ -36,7 +36,7 @@ export function JobApplyModal({
     return null;
   }
 
-  const requiresCv = Boolean(job.batBuocCv);
+  const requiresCv = Boolean(job.batBuocCV);
   const canSubmit = profiles.length > 0 && !submitting;
 
   return (
@@ -79,7 +79,7 @@ export function JobApplyModal({
                 <option value="">Chọn hồ sơ</option>
                 {profiles.map((profile) => (
                   <option key={profile.id} value={profile.id}>
-                    {profile.title}
+                    {profile.tieuDe}
                   </option>
                 ))}
               </select>

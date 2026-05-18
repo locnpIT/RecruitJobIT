@@ -85,9 +85,9 @@ public class ChatService {
     }
 
     @Transactional
-    public List<ChatMessageResponse> listMessages(Long userId, Long conversationId) {
+    public List<ChatMessageResponse> listMessages(Long userId, Long cuocTroChuyenId) {
         Integer viewerId = toIntId(userId, "userId");
-        CuocTroChuyen conversation = requireConversationParticipant(viewerId, conversationId);
+        CuocTroChuyen conversation = requireConversationParticipant(viewerId, cuocTroChuyenId);
         List<TinNhan> messages = tinNhanRepository.findByConversationIdOrderByTimeAsc(conversation.getId());
 
         // Khi mở room, đánh dấu các tin nhắn từ phía còn lại là đã đọc.
@@ -104,9 +104,9 @@ public class ChatService {
             chatRealtimePublisher.publishToUsers(
                     resolveParticipantIds(conversation),
                     ChatRealtimeEventResponse.builder()
-                            .type("MESSAGES_READ")
-                            .conversationId(conversationId)
-                            .readerId(userId)
+                            .loai("MESSAGES_READ")
+                            .cuocTroChuyenId(cuocTroChuyenId)
+                            .nguoiDocId(userId)
                             .build()
             );
         }
@@ -117,9 +117,9 @@ public class ChatService {
     }
 
     @Transactional
-    public ChatMessageResponse sendMessage(Long userId, Long conversationId, CreateChatMessageRequest request) {
+    public ChatMessageResponse sendMessage(Long userId, Long cuocTroChuyenId, CreateChatMessageRequest request) {
         Integer viewerId = toIntId(userId, "userId");
-        CuocTroChuyen conversation = requireConversationParticipant(viewerId, conversationId);
+        CuocTroChuyen conversation = requireConversationParticipant(viewerId, cuocTroChuyenId);
         NguoiDung sender = requireUser(viewerId);
         String content = normalizeMessageContent(request == null ? null : request.getNoiDung());
 
@@ -135,9 +135,9 @@ public class ChatService {
         chatRealtimePublisher.publishToUsers(
                 resolveParticipantIds(conversation),
                 ChatRealtimeEventResponse.builder()
-                        .type("NEW_MESSAGE")
-                        .conversationId(conversationId)
-                        .message(mapped)
+                        .loai("NEW_MESSAGE")
+                        .cuocTroChuyenId(cuocTroChuyenId)
+                        .tinNhan(mapped)
                         .build()
         );
         return mapped;
@@ -155,11 +155,11 @@ public class ChatService {
         return ChatConversationResponse.builder()
                 .id(toLong(conversation.getId()))
                 .ungVienId(conversation.getUngVien() == null ? null : toLong(conversation.getUngVien().getId()))
-                .ungVienDisplayName(resolveDisplayName(conversation.getUngVien()))
-                .ungVienAvatarUrl(conversation.getUngVien() == null ? null : conversation.getUngVien().getAnhDaiDienUrl())
+                .ungVienHienThiTen(resolveDisplayName(conversation.getUngVien()))
+                .ungVienAnhDaiDienUrl(conversation.getUngVien() == null ? null : conversation.getUngVien().getAnhDaiDienUrl())
                 .nhaTuyenDungId(conversation.getNhaTuyenDung() == null ? null : toLong(conversation.getNhaTuyenDung().getId()))
-                .nhaTuyenDungDisplayName(resolveDisplayName(conversation.getNhaTuyenDung()))
-                .nhaTuyenDungAvatarUrl(conversation.getNhaTuyenDung() == null ? null : conversation.getNhaTuyenDung().getAnhDaiDienUrl())
+                .nhaTuyenDungHienThiTen(resolveDisplayName(conversation.getNhaTuyenDung()))
+                .nhaTuyenDungAnhDaiDienUrl(conversation.getNhaTuyenDung() == null ? null : conversation.getNhaTuyenDung().getAnhDaiDienUrl())
                 .tinNhanGanNhat(lastMessage == null ? null : lastMessage.getNoiDung())
                 .tinNhanGanNhatLuc(lastMessage == null ? null : lastMessage.getNgayTao())
                 .soTinChuaDoc(unreadCount)
@@ -171,18 +171,18 @@ public class ChatService {
         Integer senderId = message.getNguoiGui() == null ? null : message.getNguoiGui().getId();
         return ChatMessageResponse.builder()
                 .id(toLong(message.getId()))
-                .conversationId(message.getCuocTroChuyen() == null ? null : toLong(message.getCuocTroChuyen().getId()))
-                .senderId(senderId == null ? null : senderId.longValue())
-                .senderDisplayName(resolveDisplayName(message.getNguoiGui()))
+                .cuocTroChuyenId(message.getCuocTroChuyen() == null ? null : toLong(message.getCuocTroChuyen().getId()))
+                .nguoiGuiId(senderId == null ? null : senderId.longValue())
+                .nguoiGuiHienThiTen(resolveDisplayName(message.getNguoiGui()))
                 .noiDung(message.getNoiDung())
                 .daDoc(Boolean.TRUE.equals(message.getDaDoc()))
-                .mine(senderId != null && senderId.equals(viewerId))
+                .cuaToi(senderId != null && senderId.equals(viewerId))
                 .ngayTao(message.getNgayTao())
                 .build();
     }
 
-    private CuocTroChuyen requireConversationParticipant(Integer viewerId, Long conversationId) {
-        Integer safeConversationId = toIntId(conversationId, "conversationId");
+    private CuocTroChuyen requireConversationParticipant(Integer viewerId, Long cuocTroChuyenId) {
+        Integer safeConversationId = toIntId(cuocTroChuyenId, "cuocTroChuyenId");
         CuocTroChuyen conversation = cuocTroChuyenRepository.findDetailedById(safeConversationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy cuộc trò chuyện"));
 

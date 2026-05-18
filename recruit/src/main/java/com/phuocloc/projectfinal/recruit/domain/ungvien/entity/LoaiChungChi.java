@@ -3,6 +3,10 @@ package com.phuocloc.projectfinal.recruit.domain.ungvien.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Entity ánh xạ dữ liệu cho LoaiChungChi.
+ * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
+ */
 @Entity
 @Table(name = "LoaiChungChi")
 @Data

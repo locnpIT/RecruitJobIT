@@ -4,6 +4,7 @@ import com.phuocloc.projectfinal.recruit.auth.dto.request.CreateOwnerRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.LoginRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.RegisterRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.UpdateAvatarRequest;
+import com.phuocloc.projectfinal.recruit.auth.dto.request.UpdateUserProfileRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.AuthResponse;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.CreateOwnerResponse;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.UserProfileResponse;
@@ -92,5 +93,15 @@ public class AuthController {
     ) {
         UserProfileResponse data = authService.updateAvatar(principal.getUserId(), request);
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật ảnh đại diện thành công", data));
+    }
+
+    @PatchMapping("/me")
+    // Cập nhật thông tin cá nhân mở rộng của user hiện tại (ngày sinh, giới tính, địa chỉ, xã/phường).
+    public ResponseEntity<SuccessResponse<UserProfileResponse>> updateMe(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @RequestBody UpdateUserProfileRequest request
+    ) {
+        UserProfileResponse data = authService.updateCurrentUserProfile(principal.getUserId(), request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật hồ sơ người dùng thành công", data));
     }
 }

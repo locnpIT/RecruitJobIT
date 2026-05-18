@@ -4,6 +4,7 @@ import com.phuocloc.projectfinal.recruit.auth.dto.request.CreateOwnerRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.LoginRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.RegisterRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.UpdateAvatarRequest;
+import com.phuocloc.projectfinal.recruit.auth.dto.request.UpdateUserProfileRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.AuthResponse;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.CreateOwnerResponse;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.UserProfileResponse;
@@ -266,6 +267,39 @@ public class AuthService {
         return mapUserProfile(user);
     }
 
+    @Transactional
+    public UserProfileResponse updateCurrentUserProfile(Long userId, UpdateUserProfileRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payload cập nhật không hợp lệ");
+        }
+
+        NguoiDung user = usersRepository.findById(toIntId(userId, "userId"))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
+
+        // Chuẩn hóa dữ liệu chuỗi theo nguyên tắc trimToNull để tránh lưu chuỗi rỗng.
+        if (request.getSoDienThoai() != null) {
+            user.setSoDienThoai(trimToNull(request.getSoDienThoai()));
+        }
+        if (request.getGioiTinh() != null) {
+            user.setGioiTinh(trimToNull(request.getGioiTinh()));
+        }
+        if (request.getDiaChiChiTiet() != null) {
+            user.setDiaChiChiTiet(trimToNull(request.getDiaChiChiTiet()));
+        }
+        if (request.getNgaySinh() != null) {
+            user.setNgaySinh(request.getNgaySinh());
+        }
+        // Cho phép clear xã/phường bằng cách gửi xaPhuongId = null từ client.
+        if (request.getXaPhuongId() == null) {
+            user.setXaPhuong(null);
+        } else {
+            user.setXaPhuong(resolveXaPhuong(request.getXaPhuongId()));
+        }
+
+        user = usersRepository.save(user);
+        return mapUserProfile(user);
+    }
+
     private ThanhVienCongTy requireOwnerProfile(Long ownerUserId) {
         if (ownerUserId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Thiếu thông tin người dùng đăng nhập");
@@ -490,6 +524,21 @@ public class AuthService {
                 .ten(user.getTen())
                 .ho(user.getHo())
                 .soDienThoai(user.getSoDienThoai())
+                .ngaySinh(user.getNgaySinh())
+                .gioiTinh(user.getGioiTinh())
+                .diaChiChiTiet(user.getDiaChiChiTiet())
+                .xaPhuongId(user.getXaPhuong() == null || user.getXaPhuong().getId() == null
+                        ? null
+                        : user.getXaPhuong().getId().longValue())
+                .xaPhuongTen(user.getXaPhuong() == null ? null : user.getXaPhuong().getTen())
+                .tinhThanhId(user.getXaPhuong() == null
+                        || user.getXaPhuong().getTinhThanh() == null
+                        || user.getXaPhuong().getTinhThanh().getId() == null
+                        ? null
+                        : user.getXaPhuong().getTinhThanh().getId().longValue())
+                .tinhThanhTen(user.getXaPhuong() == null || user.getXaPhuong().getTinhThanh() == null
+                        ? null
+                        : user.getXaPhuong().getTinhThanh().getTen())
                 .vaiTro(user.getVaiTroHeThong() == null ? null : user.getVaiTroHeThong().getTen())
                 .dangHoatDong(user.getDangHoatDong())
                 .anhDaiDienUrl(user.getAnhDaiDienUrl())

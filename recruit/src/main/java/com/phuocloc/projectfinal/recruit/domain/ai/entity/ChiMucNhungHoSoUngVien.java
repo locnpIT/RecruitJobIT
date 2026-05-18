@@ -4,6 +4,10 @@ import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * Entity ánh xạ dữ liệu cho ChiMucNhungHoSoUngVien.
+ * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
+ */
 @Entity
 @Table(name = "ChiMucNhungHoSoUngVien")
 @Data

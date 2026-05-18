@@ -22,6 +22,12 @@ import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
+/**
+ * Service dựng dữ liệu thanh toán SePay (QR và checkout form).
+ *
+ * <p>Service này không ghi DB, chỉ tạo mã thanh toán, chuẩn hóa nội dung chuyển khoản
+ * và ký chữ ký HMAC cho form checkout theo cấu hình merchant hiện tại.</p>
+ */
 public class SepayPaymentService {
 
     private static final DateTimeFormatter PAYMENT_CODE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -42,12 +48,18 @@ public class SepayPaymentService {
 
     private final SepayProperties sepayProperties;
 
+    /**
+     * Sinh mã thanh toán duy nhất cho luồng checkout thủ công.
+     */
     public String generatePaymentCode() {
         String timestamp = LocalDateTime.now().format(PAYMENT_CODE_TIME_FORMAT);
         String suffix = randomAlphaNumeric(6);
         return sepayProperties.getPaymentCodePrefix() + timestamp + suffix;
     }
 
+    /**
+     * Sinh mã thanh toán gắn trực tiếp với ID đăng ký gói để webhook dễ truy vết.
+     */
     public String buildPaymentCodeForRegistration(Integer registrationId) {
         if (registrationId == null || registrationId <= 0) {
             throw new IllegalArgumentException("Registration ID không hợp lệ");
@@ -56,6 +68,9 @@ public class SepayPaymentService {
                 + registrationId;
     }
 
+    /**
+     * Tạo checkout form đầy đủ tham số và chữ ký để redirect người dùng sang SePay.
+     */
     public SepayCheckoutForm buildCheckoutForm(
             long amount,
             String orderInvoiceNumber,

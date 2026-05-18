@@ -18,6 +18,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+/**
+ * Service chuyên trách kiểm tra quyền truy cập của user trong khu vực company-admin.
+ *
+ * <p>Mục tiêu chính:
+ * chuẩn hóa logic membership active, mở rộng quyền OWNER theo phạm vi công ty,
+ * và tái sử dụng chung cho các service thao tác chi nhánh/công ty.</p>
+ */
 public class CompanyAdminAccessService {
 
     private static final String COMPANY_NOT_APPROVED_MESSAGE = "Công ty chưa được duyệt, chỉ có thể cập nhật logo";

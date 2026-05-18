@@ -6,6 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Thành phần lõi SepayWebhookRequest của hệ thống tuyển dụng.
+ * Giữ vai trò hạ tầng/miền dùng chung giữa các module.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

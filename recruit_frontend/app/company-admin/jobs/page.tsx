@@ -45,11 +45,11 @@ export default function CompanyAdminJobsPage() {
       kyNangIds: [],
     },
   });
-  const batBuocCv = watch("batBuocCV");
+  const batBuocCV = watch("batBuocCV");
   const mauCvUrlValue = watch("mauCvUrl");
   const selectedKyNangIds = watch("kyNangIds") ?? [];
   const chiNhanhField = register("chiNhanhId", { valueAsNumber: true });
-  const batBuocCvField = register("batBuocCV", {
+  const batBuocCVField = register("batBuocCV", {
     onChange: (event) => {
       if (!event.target.checked) {
         setValue("mauCvUrl", "");
@@ -332,12 +332,12 @@ export default function CompanyAdminJobsPage() {
         kyNangOptions={kyNangOptions}
         selectedKyNangIds={selectedKyNangIds}
         onKyNangIdsChange={(nextIds) => setValue("kyNangIds", nextIds, { shouldDirty: true })}
-        batBuocCv={batBuocCv}
+        batBuocCV={batBuocCV}
         mauCvUrlValue={mauCvUrlValue}
         isUploadingCvTemplate={isUploadingCvTemplate}
         cvTemplateFileName={cvTemplateFileName}
         onUploadCvTemplate={handleUploadCvTemplate}
-        batBuocCvField={batBuocCvField}
+        batBuocCVField={batBuocCVField}
         isSubmitting={isSubmitting}
       />
     </div>

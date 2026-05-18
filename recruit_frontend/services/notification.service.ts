@@ -10,21 +10,21 @@ export interface NotificationItem {
 }
 
 export interface NotificationListResponse {
-  items: NotificationItem[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
+  danhSach: NotificationItem[];
+  trang: number;
+  kichThuoc: number;
+  tongPhanTu: number;
+  tongSoTrang: number;
+  conTrangSau: boolean;
 }
 
 export interface NotificationUnreadCountResponse {
-  unreadCount: number;
+  soChuaDoc: number;
 }
 
 export const notificationService = {
-  list: async (page = 0, size = 20): Promise<NotificationListResponse> => {
-    const response = await apiClient.get("/notifications", { params: { page, size } });
+  list: async (trang = 0, kichThuoc = 20): Promise<NotificationListResponse> => {
+    const response = await apiClient.get("/notifications", { params: { trang, kichThuoc } });
     return response.data.data as NotificationListResponse;
   },
 
@@ -38,9 +38,9 @@ export const notificationService = {
     return response.data.data as NotificationItem;
   },
 
-  markAllRead: async (): Promise<{ updatedCount: number }> => {
+  markAllRead: async (): Promise<{ soDaCapNhat: number }> => {
     const response = await apiClient.patch("/notifications/read-all");
-    return response.data.data as { updatedCount: number };
+    return response.data.data as { soDaCapNhat: number };
   },
 
   delete: async (notificationId: number): Promise<void> => {

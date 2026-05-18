@@ -18,7 +18,7 @@ function formatTime(value: string | null) {
 // Bubble tin nhắn của một dòng chat.
 // Tách riêng để phần list chỉ tập trung render danh sách/scroll.
 export function ChatMessageItem({ message }: ChatMessageItemProps) {
-  const mine = Boolean(message.mine);
+  const mine = Boolean(message.cuaToi);
 
   return (
     <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
@@ -31,7 +31,7 @@ export function ChatMessageItem({ message }: ChatMessageItemProps) {
       >
         {!mine ? (
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            {message.senderDisplayName ?? "Nhà tuyển dụng"}
+            {message.nguoiGuiHienThiTen ?? "Nhà tuyển dụng"}
           </p>
         ) : null}
         <p className="whitespace-pre-wrap break-words leading-6">{message.noiDung}</p>

@@ -14,8 +14,10 @@ import { WorkExperiencePanel } from "./components/WorkExperiencePanel";
 import { CertificatePanel } from "./components/CertificatePanel";
 import { SummaryPanel } from "./components/SummaryPanel";
 import { ProfileHero } from "./components/ProfileHero";
+import { PersonalInfoPanel, type PersonalInfoFormState } from "./components/PersonalInfoPanel";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 import { authService, type UserProfileResponse } from "@/services/auth.service";
+import { locationService, type Province, type Ward } from "@/services/location.service";
 import {
   candidateProfileService,
   type CandidateCertificateItem,
@@ -83,6 +85,8 @@ export default function ProfilePage() {
   const [savingSkills, setSavingSkills] = useState(false);
   const [savingIndustries, setSavingIndustries] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
+  const [savingPersonalInfo, setSavingPersonalInfo] = useState(false);
+  const [loadingWards, setLoadingWards] = useState(false);
 
   const [eduForm, setEduForm] = useState(EMPTY_EDU);
   const [certForm, setCertForm] = useState(EMPTY_CERT);
@@ -92,6 +96,16 @@ export default function ProfilePage() {
   const [summaryForm, setSummaryForm] = useState({
     gioiThieuBanThan: "",
     mucTieuNgheNghiep: "",
+  });
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [personalInfoForm, setPersonalInfoForm] = useState<PersonalInfoFormState>({
+    soDienThoai: "",
+    ngaySinh: "",
+    gioiTinh: "",
+    diaChiChiTiet: "",
+    tinhThanhId: "",
+    xaPhuongId: "",
   });
 
   const [user, setUser] = useState<LocalUser | null>(null);
@@ -173,6 +187,14 @@ export default function ProfilePage() {
           gioiThieuBanThan: cp?.gioiThieuBanThan ?? "",
           mucTieuNgheNghiep: cp?.mucTieuNgheNghiep ?? "",
         });
+        setPersonalInfoForm({
+          soDienThoai: me.soDienThoai ?? "",
+          ngaySinh: me.ngaySinh ?? "",
+          gioiTinh: me.gioiTinh ?? "",
+          diaChiChiTiet: me.diaChiChiTiet ?? "",
+          tinhThanhId: me.tinhThanhId ? String(me.tinhThanhId) : "",
+          xaPhuongId: me.xaPhuongId ? String(me.xaPhuongId) : "",
+        });
       } catch (error) {
         console.error(error);
         toast.error("Không tải được dữ liệu hồ sơ ứng viên.");
@@ -181,6 +203,46 @@ export default function ProfilePage() {
 
     void loadAll();
   }, [user]);
+
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const data = await locationService.getProvinces();
+        setProvinces(data);
+      } catch {
+        toast.error("Không tải được danh sách tỉnh/thành.");
+      }
+    };
+    void loadProvinces();
+  }, []);
+
+  useEffect(() => {
+    const tinhThanhId = Number(personalInfoForm.tinhThanhId);
+    if (!tinhThanhId || Number.isNaN(tinhThanhId)) {
+      return;
+    }
+
+    const loadWards = async () => {
+      try {
+        setLoadingWards(true);
+        const data = await locationService.getWards(tinhThanhId);
+        setWards(data);
+      } catch {
+        toast.error("Không tải được danh sách xã/phường.");
+      } finally {
+        setLoadingWards(false);
+      }
+    };
+    void loadWards();
+  }, [personalInfoForm.tinhThanhId]);
+
+  const handlePersonalInfoFormChange = (next: PersonalInfoFormState) => {
+    // Reset option xã/phường hiển thị khi user đổi tỉnh/thành bằng thao tác tay.
+    if (next.tinhThanhId !== personalInfoForm.tinhThanhId) {
+      setWards([]);
+    }
+    setPersonalInfoForm(next);
+  };
 
   useEffect(() => {
     const loadActiveProfile = async () => {
@@ -481,6 +543,50 @@ export default function ProfilePage() {
     }
   };
 
+  const handleSavePersonalInfo = async () => {
+    if (personalInfoForm.tinhThanhId && !personalInfoForm.xaPhuongId) {
+      toast.error("Bạn cần chọn xã/phường khi đã chọn tỉnh/thành.");
+      return;
+    }
+
+    try {
+      setSavingPersonalInfo(true);
+      const updated = await authService.updateMe({
+        soDienThoai: personalInfoForm.soDienThoai.trim(),
+        ngaySinh: personalInfoForm.ngaySinh || null,
+        gioiTinh: personalInfoForm.gioiTinh || null,
+        diaChiChiTiet: personalInfoForm.diaChiChiTiet.trim(),
+        xaPhuongId: personalInfoForm.xaPhuongId ? Number(personalInfoForm.xaPhuongId) : null,
+      });
+      setProfile(updated);
+      setPersonalInfoForm({
+        soDienThoai: updated.soDienThoai ?? "",
+        ngaySinh: updated.ngaySinh ?? "",
+        gioiTinh: updated.gioiTinh ?? "",
+        diaChiChiTiet: updated.diaChiChiTiet ?? "",
+        tinhThanhId: updated.tinhThanhId ? String(updated.tinhThanhId) : "",
+        xaPhuongId: updated.xaPhuongId ? String(updated.xaPhuongId) : "",
+      });
+
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const localUser = JSON.parse(raw) as LocalUser;
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...localUser,
+            soDienThoai: updated.soDienThoai,
+          }),
+        );
+      }
+      toast.success("Đã cập nhật thông tin cá nhân.");
+    } catch {
+      toast.error("Không thể cập nhật thông tin cá nhân.");
+    } finally {
+      setSavingPersonalInfo(false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -535,6 +641,18 @@ export default function ProfilePage() {
               />
             </section>
           </div>
+        </section>
+
+        <section className="mt-6">
+          <PersonalInfoPanel
+            form={personalInfoForm}
+            provinces={provinces}
+            wards={wards}
+            loadingWards={loadingWards}
+            saving={savingPersonalInfo}
+            onChange={handlePersonalInfoFormChange}
+            onSave={() => void handleSavePersonalInfo()}
+          />
         </section>
 
         <section className="mt-6">

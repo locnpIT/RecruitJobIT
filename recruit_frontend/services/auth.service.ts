@@ -39,9 +39,24 @@ export interface UserProfileResponse {
   ten: string | null;
   ho: string | null;
   soDienThoai: string | null;
+  ngaySinh: string | null;
+  gioiTinh: string | null;
+  diaChiChiTiet: string | null;
+  xaPhuongId: number | null;
+  xaPhuongTen: string | null;
+  tinhThanhId: number | null;
+  tinhThanhTen: string | null;
   vaiTro: string;
   dangHoatDong: boolean;
   anhDaiDienUrl: string | null;
+}
+
+export interface UpdateMePayload {
+  soDienThoai?: string | null;
+  ngaySinh?: string | null;
+  gioiTinh?: string | null;
+  diaChiChiTiet?: string | null;
+  xaPhuongId?: number | null;
 }
 
 export interface RegisterCandidatePayload {
@@ -102,6 +117,11 @@ export const authService = {
 
   updateAvatar: async (anhDaiDienUrl: string) => {
     const response = await apiClient.patch("/auth/me/avatar", { anhDaiDienUrl });
+    return response.data.data as UserProfileResponse;
+  },
+
+  updateMe: async (payload: UpdateMePayload) => {
+    const response = await apiClient.patch("/auth/me", payload);
     return response.data.data as UserProfileResponse;
   },
 

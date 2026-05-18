@@ -5,8 +5,17 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+/**
+ * Service gửi thông tin tài khoản HR mới tạo.
+ *
+ * <p>Hiện tại đang chạy chế độ log-only để phục vụ môi trường dev.
+ * Khi tích hợp SMTP/Brevo, phần log này sẽ được thay bằng gửi mail thật.</p>
+ */
 public class HrCredentialMailService {
 
+    /**
+     * Gửi mật khẩu khởi tạo cho HR sau khi owner tạo tài khoản mới.
+     */
     public void sendInitialPassword(
             String toEmail,
             String firstName,

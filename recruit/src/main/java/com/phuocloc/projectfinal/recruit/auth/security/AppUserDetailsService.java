@@ -14,6 +14,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Tải thông tin người dùng cho Spring Security.
+ * Ngoài role hệ thống, service này còn gắn thêm thông tin thành viên công ty
+ * để các luồng company-admin có thể kiểm tra quyền theo công ty/chi nhánh.
+ */
 @Service
 @RequiredArgsConstructor
 public class AppUserDetailsService implements UserDetailsService {
@@ -21,6 +26,9 @@ public class AppUserDetailsService implements UserDetailsService {
     private final UsersRepository usersRepository;
     private final ThanhVienCongTyRepository thanhVienCongTyRepository;
 
+    /**
+     * Tìm người dùng theo email và map sang principal dùng trong toàn bộ phiên đăng nhập.
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -29,9 +37,9 @@ public class AppUserDetailsService implements UserDetailsService {
 
         List<CompanyMemberInfo> memberships = thanhVienCongTyRepository.findActiveMembershipsByUserId(user.getId()).stream()
                 .map(m -> CompanyMemberInfo.builder()
-                        .companyId(m.getChiNhanh().getCongTy().getId())
-                        .branchId(m.getChiNhanh().getId())
-                        .companyRole(m.getVaiTroCongTy().getTen())
+                        .congTyId(m.getChiNhanh().getCongTy().getId())
+                        .chiNhanhId(m.getChiNhanh().getId())
+                        .vaiTroCongTy(m.getVaiTroCongTy().getTen())
                         .build())
                 .collect(Collectors.toList());
 

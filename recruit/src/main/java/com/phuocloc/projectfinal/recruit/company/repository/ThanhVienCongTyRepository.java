@@ -7,6 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
 
+/**
+ * Repository truy cập dữ liệu cho ThanhVienCongTyRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface ThanhVienCongTyRepository extends JpaRepository<ThanhVienCongTy, ThanhVienCongTyId> {
     
     @Query("SELECT t FROM ThanhVienCongTy t " +

@@ -67,7 +67,7 @@ export interface CandidateProfileMetadata {
 
 export interface CandidateProfileListItem {
   id: number;
-  title: string;
+  tieuDe: string;
   mucTieuNgheNghiep: string | null;
   gioiThieuBanThan: string | null;
   ngayCapNhat: string | null;

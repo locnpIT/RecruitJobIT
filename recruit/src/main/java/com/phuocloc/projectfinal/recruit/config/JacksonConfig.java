@@ -6,6 +6,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Cấu hình ứng dụng cho thành phần JacksonConfig.
+ * Tập trung các bean/thuộc tính để các module dùng thống nhất.
+ */
 @Configuration
 public class JacksonConfig {
 

@@ -41,7 +41,7 @@ export function ConversationThread({
     <section className="rounded-lg border border-slate-200 bg-white">
       <header className="border-b border-slate-200 px-4 py-3">
         <h2 className="text-sm font-semibold text-slate-900">
-          {conversation?.ungVienDisplayName || "Chọn cuộc trò chuyện"}
+          {conversation?.ungVienHienThiTen || "Chọn cuộc trò chuyện"}
         </h2>
         <p className="mt-1 text-xs text-slate-500">
           {conversation?.tinNhanGanNhatLuc
@@ -65,16 +65,16 @@ export function ConversationThread({
               <p className="text-sm text-slate-500">Chưa có tin nhắn nào.</p>
             ) : (
               messages.map((message) => (
-                <div key={message.id} className={`flex ${message.mine ? "justify-end" : "justify-start"}`}>
+                <div key={message.id} className={`flex ${message.cuaToi ? "justify-end" : "justify-start"}`}>
                   <article
                     className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                      message.mine
+                      message.cuaToi
                         ? "rounded-br-md bg-slate-900 text-white"
                         : "rounded-bl-md border border-slate-200 bg-white text-slate-900"
                     }`}
                   >
                     <p className="whitespace-pre-wrap break-words leading-6">{message.noiDung}</p>
-                    <p className={`mt-1 text-right text-[11px] ${message.mine ? "text-slate-300" : "text-slate-500"}`}>
+                    <p className={`mt-1 text-right text-[11px] ${message.cuaToi ? "text-slate-300" : "text-slate-500"}`}>
                       {formatTime(message.ngayTao)}
                     </p>
                   </article>

@@ -16,6 +16,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * Thành phần bảo mật phụ trách AppUserPrinciple.
+ * Hỗ trợ xác thực/ủy quyền theo quy tắc của hệ thống.
+ */
 @Getter
 @AllArgsConstructor
 @Builder

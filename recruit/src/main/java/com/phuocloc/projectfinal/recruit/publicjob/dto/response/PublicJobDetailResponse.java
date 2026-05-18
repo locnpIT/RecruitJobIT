@@ -4,6 +4,10 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * DTO trả dữ liệu từ server cho API PublicJobDetailResponse.
+ * Giữ response rõ ràng để frontend dễ hiển thị và bảo trì.
+ */
 @Getter
 @Builder
 public class PublicJobDetailResponse {
@@ -30,7 +34,7 @@ public class PublicJobDetailResponse {
     private String soLuongTuyen;
     private String gioiTinh;
     private String capNhatLuc;
-    private Boolean batBuocCv;
+    private Boolean batBuocCV;
     private String mauCvUrl;
     private List<String> the;
     private List<String> kyNangs;

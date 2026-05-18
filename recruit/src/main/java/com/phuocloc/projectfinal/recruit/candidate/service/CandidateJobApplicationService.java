@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.candidate.service;
 
+import com.phuocloc.projectfinal.recruit.ai.service.ApplicationEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.CreateJobApplicationRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateJobApplicationResponse;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateJobApplicationStatusResponse;
@@ -32,6 +33,7 @@ public class CandidateJobApplicationService {
     private final PublicJobService publicJobService;
     private final CandidateProfileRepository candidateProfileRepository;
     private final DonUngTuyenRepository donUngTuyenRepository;
+    private final ApplicationEmbeddingIndexService chiMucNhungDonUngTuyenService;
 
     @Transactional
     public CandidateJobApplicationResponse apply(Long userId, Long jobId, CreateJobApplicationRequest request) {
@@ -61,7 +63,10 @@ public class CandidateJobApplicationService {
         application.setHoSoUngVien(profile);
         application.setTrangThai(STATUS_PENDING);
         application.setCvUrl(cvUrl);
-        return mapApplication(donUngTuyenRepository.save(application));
+        DonUngTuyen saved = donUngTuyenRepository.save(application);
+        // Sau khi tạo đơn thành công, đồng bộ chỉ mục nhúng để phục vụ semantic matching.
+        chiMucNhungDonUngTuyenService.dongBoChiMuc(saved);
+        return mapApplication(saved);
     }
 
     @Transactional(readOnly = true)
@@ -71,14 +76,14 @@ public class CandidateJobApplicationService {
         return donUngTuyenRepository
                 .findByTinTuyenDung_IdAndHoSoUngVien_NguoiDung_IdAndNgayXoaIsNull(safeJobId, candidateId)
                 .map(application -> CandidateJobApplicationStatusResponse.builder()
-                        .jobId(jobId)
-                        .applied(true)
-                        .application(mapApplication(application))
+                        .tinTuyenDungId(jobId)
+                        .daUngTuyen(true)
+                        .donUngTuyen(mapApplication(application))
                         .build())
                 .orElseGet(() -> CandidateJobApplicationStatusResponse.builder()
-                        .jobId(jobId)
-                        .applied(false)
-                        .application(null)
+                        .tinTuyenDungId(jobId)
+                        .daUngTuyen(false)
+                        .donUngTuyen(null)
                         .build());
     }
 
@@ -101,7 +106,7 @@ public class CandidateJobApplicationService {
                         : application.getHoSoUngVien().getId().longValue())
                 .trangThai(application.getTrangThai())
                 .cvUrl(application.getCvUrl())
-                .batBuocCv(job == null ? null : Boolean.TRUE.equals(job.getBatBuocCV()))
+                .batBuocCV(job == null ? null : Boolean.TRUE.equals(job.getBatBuocCV()))
                 .mauCvUrl(job == null ? null : job.getMauCvUrl())
                 .ngayTao(application.getNgayTao())
                 .build();

@@ -7,6 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 
+/**
+ * Thành phần lõi RecruitApplication của hệ thống tuyển dụng.
+ * Giữ vai trò hạ tầng/miền dùng chung giữa các module.
+ */
 @SpringBootApplication
 @EnableAspectJAutoProxy
 public class RecruitApplication {

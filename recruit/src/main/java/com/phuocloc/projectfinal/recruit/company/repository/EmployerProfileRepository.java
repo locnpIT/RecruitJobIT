@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * Repository truy cập dữ liệu cho EmployerProfileRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface EmployerProfileRepository extends JpaRepository<ThanhVienCongTy, ThanhVienCongTyId> {
 
     Optional<ThanhVienCongTy> findFirstByNguoiDung_IdAndVaiTroCongTy_TenIgnoreCase(Integer nguoiDungId, String vaiTro);

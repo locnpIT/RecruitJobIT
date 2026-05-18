@@ -6,6 +6,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/**
+ * Repository truy cập dữ liệu cho XaPhuongRepository.
+ * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
+ */
 public interface XaPhuongRepository extends JpaRepository<XaPhuong, Integer> {
 
     @EntityGraph(attributePaths = {"tinhThanh"})

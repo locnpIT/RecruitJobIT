@@ -32,7 +32,7 @@ export function connectChatWebSocket(options: ChatWebSocketOptions): WebSocket {
     try {
       // Payload realtime được backend gửi dưới dạng ChatRealtimeEventResponse (JSON).
       const data = JSON.parse(String(event.data)) as ChatRealtimeEvent;
-      if (!data?.type || !data?.conversationId) {
+      if (!data?.loai || !data?.cuocTroChuyenId) {
         return;
       }
       options.onEvent(data);

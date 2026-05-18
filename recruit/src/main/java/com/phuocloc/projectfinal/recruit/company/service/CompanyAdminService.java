@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.company.service;
 
+import com.phuocloc.projectfinal.recruit.ai.service.JobEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.company.dto.request.CreateCompanyJobRequest;
@@ -56,6 +57,7 @@ import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDun
 import com.phuocloc.projectfinal.recruit.infrastructure.sepay.SepayPaymentService;
 import com.phuocloc.projectfinal.recruit.infrastructure.sepay.SepayCheckoutForm;
 import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
+import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobElasticsearchIndexService;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
@@ -122,6 +124,8 @@ public class CompanyAdminService {
     private final CapDoKinhNghiemRepository capDoKinhNghiemRepository;
     private final SepayPaymentService sepayPaymentService;
     private final NotificationService notificationService;
+    private final JobEmbeddingIndexService chiMucNhungTinTuyenDungService;
+    private final PublicJobElasticsearchIndexService publicJobElasticsearchIndexService;
 
     @Transactional(readOnly = true)
     public CompanyAdminMeResponse getMe(AppUserPrinciple principal) {
@@ -199,11 +203,12 @@ public class CompanyAdminService {
         Integer userId = principal.getUserId().intValue();
         CongTy congTy = resolveManagedCompany(userId);
 
-        if (request == null || !StringUtils.hasText(request.getLogoUrl())) {
+        String safeLogoUrl = request == null ? null : request.getLogoUrl();
+        if (!StringUtils.hasText(safeLogoUrl)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "logoUrl không hợp lệ");
         }
 
-        congTy.setLogoUrl(request.getLogoUrl().trim());
+        congTy.setLogoUrl(safeLogoUrl.trim());
         congTy = companyRepository.save(congTy);
 
         return mapCompanyResponse(congTy);
@@ -224,8 +229,9 @@ public class CompanyAdminService {
         if (StringUtils.hasText(request.getMaSoThue())) {
             congTy.setMaSoThue(request.getMaSoThue().trim());
         }
-        if (StringUtils.hasText(request.getWebsite())) {
-            congTy.setWebsite(request.getWebsite().trim());
+        String safeWebsite = request.getWebsite();
+        if (StringUtils.hasText(safeWebsite)) {
+            congTy.setWebsite(safeWebsite.trim());
         } else {
             congTy.setWebsite(null);
         }
@@ -369,6 +375,10 @@ public class CompanyAdminService {
         tinTuyenDung = tinTuyenDungRepository.save(tinTuyenDung);
         // Lưu danh sách kỹ năng yêu cầu của tin vào bảng mapping.
         replaceJobSkills(tinTuyenDung, request.getKyNangIds());
+        // Sau khi có đủ dữ liệu job + skill mapping, đồng bộ semantic index cho tin.
+        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(tinTuyenDung);
+        // Đồng bộ full-text index cho module search Elasticsearch.
+        publicJobElasticsearchIndexService.dongBoHoacXoa(tinTuyenDung);
 
         return mapJob(tinTuyenDung, mapJobSkills(tinTuyenDung.getId()));
     }
@@ -400,6 +410,10 @@ public class CompanyAdminService {
         tinTuyenDung = tinTuyenDungRepository.save(tinTuyenDung);
         // Update kỹ năng theo chiến lược replace-all: dữ liệu trong request là nguồn sự thật.
         replaceJobSkills(tinTuyenDung, request.getKyNangIds());
+        // Re-index ngay sau update để vector phản ánh đúng nội dung mới của tin.
+        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(tinTuyenDung);
+        // Re-index full-text ngay sau update để kết quả search không bị stale.
+        publicJobElasticsearchIndexService.dongBoHoacXoa(tinTuyenDung);
 
         return mapJob(tinTuyenDung, mapJobSkills(tinTuyenDung.getId()));
     }
@@ -408,7 +422,11 @@ public class CompanyAdminService {
     public void deleteJob(AppUserPrinciple principal, Long jobId) {
         TinTuyenDung tinTuyenDung = requireManagedJob(principal, jobId);
         tinTuyenDung.setNgayXoa(LocalDateTime.now());
-        tinTuyenDungRepository.save(tinTuyenDung);
+        TinTuyenDung saved = tinTuyenDungRepository.save(tinTuyenDung);
+        // Tin bị xóa mềm thì semantic search không nên trả về, nên sync để rút point khỏi Qdrant.
+        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(saved);
+        // Tin xóa mềm phải bị rút khỏi Elasticsearch.
+        publicJobElasticsearchIndexService.dongBoHoacXoa(saved);
     }
 
     @Transactional(readOnly = true)

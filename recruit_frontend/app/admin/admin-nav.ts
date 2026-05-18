@@ -14,6 +14,5 @@ export const adminNavItems: AdminNavItem[] = [
   { label: "Duyệt tin tuyển dụng", href: "/admin/jobs" },
   { label: "Duyệt hồ sơ ứng viên", href: "/admin/candidate-proofs" },
   { label: "Gói dịch vụ", href: "/admin/plans" },
-  { label: "Báo cáo hệ thống", href: "/admin/reports" },
-  { label: "Cài đặt", href: "/admin/settings" },
+  { label: "Danh mục hệ thống", href: "/admin/catalogs" },
 ];
