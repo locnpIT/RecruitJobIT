@@ -5,6 +5,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -13,6 +14,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 /**
  * Xác thực websocket handshake bằng JWT token trên query string.
@@ -35,13 +37,21 @@ public class ChatWebSocketHandshakeInterceptor implements HandshakeInterceptor {
     ) {
         // Parse token trực tiếp từ URL handshake.
         String token = extractToken(request.getURI());
-        if (token == null || token.isBlank() || !jwtService.istokenValid(token)) {
+        if (token == null || token.isBlank()) {
+            log.warn("WS handshake reject: missing token, uri={}", request.getURI());
+            response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            return false;
+        }
+        if (!jwtService.istokenValid(token)) {
+            log.warn("WS handshake reject: invalid token, uri={}", request.getURI());
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
 
         // userId sẽ được ChatWebSocketHandler dùng để register session đúng owner.
-        attributes.put(WS_USER_ID_ATTRIBUTE, jwtService.extractUserIdFromToken(token));
+        Long userId = jwtService.extractUserIdFromToken(token);
+        attributes.put(WS_USER_ID_ATTRIBUTE, userId);
+        log.debug("WS handshake accepted: userId={}, uri={}", userId, request.getURI());
         return true;
     }
 

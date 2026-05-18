@@ -94,7 +94,8 @@ public class SecurityConfig {
                         // Top companies public dùng cho homepage.
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/companies/**").permitAll()
                         // Handshake websocket chat dùng query token riêng nên phải mở public tại đây.
-                        .requestMatchers("/ws/chat/**").permitAll()
+                        // Khai báo cả endpoint gốc "/ws/chat" và pattern con để tránh miss-match matcher.
+                        .requestMatchers("/ws/chat", "/ws/chat/**").permitAll()
                         .requestMatchers(
                                 // Các route auth public + webhook SePay phải được mở để hệ thống bên ngoài gọi tới.
                                 "/api/v1/auth/login",

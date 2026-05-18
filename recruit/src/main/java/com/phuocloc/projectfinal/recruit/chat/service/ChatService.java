@@ -130,17 +130,23 @@ public class ChatService {
         message.setDaDoc(false);
         TinNhan saved = tinNhanRepository.save(message);
 
-        ChatMessageResponse mapped = mapMessage(saved, viewerId);
-        // Sau khi lưu DB thành công mới broadcast để tránh client nhận tin "ảo".
-        chatRealtimePublisher.publishToUsers(
-                resolveParticipantIds(conversation),
-                ChatRealtimeEventResponse.builder()
-                        .loai("NEW_MESSAGE")
-                        .cuocTroChuyenId(cuocTroChuyenId)
-                        .tinNhan(mapped)
-                        .build()
-        );
-        return mapped;
+        ChatMessageResponse senderView = mapMessage(saved, viewerId);
+        // Quan trọng: mỗi phía cần nhận payload "cuaToi" theo chính họ.
+        // Nếu broadcast cùng một object cho cả 2 user thì phía nhận sẽ hiển thị bubble sai hướng
+        // (tin từ đối phương nhưng vẫn nằm bên phải cho tới khi reload).
+        for (Long participantUserId : resolveParticipantIds(conversation)) {
+            Integer participantViewerId = Math.toIntExact(participantUserId);
+            ChatMessageResponse participantView = mapMessage(saved, participantViewerId);
+            chatRealtimePublisher.publishToUsers(
+                    Set.of(participantUserId),
+                    ChatRealtimeEventResponse.builder()
+                            .loai("NEW_MESSAGE")
+                            .cuocTroChuyenId(cuocTroChuyenId)
+                            .tinNhan(participantView)
+                            .build()
+            );
+        }
+        return senderView;
     }
 
     private ChatConversationResponse mapConversation(CuocTroChuyen conversation, Integer viewerId) {

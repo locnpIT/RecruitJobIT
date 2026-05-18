@@ -22,7 +22,8 @@ public class ChatWebSocketConfig implements WebSocketConfigurer {
         // Endpoint realtime thống nhất cho client.
         registry.addHandler(chatWebSocketHandler, "/ws/chat")
                 .addInterceptors(chatWebSocketHandshakeInterceptor)
-                // Đồng bộ với CORS frontend local hiện tại.
-                .setAllowedOrigins("http://localhost:3000");
+                // Nới origin pattern ở môi trường dev để loại trừ lỗi handshake do lệch host/port/protocol.
+                // Khi deploy production nên giới hạn lại theo domain thực tế.
+                .setAllowedOriginPatterns("*");
     }
 }

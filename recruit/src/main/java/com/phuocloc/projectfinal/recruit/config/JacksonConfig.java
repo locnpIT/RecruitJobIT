@@ -1,25 +1,28 @@
 package com.phuocloc.projectfinal.recruit.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Cấu hình ứng dụng cho thành phần JacksonConfig.
- * Tập trung các bean/thuộc tính để các module dùng thống nhất.
+ * Cấu hình Jackson dùng chung cho toàn ứng dụng.
+ *
+ * <p>Bắt buộc đăng ký JavaTimeModule để serialize/deserialize LocalDateTime ổn định
+ * cho cả REST và websocket realtime payload.</p>
  */
 @Configuration
 public class JacksonConfig {
 
-    /**
-     * Khai báo fallback ObjectMapper cho các luồng serialize thủ công (ví dụ websocket payload).
-     * findAndAddModules giúp tự nạp module LocalDateTime nếu dependency có sẵn.
-     */
     @Bean
     @ConditionalOnMissingBean(ObjectMapper.class)
     public ObjectMapper objectMapper() {
-        return JsonMapper.builder().findAndAddModules().build();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        // Trả date-time dạng ISO-8601 thay vì timestamp số để frontend đọc trực tiếp.
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
     }
 }

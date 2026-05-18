@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { ChatConversation, ChatMessage } from "@/services/chat.service";
 
 type ConversationThreadProps = {
@@ -36,6 +37,27 @@ export function ConversationThread({
   onSend,
 }: ConversationThreadProps) {
   const canSend = inputValue.trim().length > 0 && !sending && Boolean(conversation);
+  const messageContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = () => {
+    const container = messageContainerRef.current;
+    if (!container) {
+      return;
+    }
+    container.scrollTop = container.scrollHeight;
+  };
+
+  useEffect(() => {
+    // Khi mở cuộc trò chuyện hoặc load xong lịch sử, luôn nhảy xuống cuối để thấy tin mới nhất.
+    if (!loading) {
+      scrollToBottom();
+    }
+  }, [loading, conversation?.id]);
+
+  useEffect(() => {
+    // Khi có tin nhắn mới được append, tự cuộn xuống cuối.
+    scrollToBottom();
+  }, [messages.length]);
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white">
@@ -60,7 +82,10 @@ export function ConversationThread({
             {error}
           </div>
         ) : (
-          <div className="h-80 space-y-3 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3">
+          <div
+            ref={messageContainerRef}
+            className="h-80 space-y-3 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3"
+          >
             {messages.length === 0 ? (
               <p className="text-sm text-slate-500">Chưa có tin nhắn nào.</p>
             ) : (

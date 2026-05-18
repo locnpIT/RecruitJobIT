@@ -2,6 +2,7 @@ package com.phuocloc.projectfinal.recruit.notification.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.util.StringUtils;
@@ -14,7 +15,8 @@ import org.springframework.util.StringUtils;
  */
 public final class NotificationPayloadCodec {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    // Dùng mapper có auto-register modules để tránh lỗi date/time khi payload mở rộng trong tương lai.
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().findAndAddModules().build();
 
     private NotificationPayloadCodec() {
     }

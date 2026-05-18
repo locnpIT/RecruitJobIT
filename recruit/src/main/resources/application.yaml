@@ -30,6 +30,10 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+  devtools:
+    restart:
+      # Tránh lỗi ClassNotFound/NoClassDefFoundError do RestartClassLoader giữ class cũ.
+      enabled: false
 
 app:
   jwt:
