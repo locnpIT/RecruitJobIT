@@ -1,3 +1,5 @@
+import { StateCard } from "@/app/components/shared/StateCard";
+
 type TopCompaniesStatesProps = {
   loading: boolean;
   empty: boolean;
@@ -6,19 +8,11 @@ type TopCompaniesStatesProps = {
 // Tách các trạng thái loading/empty riêng để giảm if-else lồng trong section chính.
 export function TopCompaniesStates({ loading, empty }: TopCompaniesStatesProps) {
   if (loading) {
-    return (
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-        Đang tải danh sách doanh nghiệp...
-      </div>
-    );
+    return <StateCard message="Đang tải danh sách doanh nghiệp..." tone="muted" />;
   }
 
   if (empty) {
-    return (
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-        Chưa có doanh nghiệp nổi bật để hiển thị.
-      </div>
-    );
+    return <StateCard message="Chưa có doanh nghiệp nổi bật để hiển thị." tone="muted" />;
   }
 
   return null;

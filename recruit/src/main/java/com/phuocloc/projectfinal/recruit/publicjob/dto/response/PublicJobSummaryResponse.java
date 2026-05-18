@@ -15,7 +15,10 @@ public class PublicJobSummaryResponse {
     private Long id;
     private String maTin;
     private String tieuDe;
+    private Long congTyId;
     private String congTyTen;
+    private String congTyLogoUrl;
+    private String logoUrl;
     private String diaDiem;
     private String mucLuong;
     private String capDo;

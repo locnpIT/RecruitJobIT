@@ -25,4 +25,6 @@ public interface CompanyRepository extends JpaRepository<CongTy, Integer>, JpaSp
 
     @Query("SELECT COUNT(c) FROM CongTy c WHERE c.ngayXoa IS NULL AND LOWER(c.trangThai) IN :statuses")
     long countByNgayXoaIsNullAndTrangThaiIn(List<String> statuses);
+
+    Optional<CongTy> findByIdAndNgayXoaIsNullAndTrangThaiIgnoreCase(Integer id, String trangThai);
 }

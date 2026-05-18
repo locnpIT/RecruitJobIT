@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, Loader2, X } from "lucide-react";
+import { ExternalLink, FileText, Loader2, MessageSquareText, X } from "lucide-react";
 import type { CompanyAdminApplication } from "@/services/company-admin.service";
 import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
 
@@ -14,8 +14,10 @@ type ApplicationDetailModalProps = {
   application: CompanyAdminApplication | null;
   loading: boolean;
   savingStatus: boolean;
+  openingChat: boolean;
   onClose: () => void;
   onStatusChange: (status: string) => void;
+  onOpenChat: () => void;
 };
 
 // Modal chi tiết đơn ứng tuyển cho Owner/HR.
@@ -25,8 +27,10 @@ export function ApplicationDetailModal({
   application,
   loading,
   savingStatus,
+  openingChat,
   onClose,
   onStatusChange,
+  onOpenChat,
 }: ApplicationDetailModalProps) {
   if (!open) {
     return null;
@@ -85,19 +89,39 @@ export function ApplicationDetailModal({
                     <p className="text-sm font-medium text-slate-700">Trạng thái đơn</p>
                     <div className="mt-2"><ApplicationStatusBadge status={application.trangThai} /></div>
                   </div>
-                  {application.cvUrl ? (
-                    <a
-                      href={application.cvUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={onOpenChat}
+                      disabled={openingChat}
+                      className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                     >
-                      <FileText className="h-4 w-4" />
-                      Tải CV
-                    </a>
-                  ) : (
-                    <span className="text-sm text-slate-500">Không có CV đính kèm</span>
-                  )}
+                      {openingChat ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Đang mở chat...
+                        </>
+                      ) : (
+                        <>
+                          <MessageSquareText className="h-4 w-4" />
+                          Gửi tin nhắn
+                        </>
+                      )}
+                    </button>
+                    {application.cvUrl ? (
+                      <a
+                        href={application.cvUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Tải CV
+                      </a>
+                    ) : (
+                      <span className="text-sm text-slate-500">Không có CV đính kèm</span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">

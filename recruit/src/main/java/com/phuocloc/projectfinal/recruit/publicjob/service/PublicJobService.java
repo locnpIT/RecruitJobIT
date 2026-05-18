@@ -150,6 +150,7 @@ public class PublicJobService {
                 .id(toLong(job.getId()))
                 .maTin(buildJobCode(job))
                 .tieuDe(job.getTieuDe())
+                .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
                 .trangThai("Đang tuyển dụng")
                 .congTy(resolveCompanyName(job))
                 .congTyDaXacMinh(isCompanyApproved(resolveCompany(job)))
@@ -165,9 +166,7 @@ public class PublicJobService {
                 .kinhNghiem(job.getCapDoKinhNghiem() == null ? "Đang cập nhật" : job.getCapDoKinhNghiem().getTen())
                 .hanNop(formatDate(job.getDenHanLuc()))
                 .dangLuc(formatRelativeTime(job.getNgayTao()))
-                .hocVan("Không yêu cầu")
                 .soLuongTuyen(job.getSoLuongTuyen() == null ? "Đang cập nhật" : job.getSoLuongTuyen() + " người")
-                .gioiTinh("Không yêu cầu")
                 .capNhatLuc(formatRelativeTime(job.getNgayCapNhat()))
                 .batBuocCV(Boolean.TRUE.equals(job.getBatBuocCV()))
                 .mauCvUrl(job.getMauCvUrl())
@@ -192,11 +191,15 @@ public class PublicJobService {
     }
 
     public PublicJobSummaryResponse mapSummary(TinTuyenDung job) {
+        String companyLogoUrl = resolveCompany(job) == null ? null : resolveCompany(job).getLogoUrl();
         return PublicJobSummaryResponse.builder()
                 .id(toLong(job.getId()))
                 .maTin(buildJobCode(job))
                 .tieuDe(job.getTieuDe())
+                .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
                 .congTyTen(resolveCompanyName(job))
+                .congTyLogoUrl(companyLogoUrl)
+                .logoUrl(companyLogoUrl)
                 .diaDiem(resolveLocation(job))
                 .mucLuong(formatSalary(job))
                 .capDo(job.getCapDoKinhNghiem() == null ? "Đang cập nhật" : job.getCapDoKinhNghiem().getTen())

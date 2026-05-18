@@ -63,13 +63,15 @@ export function JobSidebar({
 
         <p className="mt-5 text-sm leading-6 text-slate-600">{job.moTaCongTy}</p>
 
-        <Link
-          href="/auth/login"
-          className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:underline"
-        >
-          Xem thêm về công ty
-          <ExternalLink className="h-4 w-4" />
-        </Link>
+        {job.congTyId ? (
+          <Link
+            href={`/companies/${job.congTyId}`}
+            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:underline"
+          >
+            Xem thêm về công ty
+            <ExternalLink className="h-4 w-4" />
+          </Link>
+        ) : null}
 
         <div className="mt-6 space-y-3">
           <button

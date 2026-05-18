@@ -4,7 +4,10 @@ export type PublicJobSummary = {
   id: number;
   maTin: string | null;
   tieuDe: string;
+  congTyId: number | null;
   congTyTen: string;
+  congTyLogoUrl: string | null;
+  logoUrl?: string | null;
   diaDiem: string;
   mucLuong: string;
   capDo: string;
@@ -19,6 +22,7 @@ export type PublicJobDetail = {
   id: number;
   maTin: string | null;
   tieuDe: string;
+  congTyId: number | null;
   trangThai: string;
   congTy: string;
   congTyDaXacMinh: boolean;
@@ -34,9 +38,7 @@ export type PublicJobDetail = {
   kinhNghiem: string;
   hanNop: string;
   dangLuc: string;
-  hocVan: string;
   soLuongTuyen: string;
-  gioiTinh: string;
   capNhatLuc: string;
   batBuocCV: boolean;
   mauCvUrl: string | null;

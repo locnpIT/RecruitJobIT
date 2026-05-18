@@ -1,5 +1,6 @@
 import { MessageCircle, X } from "lucide-react";
 import type { ChatConversation, ChatMessage } from "@/services/chat.service";
+import { buildRecruiterLabel } from "@/app/chat/utils/chat-partner-label";
 import { ChatComposer } from "./ChatComposer";
 import { ChatMessageList } from "./ChatMessageList";
 
@@ -45,7 +46,11 @@ export function JobChatModal({
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Chat tuyển dụng</p>
               <h2 className="mt-1 text-lg font-semibold text-slate-950">
-                {conversation?.nhaTuyenDungHienThiTen ?? "Nhà tuyển dụng"}
+                {buildRecruiterLabel(
+                  conversation?.nhaTuyenDungHienThiTen,
+                  conversation?.nhaTuyenDungCongTyTen,
+                  "Nhà tuyển dụng"
+                )}
               </h2>
             </div>
           </div>

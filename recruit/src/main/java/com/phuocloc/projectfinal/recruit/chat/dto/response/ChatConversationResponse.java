@@ -18,6 +18,7 @@ public class ChatConversationResponse {
     private String ungVienAnhDaiDienUrl;
     private Long nhaTuyenDungId;
     private String nhaTuyenDungHienThiTen;
+    private String nhaTuyenDungCongTyTen;
     private String nhaTuyenDungAnhDaiDienUrl;
     private String tinNhanGanNhat;
     private LocalDateTime tinNhanGanNhatLuc;

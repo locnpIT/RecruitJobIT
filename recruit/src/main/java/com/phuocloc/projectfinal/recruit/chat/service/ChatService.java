@@ -6,12 +6,19 @@ import com.phuocloc.projectfinal.recruit.chat.dto.response.ChatConversationRespo
 import com.phuocloc.projectfinal.recruit.chat.dto.response.ChatMessageResponse;
 import com.phuocloc.projectfinal.recruit.chat.dto.response.ChatRealtimeEventResponse;
 import com.phuocloc.projectfinal.recruit.chat.websocket.ChatRealtimePublisher;
+import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
+import com.phuocloc.projectfinal.recruit.company.repository.ThanhVienCongTyRepository;
+import com.phuocloc.projectfinal.recruit.company.service.CompanyAdminAccessService;
 import com.phuocloc.projectfinal.recruit.domain.chat.entity.CuocTroChuyen;
 import com.phuocloc.projectfinal.recruit.domain.chat.entity.TinNhan;
 import com.phuocloc.projectfinal.recruit.domain.chat.repository.CuocTroChuyenRepository;
 import com.phuocloc.projectfinal.recruit.domain.chat.repository.TinNhanRepository;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.DonUngTuyenRepository;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobService;
 import java.util.Comparator;
 import java.util.List;
@@ -36,11 +43,20 @@ import org.springframework.web.server.ResponseStatusException;
 public class ChatService {
 
     private static final int MAX_MESSAGE_LENGTH = 2000;
+    private static final Set<String> COMPANY_CHAT_ROLES = Set.of(
+            EmployerCompanyRole.OWNER.name(),
+            EmployerCompanyRole.MASTER_BRANCH.name(),
+            EmployerCompanyRole.HR.name()
+    );
 
     private final UsersRepository usersRepository;
     private final PublicJobService publicJobService;
+    private final CompanyAdminAccessService companyAdminAccessService;
     private final CuocTroChuyenRepository cuocTroChuyenRepository;
     private final TinNhanRepository tinNhanRepository;
+    private final DonUngTuyenRepository donUngTuyenRepository;
+    private final TinTuyenDungRepository tinTuyenDungRepository;
+    private final ThanhVienCongTyRepository thanhVienCongTyRepository;
     private final ChatRealtimePublisher chatRealtimePublisher;
 
     @Transactional
@@ -64,6 +80,40 @@ public class ChatService {
                 // DB model hiện tại xem room là unique theo cặp candidate-recruiter.
                 .findByUngVien_IdAndNhaTuyenDung_Id(viewerId, recruiterId)
                 .orElseGet(() -> cuocTroChuyenRepository.save(new CuocTroChuyen(null, null, viewer, recruiter)));
+
+        return mapConversation(conversation, viewerId);
+    }
+
+    @Transactional
+    public ChatConversationResponse openConversationByApplicationForRecruiter(Long userId, Long applicationId) {
+        Integer viewerId = toIntId(userId, "userId");
+        Integer safeApplicationId = toIntId(applicationId, "applicationId");
+        DonUngTuyen application = donUngTuyenRepository.findByIdAndNgayXoaIsNull(safeApplicationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đơn ứng tuyển"));
+
+        TinTuyenDung job = application.getTinTuyenDung();
+        if (job == null || job.getChiNhanh() == null || job.getChiNhanh().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đơn ứng tuyển chưa gắn chi nhánh hợp lệ");
+        }
+
+        // Chỉ owner/hr/master-branch của chi nhánh quản lý đơn mới được mở chat từ màn ứng viên.
+        companyAdminAccessService.requireMembership(viewerId, job.getChiNhanh().getId(), COMPANY_CHAT_ROLES);
+
+        Integer candidateId = application.getHoSoUngVien() != null && application.getHoSoUngVien().getNguoiDung() != null
+                ? application.getHoSoUngVien().getNguoiDung().getId()
+                : null;
+        if (candidateId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đơn ứng tuyển chưa có ứng viên hợp lệ");
+        }
+        if (Objects.equals(viewerId, candidateId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn không thể tự chat với chính mình");
+        }
+
+        NguoiDung candidate = requireUser(candidateId);
+        NguoiDung recruiter = requireUser(viewerId);
+        CuocTroChuyen conversation = cuocTroChuyenRepository
+                .findByUngVien_IdAndNhaTuyenDung_Id(candidateId, viewerId)
+                .orElseGet(() -> cuocTroChuyenRepository.save(new CuocTroChuyen(null, null, candidate, recruiter)));
 
         return mapConversation(conversation, viewerId);
     }
@@ -157,20 +207,66 @@ public class ChatService {
         );
         TinNhan lastMessage = lastMessageCandidates.isEmpty() ? null : lastMessageCandidates.getFirst();
         long unreadCount = tinNhanRepository.countUnreadByConversationIdAndViewerId(conversation.getId(), viewerId);
+        Integer recruiterId = conversation.getNhaTuyenDung() == null ? null : conversation.getNhaTuyenDung().getId();
 
         return ChatConversationResponse.builder()
                 .id(toLong(conversation.getId()))
                 .ungVienId(conversation.getUngVien() == null ? null : toLong(conversation.getUngVien().getId()))
                 .ungVienHienThiTen(resolveDisplayName(conversation.getUngVien()))
                 .ungVienAnhDaiDienUrl(conversation.getUngVien() == null ? null : conversation.getUngVien().getAnhDaiDienUrl())
-                .nhaTuyenDungId(conversation.getNhaTuyenDung() == null ? null : toLong(conversation.getNhaTuyenDung().getId()))
+                .nhaTuyenDungId(recruiterId == null ? null : toLong(recruiterId))
                 .nhaTuyenDungHienThiTen(resolveDisplayName(conversation.getNhaTuyenDung()))
+                .nhaTuyenDungCongTyTen(resolveRecruiterCompanyName(recruiterId))
                 .nhaTuyenDungAnhDaiDienUrl(conversation.getNhaTuyenDung() == null ? null : conversation.getNhaTuyenDung().getAnhDaiDienUrl())
                 .tinNhanGanNhat(lastMessage == null ? null : lastMessage.getNoiDung())
                 .tinNhanGanNhatLuc(lastMessage == null ? null : lastMessage.getNgayTao())
                 .soTinChuaDoc(unreadCount)
                 .ngayTao(conversation.getNgayTao())
                 .build();
+    }
+
+    private String resolveRecruiterCompanyName(Integer recruiterId) {
+        if (recruiterId == null) {
+            return null;
+        }
+
+        List<ThanhVienCongTy> memberships = thanhVienCongTyRepository.findActiveMembershipsByUserId(recruiterId);
+
+        // Ưu tiên membership đang ACTIVE để hiển thị đúng công ty hiện tại của HR trong danh sách chat.
+        String activeCompanyName = memberships.stream()
+                .filter(membership -> "ACTIVE".equalsIgnoreCase(membership.getTrangThai()))
+                .map(this::extractCompanyName)
+                .filter(StringUtils::hasText)
+                .findFirst()
+                .orElse(null);
+
+        if (StringUtils.hasText(activeCompanyName)) {
+            return activeCompanyName;
+        }
+
+        // Fallback an toàn: nếu thiếu trạng thái ACTIVE, lấy công ty đầu tiên có dữ liệu.
+        String companyNameFromMembership = memberships.stream()
+                .map(this::extractCompanyName)
+                .filter(StringUtils::hasText)
+                .findFirst()
+                .orElse(null);
+        if (StringUtils.hasText(companyNameFromMembership)) {
+            return companyNameFromMembership;
+        }
+
+        // Fallback cuối: có một số account HR chưa có membership chuẩn nhưng vẫn là "nguoiDang" của job.
+        // Trường hợp này lấy công ty từ tin tuyển dụng mới nhất của recruiter để UI vẫn phân biệt được.
+        return tinTuyenDungRepository.findCompanyNamesByRecruiterId(recruiterId, PageRequest.of(0, 1)).stream()
+                .filter(StringUtils::hasText)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String extractCompanyName(ThanhVienCongTy membership) {
+        if (membership == null || membership.getChiNhanh() == null || membership.getChiNhanh().getCongTy() == null) {
+            return null;
+        }
+        return membership.getChiNhanh().getCongTy().getTen();
     }
 
     private ChatMessageResponse mapMessage(TinNhan message, Integer viewerId) {

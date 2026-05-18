@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HomeFooter } from "@/app/components/home/HomeFooter";
@@ -8,6 +7,9 @@ import { HomeHeader } from "@/app/components/home/HomeHeader";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 import { publicJobService, type PublicJobSummary } from "@/services/public-job.service";
 import { PublicJobCard } from "../jobs/components/PublicJobCard";
+import { StateCard } from "@/app/components/shared/StateCard";
+import { FavoriteJobsEmptyState } from "./components/FavoriteJobsEmptyState";
+import { FavoriteJobsHeader } from "./components/FavoriteJobsHeader";
 
 type LocalUser = {
   vaiTro?: string;
@@ -105,52 +107,17 @@ export default function FavoriteJobsPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <HomeHeader />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 md:py-10">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Candidate
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-slate-950 md:text-3xl">
-              Việc làm yêu thích
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-              Danh sách các tin bạn đã lưu để xem lại và ứng tuyển sau.
-            </p>
-          </div>
-          <Link
-            href="/jobs"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-          >
-            Xem thêm việc làm
-          </Link>
-        </div>
+        <FavoriteJobsHeader />
 
         {isLoading ? (
-          <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-500">
-            Đang tải việc làm yêu thích...
-          </div>
+          <StateCard message="Đang tải việc làm yêu thích..." paddingClassName="p-5" />
         ) : null}
 
         {!isLoading && error ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-            {error}
-          </div>
+          <StateCard message={error} tone="error" paddingClassName="p-5" />
         ) : null}
 
-        {!isLoading && !error && jobs.length === 0 ? (
-          <div className="rounded-lg border border-slate-200 bg-white p-6">
-            <p className="font-semibold text-slate-950">Bạn chưa lưu tin tuyển dụng nào</p>
-            <p className="mt-2 text-sm text-slate-600">
-              Khi thấy tin phù hợp, hãy bấm “Lưu tin tuyển dụng” để quay lại sau.
-            </p>
-            <Link
-              href="/jobs"
-              className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              Tìm việc ngay
-            </Link>
-          </div>
-        ) : null}
+        {!isLoading && !error && jobs.length === 0 ? <FavoriteJobsEmptyState /> : null}
 
         {!isLoading && !error && jobs.length > 0 ? (
           <div className="space-y-3">

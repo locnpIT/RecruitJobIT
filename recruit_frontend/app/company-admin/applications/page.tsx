@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Download, Eye, Loader2 } from "lucide-react";
 
 import { companyAdminService, type CompanyAdminApplication, type CompanyAdminBranch } from "@/services/company-admin.service";
+import { chatService } from "@/services/chat.service";
 import { isCompanyApproved } from "../company-admin-status";
 import { CompanyAdminRestrictedNotice } from "../components/CompanyAdminRestrictedNotice";
 import { ApplicationDetailModal } from "./components/ApplicationDetailModal";
@@ -27,6 +29,7 @@ const DEFAULT_FILTERS: ApplicationFiltersValue = {
  * - Modal detail gọi API riêng để xem hồ sơ ứng viên, CV, học vấn, chứng chỉ và kỹ năng.
  */
 export default function CompanyAdminApplicationsPage() {
+  const router = useRouter();
   const [branches, setBranches] = useState<CompanyAdminBranch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [applications, setApplications] = useState<CompanyAdminApplication[]>([]);
@@ -37,6 +40,7 @@ export default function CompanyAdminApplicationsPage() {
   const [isLoadingApplications, setIsLoadingApplications] = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [openingChatApplicationId, setOpeningChatApplicationId] = useState<number | null>(null);
   const [companyStatus, setCompanyStatus] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -156,6 +160,23 @@ export default function CompanyAdminApplicationsPage() {
     }
   };
 
+  // Từ màn ứng viên, HR/Owner có thể mở trực tiếp room chat với ứng viên của đơn.
+  // Backend sẽ tự tạo room mới nếu chưa tồn tại theo cặp (ungVienId, recruiterId hiện tại).
+  const handleOpenChat = async (applicationId: number | null) => {
+    if (!applicationId) {
+      return;
+    }
+    setOpeningChatApplicationId(applicationId);
+    try {
+      const conversation = await chatService.openByApplication(applicationId);
+      router.push(`/company-admin/messages?cuocTroChuyenId=${conversation.id}`);
+    } catch {
+      setError("Không thể mở cuộc trò chuyện với ứng viên.");
+    } finally {
+      setOpeningChatApplicationId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center text-slate-500">
@@ -249,14 +270,31 @@ export default function CompanyAdminApplicationsPage() {
                       <td className="py-3"><ApplicationStatusBadge status={application.trangThai} /></td>
                       <td className="py-3 text-slate-600">{formatDateTime(application.ngayTao)}</td>
                       <td className="py-3 pr-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenDetail(application.id)}
-                          className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                        >
-                          <Eye className="h-4 w-4" />
-                          Xem hồ sơ
-                        </button>
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={openingChatApplicationId === application.id}
+                            onClick={() => handleOpenChat(application.id)}
+                            className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                          >
+                            {openingChatApplicationId === application.id ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Đang mở chat...
+                              </>
+                            ) : (
+                              "Gửi tin nhắn"
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDetail(application.id)}
+                            className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Xem hồ sơ
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -272,8 +310,10 @@ export default function CompanyAdminApplicationsPage() {
         application={selectedApplication}
         loading={isLoadingDetail}
         savingStatus={isSavingStatus}
+        openingChat={openingChatApplicationId === selectedApplication?.id}
         onClose={() => setDetailOpen(false)}
         onStatusChange={handleStatusChange}
+        onOpenChat={() => handleOpenChat(selectedApplication?.id ?? null)}
       />
     </div>
   );

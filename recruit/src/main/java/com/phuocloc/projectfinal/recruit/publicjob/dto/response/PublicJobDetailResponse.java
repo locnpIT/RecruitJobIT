@@ -15,6 +15,7 @@ public class PublicJobDetailResponse {
     private Long id;
     private String maTin;
     private String tieuDe;
+    private Long congTyId;
     private String trangThai;
     private String congTy;
     private Boolean congTyDaXacMinh;
@@ -30,9 +31,7 @@ public class PublicJobDetailResponse {
     private String kinhNghiem;
     private String hanNop;
     private String dangLuc;
-    private String hocVan;
     private String soLuongTuyen;
-    private String gioiTinh;
     private String capNhatLuc;
     private Boolean batBuocCV;
     private String mauCvUrl;

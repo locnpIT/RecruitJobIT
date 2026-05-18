@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { HomeHeader } from "../components/home/HomeHeader";
 import { HomeFooter } from "../components/home/HomeFooter";
@@ -14,32 +13,21 @@ import { WorkExperiencePanel } from "./components/WorkExperiencePanel";
 import { CertificatePanel } from "./components/CertificatePanel";
 import { SummaryPanel } from "./components/SummaryPanel";
 import { ProfileHero } from "./components/ProfileHero";
-import { PersonalInfoPanel, type PersonalInfoFormState } from "./components/PersonalInfoPanel";
-import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
-import { authService, type UserProfileResponse } from "@/services/auth.service";
-import { locationService, type Province, type Ward } from "@/services/location.service";
+import { PersonalInfoPanel } from "./components/PersonalInfoPanel";
+import { authService } from "@/services/auth.service";
 import {
   candidateProfileService,
   type CandidateCertificateItem,
   type CandidateEducationItem,
-  type CandidateProfile,
-  type CandidateProfileListItem,
-  type CandidateProfileMetadata,
   type CandidateWorkExperienceItem,
 } from "@/services/candidate-profile.service";
+import { useCandidateProfileData } from "./hooks/useCandidateProfileData";
+import { useCandidateProfileSession } from "./hooks/useCandidateProfileSession";
+import type { LocalUser } from "./hooks/types";
+import { useProfileLocationForm } from "./hooks/useProfileLocationForm";
 
 // Trang profile ứng viên.
-// File này giữ state tổng cho toàn bộ hồ sơ: nhiều profile, kỹ năng, học vấn, chứng chỉ, avatar và summary.
-type LocalUser = {
-  id: number;
-  email: string;
-  ten: string | null;
-  ho: string | null;
-  soDienThoai?: string | null;
-  vaiTro: string;
-  dangHoatDong: boolean;
-  anhDaiDienUrl?: string | null;
-};
+// Sau refactor, page chủ yếu orchestration; state session/data/location được tách qua hooks.
 
 const EMPTY_EDU = {
   tenTruong: "",
@@ -67,14 +55,7 @@ const EMPTY_EXP = {
 };
 
 export default function ProfilePage() {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const [profile, setProfile] = useState<UserProfileResponse | null>(null);
-  const [candidateData, setCandidateData] = useState<CandidateProfile | null>(null);
-  const [metadata, setMetadata] = useState<CandidateProfileMetadata | null>(null);
-  const [profiles, setProfiles] = useState<CandidateProfileListItem[]>([]);
-  const [activeProfileId, setActiveProfileId] = useState<number | null>(null);
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingEduProof, setUploadingEduProof] = useState(false);
@@ -86,182 +67,37 @@ export default function ProfilePage() {
   const [savingIndustries, setSavingIndustries] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
   const [savingPersonalInfo, setSavingPersonalInfo] = useState(false);
-  const [loadingWards, setLoadingWards] = useState(false);
 
   const [eduForm, setEduForm] = useState(EMPTY_EDU);
   const [certForm, setCertForm] = useState(EMPTY_CERT);
   const [expForm, setExpForm] = useState(EMPTY_EXP);
-  const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
-  const [selectedIndustryIds, setSelectedIndustryIds] = useState<number[]>([]);
-  const [summaryForm, setSummaryForm] = useState({
-    gioiThieuBanThan: "",
-    mucTieuNgheNghiep: "",
-  });
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [wards, setWards] = useState<Ward[]>([]);
-  const [personalInfoForm, setPersonalInfoForm] = useState<PersonalInfoFormState>({
-    soDienThoai: "",
-    ngaySinh: "",
-    gioiTinh: "",
-    diaChiChiTiet: "",
-    tinhThanhId: "",
-    xaPhuongId: "",
-  });
-
-  const [user, setUser] = useState<LocalUser | null>(null);
-  const [sessionChecked, setSessionChecked] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    // Profile là route private nhưng vẫn render bằng client component trong App Router.
-    // Đọc localStorage sau mount để tránh hydration mismatch, đồng thời kiểm tra token hết hạn
-    // trước khi gọi các API `/candidate/profile/**` nhằm tránh 403 do session cũ.
-    Promise.resolve().then(() => {
-      if (!isMounted) {
-        return;
-      }
-
-      try {
-        const token = localStorage.getItem("token");
-        const expiresAt = token ? getJwtExpiryMs(token) : null;
-        if (!token || (expiresAt !== null && expiresAt <= Date.now())) {
-          clearAdminSession();
-          setUser(null);
-          setSessionChecked(true);
-          router.replace("/auth/login");
-          return;
-        }
-
-        const raw = localStorage.getItem("user");
-        setUser(raw ? (JSON.parse(raw) as LocalUser) : null);
-        setSessionChecked(true);
-      } catch {
-        clearAdminSession();
-        setUser(null);
-        setSessionChecked(true);
-        router.replace("/auth/login");
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
-
-  useEffect(() => {
-    // Không redirect khi chưa đọc xong session local, nếu không user hợp lệ sẽ bị đá về login quá sớm.
-    if (!sessionChecked) {
-      return;
-    }
-
-    if (!user) {
-      router.replace("/auth/login");
-      return;
-    }
-
-    if (user.vaiTro?.toUpperCase() !== "CANDIDATE") {
-      router.replace("/");
-    }
-  }, [router, sessionChecked, user]);
-
-  useEffect(() => {
-    const loadAll = async () => {
-      if (!user) return;
-      try {
-        const [me, profileList, meta] = await Promise.all([
-          authService.getMe(),
-          candidateProfileService.listProfiles(),
-          candidateProfileService.getMetadata(),
-        ]);
-        const selectedId = profileList[0]?.id ?? null;
-        const cp = selectedId ? await candidateProfileService.getProfileById(selectedId) : null;
-        setProfile(me);
-        setProfiles(profileList);
-        setActiveProfileId(selectedId);
-        setCandidateData(cp);
-        setMetadata(meta);
-        setSelectedSkillIds(cp?.kyNangs?.map((item) => item.id) ?? []);
-        setSelectedIndustryIds(cp?.nganhNghes?.map((item) => item.id) ?? []);
-        setSummaryForm({
-          gioiThieuBanThan: cp?.gioiThieuBanThan ?? "",
-          mucTieuNgheNghiep: cp?.mucTieuNgheNghiep ?? "",
-        });
-        setPersonalInfoForm({
-          soDienThoai: me.soDienThoai ?? "",
-          ngaySinh: me.ngaySinh ?? "",
-          gioiTinh: me.gioiTinh ?? "",
-          diaChiChiTiet: me.diaChiChiTiet ?? "",
-          tinhThanhId: me.tinhThanhId ? String(me.tinhThanhId) : "",
-          xaPhuongId: me.xaPhuongId ? String(me.xaPhuongId) : "",
-        });
-      } catch (error) {
-        console.error(error);
-        toast.error("Không tải được dữ liệu hồ sơ ứng viên.");
-      }
-    };
-
-    void loadAll();
-  }, [user]);
-
-  useEffect(() => {
-    const loadProvinces = async () => {
-      try {
-        const data = await locationService.getProvinces();
-        setProvinces(data);
-      } catch {
-        toast.error("Không tải được danh sách tỉnh/thành.");
-      }
-    };
-    void loadProvinces();
-  }, []);
-
-  useEffect(() => {
-    const tinhThanhId = Number(personalInfoForm.tinhThanhId);
-    if (!tinhThanhId || Number.isNaN(tinhThanhId)) {
-      return;
-    }
-
-    const loadWards = async () => {
-      try {
-        setLoadingWards(true);
-        const data = await locationService.getWards(tinhThanhId);
-        setWards(data);
-      } catch {
-        toast.error("Không tải được danh sách xã/phường.");
-      } finally {
-        setLoadingWards(false);
-      }
-    };
-    void loadWards();
-  }, [personalInfoForm.tinhThanhId]);
-
-  const handlePersonalInfoFormChange = (next: PersonalInfoFormState) => {
-    // Reset option xã/phường hiển thị khi user đổi tỉnh/thành bằng thao tác tay.
-    if (next.tinhThanhId !== personalInfoForm.tinhThanhId) {
-      setWards([]);
-    }
-    setPersonalInfoForm(next);
-  };
-
-  useEffect(() => {
-    const loadActiveProfile = async () => {
-      if (!activeProfileId) return;
-      try {
-        const cp = await candidateProfileService.getProfileById(activeProfileId);
-        setCandidateData(cp);
-        setSelectedSkillIds(cp.kyNangs.map((item) => item.id));
-        setSelectedIndustryIds(cp.nganhNghes.map((item) => item.id));
-        setSummaryForm({
-          gioiThieuBanThan: cp.gioiThieuBanThan ?? "",
-          mucTieuNgheNghiep: cp.mucTieuNgheNghiep ?? "",
-        });
-      } catch {
-        toast.error("Không tải được hồ sơ đang chọn.");
-      }
-    };
-    void loadActiveProfile();
-  }, [activeProfileId]);
+  const { user } = useCandidateProfileSession();
+  const {
+    provinces,
+    wards,
+    loadingWards,
+    personalInfoForm,
+    setPersonalInfoForm,
+    handlePersonalInfoFormChange,
+    hydratePersonalInfoFromMe,
+  } = useProfileLocationForm();
+  const {
+    profile,
+    setProfile,
+    candidateData,
+    setCandidateData,
+    metadata,
+    profiles,
+    setProfiles,
+    activeProfileId,
+    setActiveProfileId,
+    selectedSkillIds,
+    setSelectedSkillIds,
+    selectedIndustryIds,
+    setSelectedIndustryIds,
+    summaryForm,
+    setSummaryForm,
+  } = useCandidateProfileData(user, { onLoadedMe: hydratePersonalInfoFromMe });
 
   const fullName = useMemo(() => {
     const ho = profile?.ho ?? user?.ho ?? "";

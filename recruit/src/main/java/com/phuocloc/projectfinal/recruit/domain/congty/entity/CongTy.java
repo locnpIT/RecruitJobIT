@@ -45,7 +45,7 @@ public class CongTy {
     @Column(name = "website")
     private String website;
 
-    @Column(name = "logoUrl")
+    @Column(name = "logo_url")
     private String logoUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)

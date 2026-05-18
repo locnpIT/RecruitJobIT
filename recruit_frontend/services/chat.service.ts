@@ -7,6 +7,7 @@ export type ChatConversation = {
   ungVienAnhDaiDienUrl: string | null;
   nhaTuyenDungId: number | null;
   nhaTuyenDungHienThiTen: string | null;
+  nhaTuyenDungCongTyTen: string | null;
   nhaTuyenDungAnhDaiDienUrl: string | null;
   tinNhanGanNhat: string | null;
   tinNhanGanNhatLuc: string | null;
@@ -44,6 +45,11 @@ export type CreateChatMessagePayload = {
 export const chatService = {
   openByJob: async (jobId: number | string): Promise<ChatConversation> => {
     const response = await apiClient.post(`/chats/jobs/${jobId}/open`);
+    return response.data.data as ChatConversation;
+  },
+
+  openByApplication: async (applicationId: number | string): Promise<ChatConversation> => {
+    const response = await apiClient.post(`/chats/applications/${applicationId}/open`);
     return response.data.data as ChatConversation;
   },
 

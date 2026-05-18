@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repository truy cập dữ liệu cho TinTuyenDungRepository.
@@ -80,6 +81,38 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
     List<TinTuyenDung> findPublicApprovedActiveJobsByIds(Collection<Integer> ids, LocalDateTime now);
 
     @Query("""
+            SELECT t FROM TinTuyenDung t
+            LEFT JOIN FETCH t.chiNhanh cn
+            LEFT JOIN FETCH cn.congTy ct
+            LEFT JOIN FETCH cn.xaPhuong xp
+            LEFT JOIN FETCH xp.tinhThanh tt
+            LEFT JOIN FETCH t.nganhNghe nn
+            LEFT JOIN FETCH t.loaiHinhLamViec lh
+            LEFT JOIN FETCH t.capDoKinhNghiem cd
+            WHERE ct.id = :companyId
+              AND t.ngayXoa IS NULL
+              AND UPPER(t.trangThai) = 'APPROVED'
+              AND (t.denHanLuc IS NULL OR t.denHanLuc >= :now)
+              AND ct.ngayXoa IS NULL
+              AND UPPER(ct.trangThai) = 'APPROVED'
+            ORDER BY t.ngayTao DESC
+            """)
+    List<TinTuyenDung> findPublicApprovedActiveJobsByCompanyId(Integer companyId, LocalDateTime now);
+
+    @Query("""
+            SELECT COUNT(t.id) FROM TinTuyenDung t
+            JOIN t.chiNhanh cn
+            JOIN cn.congTy ct
+            WHERE ct.id = :companyId
+              AND t.ngayXoa IS NULL
+              AND UPPER(t.trangThai) = 'APPROVED'
+              AND (t.denHanLuc IS NULL OR t.denHanLuc >= :now)
+              AND ct.ngayXoa IS NULL
+              AND UPPER(ct.trangThai) = 'APPROVED'
+            """)
+    long countPublicApprovedActiveJobsByCompanyId(Integer companyId, LocalDateTime now);
+
+    @Query("""
             SELECT ct.id AS companyId,
                    ct.ten AS companyName,
                    ct.logoUrl AS logoUrl,
@@ -107,4 +140,16 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
             ORDER BY COUNT(t.id) DESC, MAX(t.ngayCapNhat) DESC
             """)
     List<PublicTopCompanyProjection> findPublicTopCompaniesWithActivePackage(LocalDateTime now, Pageable pageable);
+
+    @Query("""
+            SELECT ct.ten
+            FROM TinTuyenDung t
+            JOIN t.chiNhanh cn
+            JOIN cn.congTy ct
+            WHERE t.nguoiDang.id = :recruiterId
+              AND t.ngayXoa IS NULL
+              AND ct.ngayXoa IS NULL
+            ORDER BY t.ngayTao DESC
+            """)
+    List<String> findCompanyNamesByRecruiterId(@Param("recruiterId") Integer recruiterId, Pageable pageable);
 }

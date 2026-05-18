@@ -1,3 +1,5 @@
+import { StateCard } from "@/app/components/shared/StateCard";
+
 type JobsResultStateProps = {
   loading: boolean;
   error: string;
@@ -9,26 +11,20 @@ type JobsResultStateProps = {
  */
 export function JobsResultState({ loading, error, empty }: JobsResultStateProps) {
   if (loading) {
-    return (
-      <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-500">
-        Đang tải danh sách việc làm...
-      </div>
-    );
+    return <StateCard message="Đang tải danh sách việc làm..." paddingClassName="p-5" />;
   }
 
   if (error) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-        {error}
-      </div>
-    );
+    return <StateCard message={error} tone="error" paddingClassName="p-5" />;
   }
 
   if (empty) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
-        Không tìm thấy tin tuyển dụng phù hợp với bộ lọc hiện tại.
-      </div>
+      <StateCard
+        message="Không tìm thấy tin tuyển dụng phù hợp với bộ lọc hiện tại."
+        paddingClassName="p-6"
+        className="text-slate-600"
+      />
     );
   }
 

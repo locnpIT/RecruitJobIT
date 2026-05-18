@@ -44,6 +44,20 @@ public class ChatController {
         ));
     }
 
+    @PostMapping("/applications/{applicationId}/open")
+    // Mở room từ ngữ cảnh company-admin ứng viên:
+    // HR/Owner bấm "Gửi tin nhắn" để vào đúng conversation với ứng viên của đơn.
+    public ResponseEntity<SuccessResponse<ChatConversationResponse>> openByApplication(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long applicationId
+    ) {
+        requireAuthenticated(principal);
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Mở cuộc trò chuyện thành công",
+                chatService.openConversationByApplicationForRecruiter(principal.getUserId(), applicationId)
+        ));
+    }
+
     @GetMapping("/conversations")
     // Lấy inbox hiện tại của user đăng nhập.
     public ResponseEntity<SuccessResponse<List<ChatConversationResponse>>> listConversations(

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 import { notificationService, type NotificationItem } from "@/services/notification.service";
@@ -22,6 +23,7 @@ type LocalUser = {
 const NOTIFICATION_PAGE_SIZE = 10;
 
 export function HomeHeader() {
+  const pathname = usePathname();
   const [user, setUser] = useState<LocalUser | null>(null);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -235,12 +237,26 @@ export function HomeHeader() {
               priority
             />
           </Link>
-
-          <p className="hidden text-sm leading-6 text-slate-600 md:block">
-            Nền tảng tuyển dụng <br />
-            doanh nghiệp
-          </p>
         </div>
+
+        <nav className="hidden items-center gap-5 md:flex">
+          <Link
+            href="/"
+            className={`text-sm font-medium transition-colors ${
+              pathname === "/" ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Trang chủ
+          </Link>
+          <Link
+            href="/jobs"
+            className={`text-sm font-medium transition-colors ${
+              pathname?.startsWith("/jobs") ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Việc làm
+          </Link>
+        </nav>
 
         {!user && (
           <div className="flex items-center gap-2">

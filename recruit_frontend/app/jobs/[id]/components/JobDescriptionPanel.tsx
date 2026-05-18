@@ -1,7 +1,6 @@
 import {
   BriefcaseBusiness,
   CalendarClock,
-  GraduationCap,
   ListChecks,
   Medal,
   Sparkles,
@@ -15,8 +14,6 @@ type JobDescriptionPanelProps = {
   job: PublicJobDetail;
 };
 
-const tabs = ["Mô tả công việc", "Yêu cầu ứng viên", "Phúc lợi", "Thông tin công việc"];
-
 // Khối nội dung chính của tin tuyển dụng.
 // Tách khỏi page để sau này có thể map trực tiếp từ API detail mà không làm page bị dài.
 export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
@@ -24,47 +21,19 @@ export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
     { label: "Cấp bậc", value: job.capDo, icon: UserRound },
     { label: "Ngành nghề", value: job.nganhNghe, icon: BriefcaseBusiness },
     { label: "Kinh nghiệm", value: job.kinhNghiem, icon: CalendarClock },
-    { label: "Học vấn", value: job.hocVan, icon: GraduationCap },
     { label: "Hình thức làm việc", value: job.loaiHinhLamViec, icon: ListChecks },
     { label: "Số lượng tuyển", value: job.soLuongTuyen, icon: UsersRound },
-    { label: "Giới tính", value: job.gioiTinh, icon: UserRound },
     { label: "Cập nhật", value: job.capNhatLuc, icon: CalendarClock },
   ];
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white">
-      <div className="flex gap-8 overflow-x-auto border-b border-slate-200 px-6">
-        {tabs.map((tab, index) => (
-          <a
-            key={tab}
-            href={`#section-${index}`}
-            className={`whitespace-nowrap border-b-2 py-4 text-sm font-semibold ${
-              index === 0
-                ? "border-slate-950 text-slate-950"
-                : "border-transparent text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            {tab}
-          </a>
-        ))}
-      </div>
-
       <div className="space-y-8 p-6">
-        <JobTextSection
-          id="section-0"
-          icon={BriefcaseBusiness}
-          title="Mô tả công việc"
-          items={job.moTa}
-        />
-        <JobTextSection
-          id="section-1"
-          icon={UserRound}
-          title="Yêu cầu ứng viên"
-          items={job.yeuCau}
-        />
-        <JobTextSection id="section-2" icon={Medal} title="Phúc lợi" items={job.phucLoi} />
+        <JobTextSection icon={BriefcaseBusiness} title="Mô tả công việc" items={job.moTa} />
+        <JobTextSection icon={UserRound} title="Yêu cầu ứng viên" items={job.yeuCau} />
+        <JobTextSection icon={Medal} title="Phúc lợi" items={job.phucLoi} />
 
-        <section id="section-3" className="border-t border-slate-200 pt-7">
+        <section className="border-t border-slate-200 pt-7">
           <h2 className="text-lg font-semibold text-slate-950">Thông tin công việc</h2>
           <div className="mt-4">
             <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">
@@ -110,7 +79,6 @@ export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
 }
 
 type JobTextSectionProps = {
-  id: string;
   icon: typeof BriefcaseBusiness;
   title: string;
   items: string[];
@@ -118,9 +86,9 @@ type JobTextSectionProps = {
 
 // Section text dùng lại cho mô tả, yêu cầu và phúc lợi.
 // Dùng list bullet thay vì paragraph dài để ứng viên scan thông tin nhanh hơn.
-function JobTextSection({ id, icon: Icon, title, items }: JobTextSectionProps) {
+function JobTextSection({ icon: Icon, title, items }: JobTextSectionProps) {
   return (
-    <section id={id} className="border-b border-slate-200 pb-7 last:border-b-0 last:pb-0">
+    <section className="border-b border-slate-200 pb-7 last:border-b-0 last:pb-0">
       <div className="flex items-start gap-4">
         <div className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-slate-100 text-slate-800">
           <Icon className="h-5 w-5" />
