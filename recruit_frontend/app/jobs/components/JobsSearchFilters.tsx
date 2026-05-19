@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
-import { locationService, type Province } from "@/services/location.service";
+import { useMemo, type ChangeEvent, type ReactNode } from "react";
+import { useProvinces } from "@/app/hooks/useProvinces";
 import type { PublicJobSearchMetadata, SearchJobsParams } from "@/services/public-job.service";
 
 type JobsSearchFiltersProps = {
@@ -64,38 +64,7 @@ function FilterSelect({
  * Tách riêng khỏi page để dễ bảo trì khi thêm điều kiện tìm kiếm mới.
  */
 export function JobsSearchFilters({ value, metadata, onChange, onSubmit, onReset, loading }: JobsSearchFiltersProps) {
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
-  const [provinceError, setProvinceError] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-
-    locationService
-      .getProvinces()
-      .then((data) => {
-        if (!isMounted) {
-          return;
-        }
-        setProvinces(data);
-        setProvinceError("");
-      })
-      .catch(() => {
-        if (!isMounted) {
-          return;
-        }
-        setProvinceError("Không tải được tỉnh/thành");
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingProvinces(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { provinces, isLoadingProvinces, provinceError } = useProvinces();
 
   const selectedProvinceId = useMemo(() => {
     if (!value.diaDiem) {

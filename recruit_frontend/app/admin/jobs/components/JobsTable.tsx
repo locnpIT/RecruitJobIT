@@ -1,6 +1,6 @@
 import { EmptyState } from "../../components/EmptyState";
 import { StatusPill } from "../../components/StatusPill";
-import type { AdminJob } from "@/services/admin.service";
+import type { AdminJob } from "@/services/admin/types";
 
 type JobsTableProps = {
   jobs: AdminJob[];

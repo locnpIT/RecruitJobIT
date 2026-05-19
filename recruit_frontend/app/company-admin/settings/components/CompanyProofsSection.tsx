@@ -1,4 +1,4 @@
-import type { CompanyProofType } from "@/services/company-admin.service";
+import type { CompanyProofType } from "@/services/company-admin/types";
 import type { ProofRow } from "./types";
 
 type CompanyProofsSectionProps = {

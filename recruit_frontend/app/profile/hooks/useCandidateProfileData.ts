@@ -11,17 +11,13 @@ import {
 } from "@/services/candidate-profile.service";
 import type { LocalUser } from "./types";
 
-type SummaryFormState = {
+export type SummaryFormState = {
   gioiThieuBanThan: string;
   mucTieuNgheNghiep: string;
 };
 
-type UseCandidateProfileDataOptions = {
-  onLoadedMe?: (me: UserProfileResponse) => void;
-};
-
 // Nạp dữ liệu hồ sơ ứng viên: me, danh sách hồ sơ, metadata, active profile.
-export function useCandidateProfileData(user: LocalUser | null, options?: UseCandidateProfileDataOptions) {
+export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me: UserProfileResponse) => void) {
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
   const [candidateData, setCandidateData] = useState<CandidateProfile | null>(null);
   const [metadata, setMetadata] = useState<CandidateProfileMetadata | null>(null);
@@ -60,7 +56,7 @@ export function useCandidateProfileData(user: LocalUser | null, options?: UseCan
           gioiThieuBanThan: cp?.gioiThieuBanThan ?? "",
           mucTieuNgheNghiep: cp?.mucTieuNgheNghiep ?? "",
         });
-        options?.onLoadedMe?.(me);
+        onLoadedMe?.(me);
       } catch (error) {
         console.error(error);
         toast.error("Không tải được dữ liệu hồ sơ ứng viên.");
@@ -68,7 +64,7 @@ export function useCandidateProfileData(user: LocalUser | null, options?: UseCan
     };
 
     void loadAll();
-  }, [options, user]);
+  }, [onLoadedMe, user]);
 
   useEffect(() => {
     const loadActiveProfile = async () => {

@@ -166,12 +166,17 @@ export function useRecruiterInbox() {
         setWebsocketConnected(true);
       },
       onEvent: (event: ChatRealtimeEvent) => {
-        if (event.loai !== "NEW_MESSAGE" || !event.tinNhan) {
+        if (event.loai !== "NEW_MESSAGE") {
+          return;
+        }
+
+        const incomingMessage = event.tinNhan;
+        if (!incomingMessage) {
           return;
         }
 
         const activeConversationId = selectedConversationIdRef.current;
-        const isMessageFromOtherSide = event.tinNhan.nguoiGuiId !== currentUserId;
+        const isMessageFromOtherSide = incomingMessage.nguoiGuiId !== currentUserId;
 
         setConversations((current) => {
           let found = false;
@@ -186,8 +191,8 @@ export function useRecruiterInbox() {
 
             return {
               ...conversation,
-              tinNhanGanNhat: event.tinNhan?.noiDung ?? conversation.tinNhanGanNhat,
-              tinNhanGanNhatLuc: event.tinNhan?.ngayTao ?? conversation.tinNhanGanNhatLuc,
+              tinNhanGanNhat: incomingMessage.noiDung ?? conversation.tinNhanGanNhat,
+              tinNhanGanNhatLuc: incomingMessage.ngayTao ?? conversation.tinNhanGanNhatLuc,
               soTinChuaDoc: shouldIncreaseUnread ? conversation.soTinChuaDoc + 1 : conversation.soTinChuaDoc,
             };
           });
@@ -209,11 +214,11 @@ export function useRecruiterInbox() {
         }
 
         setMessages((current) => {
-          const exists = current.some((item) => item.id === event.tinNhan?.id);
+          const exists = current.some((item) => item.id === incomingMessage.id);
           if (exists) {
             return current;
           }
-          return [...current, event.tinNhan];
+          return [...current, incomingMessage];
         });
       },
       onClose: (event) => {

@@ -1,7 +1,7 @@
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
-import type { CompanyAdminJob } from "@/services/company-admin.service";
+import type { CompanyAdminJob } from "@/services/company-admin/types";
 
 // Bảng danh sách job của công ty theo chi nhánh đang chọn.
 // Component nhận callback edit/delete từ page container thay vì tự xử lý nghiệp vụ.

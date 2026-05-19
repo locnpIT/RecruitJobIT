@@ -4,7 +4,7 @@ import type { UseFormRegisterReturn } from "react-hook-form";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import type { CompanyAdminBranch, CompanyJobMetadataOption } from "@/services/company-admin.service";
+import type { CompanyAdminBranch, CompanyJobMetadataOption } from "@/services/company-admin/types";
 import { JobSkillsMultiSelect } from "./JobSkillsMultiSelect";
 
 // Modal tạo/cập nhật tin tuyển dụng của công ty.

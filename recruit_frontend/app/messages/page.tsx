@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { HomeFooter } from "@/app/components/home/HomeFooter";
 import { HomeHeader } from "@/app/components/home/HomeHeader";
 import { CandidateConversationList } from "./components/CandidateConversationList";
@@ -9,7 +10,7 @@ import { useCandidateInbox } from "./hooks/useCandidateInbox";
 
 // Inbox riêng cho candidate.
 // Mục tiêu: thay thế mô hình chat modal ngắn hạn bằng màn quản lý conversation đầy đủ.
-export default function CandidateMessagesPage() {
+function CandidateMessagesContent() {
   const {
     ready,
     currentUserId,
@@ -57,5 +58,13 @@ export default function CandidateMessagesPage() {
       </main>
       <HomeFooter />
     </div>
+  );
+}
+
+export default function CandidateMessagesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 p-6 text-sm text-slate-500">Đang tải hộp thư...</div>}>
+      <CandidateMessagesContent />
+    </Suspense>
   );
 }

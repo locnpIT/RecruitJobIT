@@ -1,14 +1,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { HomeFooter } from "@/app/components/home/HomeFooter";
 import { HomeHeader } from "@/app/components/home/HomeHeader";
 import { StateCard } from "@/app/components/shared/StateCard";
 import { PublicJobCard } from "@/app/jobs/components/PublicJobCard";
-import { publicCompanyService, type PublicCompanyDetail } from "@/services/public-company.service";
-import type { PublicJobSummary } from "@/services/public-job.service";
 import { PublicCompanyHeader } from "./components/PublicCompanyHeader";
+import { usePublicCompanyData } from "./hooks/usePublicCompanyData";
 
 // Trang public profile công ty:
 // - hiển thị thông tin công ty đã duyệt
@@ -16,42 +14,7 @@ import { PublicCompanyHeader } from "./components/PublicCompanyHeader";
 export default function PublicCompanyPage() {
   const params = useParams<{ id: string }>();
   const companyId = params.id;
-
-  const [company, setCompany] = useState<PublicCompanyDetail | null>(null);
-  const [jobs, setJobs] = useState<PublicJobSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-
-    Promise.all([
-      publicCompanyService.getCompanyDetail(companyId),
-      publicCompanyService.listCompanyJobs(companyId, 12),
-    ])
-      .then(([companyData, jobsData]) => {
-        if (!isMounted) {
-          return;
-        }
-        setCompany(companyData);
-        setJobs(jobsData);
-      })
-      .catch(() => {
-        if (!isMounted) {
-          return;
-        }
-        setError("Không tìm thấy công ty hoặc công ty chưa có dữ liệu public.");
-      })
-      .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [companyId]);
+  const { company, jobs, loading, error } = usePublicCompanyData(companyId);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">

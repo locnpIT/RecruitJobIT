@@ -1,48 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, MapPin, Search } from "lucide-react";
-import { locationService, type Province } from "@/services/location.service";
+import { useProvinces } from "@/app/hooks/useProvinces";
 
 // Hero section của homepage.
 // Đây là khối entry-point để người dùng hiểu value proposition và thực hiện tìm việc nhanh.
 
 export function HeroSection() {
-  const [provinces, setProvinces] = useState<Province[]>([]);
+  const { provinces, isLoadingProvinces, provinceError } = useProvinces();
   const [selectedProvinceId, setSelectedProvinceId] = useState("");
-  const [isLoadingProvinces, setIsLoadingProvinces] = useState(true);
-  const [provinceError, setProvinceError] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-
-    locationService
-      .getProvinces()
-      .then((data) => {
-        if (!isMounted) {
-          return;
-        }
-
-        setProvinces(data);
-        setProvinceError("");
-      })
-      .catch(() => {
-        if (!isMounted) {
-          return;
-        }
-
-        setProvinceError("Không tải được tỉnh/thành");
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingProvinces(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   return (
     <section

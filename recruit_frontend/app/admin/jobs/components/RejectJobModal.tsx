@@ -1,4 +1,4 @@
-import type { AdminJob } from "@/services/admin.service";
+import type { AdminJob } from "@/services/admin/types";
 
 type RejectJobModalProps = {
   rejectingJob: AdminJob | null;

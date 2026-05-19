@@ -1,4 +1,4 @@
-import type { CompanyJobMetadataOption } from "@/services/company-admin.service";
+import type { CompanyJobMetadataOption } from "@/services/company-admin/types";
 
 type JobSkillsMultiSelectProps = {
   options: CompanyJobMetadataOption[];

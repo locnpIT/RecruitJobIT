@@ -1,4 +1,4 @@
-import type { CompanyPackageRegistration } from "@/services/company-admin.service";
+import type { CompanyPackageRegistration } from "@/services/company-admin/types";
 import { formatDateTime } from "./package-format";
 
 // Section hiển thị gói hiện tại của công ty.

@@ -1,42 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { publicJobService, type PublicJobSummary } from "@/services/public-job.service";
 import { PublicJobCard } from "@/app/jobs/components/PublicJobCard";
 import { StateCard } from "@/app/components/shared/StateCard";
+import { useFeaturedJobs } from "./hooks/useFeaturedJobs";
 
 // Section job nổi bật trên homepage.
 // Đây là khối giới thiệu nhanh các tin đang tuyển để kéo người dùng đi vào funnel ứng tuyển.
 export function FeaturedJobsSection() {
-  const [publicJobs, setPublicJobs] = useState<PublicJobSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    publicJobService
-      .listJobs({ gioiHan: 4 })
-      .then((data) => {
-        if (isMounted) {
-          setPublicJobs(data);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setPublicJobs([]);
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { publicJobs, isLoading } = useFeaturedJobs();
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-8 md:py-10">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { CompanyProofType } from "@/services/company-admin.service";
+import type { CompanyProofType } from "@/services/company-admin/types";
 import { createProofRow, type ProofRow } from "./types";
 
 // Quản lý danh sách dòng minh chứng (thêm/xoá/cập nhật/reset) cho màn settings.

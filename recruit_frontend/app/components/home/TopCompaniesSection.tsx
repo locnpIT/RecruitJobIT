@@ -1,48 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { publicCompanyService } from "@/services/public-company.service";
-import type { CompanyItem } from "./types";
 import { TopCompanyCard } from "./top-companies/TopCompanyCard";
 import { TopCompaniesStates } from "./top-companies/TopCompaniesStates";
-import { buildMarqueeCompanies } from "./top-companies/utils";
+import { useTopCompanies } from "./hooks/useTopCompanies";
 
 export function TopCompaniesSection() {
-  const [companies, setCompanies] = useState<CompanyItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    // API backend đã lọc sẵn các công ty đủ điều kiện:
-    // - công ty APPROVED
-    // - có tin tuyển dụng public còn hiệu lực
-    // - có gói đăng bài ACTIVE + thanh toán thành công + còn thời hạn
-    publicCompanyService
-      .listTopCompanies(8)
-      .then((data) => {
-        if (isMounted) {
-          setCompanies(data);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          // Nếu API lỗi thì trả empty-state rõ ràng, không giữ dữ liệu stale.
-          setCompanies([]);
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const marqueeCompanies = useMemo(() => buildMarqueeCompanies(companies, 8), [companies]);
+  const { companies, marqueeCompanies, isLoading } = useTopCompanies();
 
   return (
     <section className="border-y border-slate-200 bg-white">

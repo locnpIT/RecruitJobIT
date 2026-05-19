@@ -1,5 +1,5 @@
 import { ExternalLink, FileText, Loader2, MessageSquareText, X } from "lucide-react";
-import type { CompanyAdminApplication } from "@/services/company-admin.service";
+import type { CompanyAdminApplication } from "@/services/company-admin/types";
 import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
 
 const STATUS_ACTIONS = [

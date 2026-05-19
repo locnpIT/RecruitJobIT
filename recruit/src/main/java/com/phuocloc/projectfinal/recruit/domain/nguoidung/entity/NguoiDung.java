@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -30,7 +31,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "NguoiDung")
+@Table(
+        name = "NguoiDung",
+        uniqueConstraints = {
+                // Email là định danh đăng nhập, phải duy nhất toàn hệ thống.
+                @UniqueConstraint(name = "uk_nguoi_dung_email", columnNames = "email")
+        }
+)
 public class NguoiDung {
 
     @Id
@@ -48,7 +55,7 @@ public class NguoiDung {
     @Column(name = "ngayXoa")
     private LocalDateTime ngayXoa;
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false)
     private String email;
 
     @Column(name = "matKhauBam")

@@ -1,4 +1,5 @@
-import type { CompanyPackageRegistration } from "@/services/company-admin.service";
+import Image from "next/image";
+import type { CompanyPackageRegistration } from "@/services/company-admin/types";
 import { formatMoney } from "./package-format";
 
 // Section hiển thị thông tin thanh toán SePay đang chờ xử lý.
@@ -28,7 +29,13 @@ export function SepayPaymentSection({ payment }: SepayPaymentSectionProps) {
         </div>
         {payment.qrImageUrl ? (
           <div className="rounded-md border border-slate-200 bg-white p-2">
-            <img src={payment.qrImageUrl} alt="Mã QR thanh toán SePay" className="h-60 w-60 max-w-full object-contain" />
+            <Image
+              src={payment.qrImageUrl}
+              alt="Mã QR thanh toán SePay"
+              width={240}
+              height={240}
+              className="h-60 w-60 max-w-full object-contain"
+            />
           </div>
         ) : null}
       </div>

@@ -94,7 +94,7 @@ export const authService = {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("api_key", signatureData.api_key);
-    formData.append("timestamp", signatureData.timestamp);
+    formData.append("timestamp", String(signatureData.timestamp));
     formData.append("signature", signatureData.signature);
     formData.append("folder", signatureData.folder);
 

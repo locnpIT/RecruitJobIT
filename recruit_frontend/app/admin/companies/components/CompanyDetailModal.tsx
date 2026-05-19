@@ -1,6 +1,6 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
-import type { AdminCompanyDetail } from "@/services/admin.service";
+import type { AdminCompanyDetail } from "@/services/admin/types";
 
 type CompanyDetailModalProps = {
   company: AdminCompanyDetail;

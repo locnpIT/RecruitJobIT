@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Eye, EyeOff, Plus } from "lucide-react";
-import type { CompanyAdminBranch } from "@/services/company-admin.service";
+import type { CompanyAdminBranch } from "@/services/company-admin/types";
 
 // Form tạo/cập nhật tài khoản HR.
 // Component này chỉ lo nhập liệu và chọn chi nhánh; validate nghiệp vụ được xử lý ở container/page.

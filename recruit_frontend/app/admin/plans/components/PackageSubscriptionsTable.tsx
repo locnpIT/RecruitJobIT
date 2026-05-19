@@ -1,7 +1,7 @@
 "use client";
 
 import { StatusPill } from "../../components/StatusPill";
-import type { AdminPackageSubscription } from "@/services/admin.service";
+import type { AdminPackageSubscription } from "@/services/admin/types";
 
 // Bảng đăng ký gói gần đây.
 // Dùng để admin theo dõi công ty nào vừa mua/gia hạn gói và trạng thái hiệu lực tương ứng.

@@ -1,6 +1,6 @@
 import { EmptyState } from "../../components/EmptyState";
 import { StatusPill } from "../../components/StatusPill";
-import type { AdminCandidateProof } from "@/services/admin.service";
+import type { AdminCandidateProof } from "@/services/admin/types";
 
 type CandidateProofTableProps = {
   loading: boolean;

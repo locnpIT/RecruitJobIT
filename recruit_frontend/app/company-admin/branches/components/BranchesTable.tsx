@@ -1,4 +1,4 @@
-import type { CompanyAdminBranch } from "@/services/company-admin.service";
+import type { CompanyAdminBranch } from "@/services/company-admin/types";
 
 type BranchesTableProps = {
   branches: CompanyAdminBranch[];

@@ -1,6 +1,6 @@
 import { EmptyState } from "../../components/EmptyState";
 import { StatusPill } from "../../components/StatusPill";
-import type { AdminUser } from "@/services/admin.service";
+import type { AdminUser } from "@/services/admin/types";
 
 type UsersTableProps = {
   users: AdminUser[];

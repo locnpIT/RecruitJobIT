@@ -12,7 +12,13 @@ import org.hibernate.annotations.UpdateTimestamp;
  * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
  */
 @Entity
-@Table(name = "CongTy")
+@Table(
+        name = "CongTy",
+        uniqueConstraints = {
+                // Mỗi công ty chỉ có một mã số thuế duy nhất.
+                @UniqueConstraint(name = "uk_cong_ty_ma_so_thue", columnNames = "maSoThue")
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,7 +42,7 @@ public class CongTy {
     @Column(name = "ten")
     private String ten;
 
-    @Column(name = "maSoThue")
+    @Column(name = "maSoThue", nullable = false)
     private String maSoThue;
 
     @Column(name = "moTa", columnDefinition = "TEXT")

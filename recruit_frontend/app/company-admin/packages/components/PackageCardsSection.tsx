@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import type { CompanyPackagePlan, CompanyPackageRegistration } from "@/services/company-admin.service";
+import type { CompanyPackagePlan, CompanyPackageRegistration } from "@/services/company-admin/types";
 import { formatMoney } from "./package-format";
 
 // Section render danh sách gói mở bán cho công ty.

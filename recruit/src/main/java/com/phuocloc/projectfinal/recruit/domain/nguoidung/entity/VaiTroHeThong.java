@@ -22,14 +22,20 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "VaiTroHeThong")
+@Table(
+        name = "VaiTroHeThong",
+        uniqueConstraints = {
+                // Tên vai trò hệ thống (ADMIN/CANDIDATE/...) không được trùng.
+                @UniqueConstraint(name = "uk_vai_tro_he_thong_ten", columnNames = "ten")
+        }
+)
 public class VaiTroHeThong {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "ten")
+    @Column(name = "ten", nullable = false)
     private String ten;
 
     @Column(name = "moTa")

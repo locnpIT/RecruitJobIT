@@ -1,6 +1,6 @@
 import { StatusPill } from "../../components/StatusPill";
 import { EmptyState } from "../../components/EmptyState";
-import type { AdminCompany } from "@/services/admin.service";
+import type { AdminCompany } from "@/services/admin/types";
 
 type CompanyTableProps = {
   companies: AdminCompany[];

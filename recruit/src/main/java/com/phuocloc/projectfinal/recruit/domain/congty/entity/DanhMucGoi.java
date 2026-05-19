@@ -8,7 +8,13 @@ import lombok.*;
  * Dùng bởi JPA để đọc/ghi dữ liệu tương ứng trong cơ sở dữ liệu.
  */
 @Entity
-@Table(name = "DanhMucGoi")
+@Table(
+        name = "DanhMucGoi",
+        uniqueConstraints = {
+                // Mã gói dùng làm business key để tra cứu/cập nhật gói.
+                @UniqueConstraint(name = "uk_danh_muc_goi_ma_goi", columnNames = "maGoi")
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,7 +23,7 @@ public class DanhMucGoi {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "maGoi")
+    @Column(name = "maGoi", nullable = false)
     private String maGoi;
 
     @Column(name = "tenGoi")

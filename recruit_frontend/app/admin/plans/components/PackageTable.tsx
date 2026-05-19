@@ -3,7 +3,7 @@
 import { PencilLine, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
-import type { AdminPackage } from "@/services/admin.service";
+import type { AdminPackage } from "@/services/admin/types";
 
 // Bảng danh mục gói dịch vụ của admin.
 // Hiển thị toàn bộ package hiện có và phát action sửa/xóa về container cha.

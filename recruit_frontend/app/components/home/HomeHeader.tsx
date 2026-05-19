@@ -2,80 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { useEffect, useRef, useState, type UIEvent } from "react";
 import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
-import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
-import { notificationService, type NotificationItem } from "@/services/notification.service";
+import { clearAdminSession } from "@/lib/admin-session";
+import { useHomeHeaderData } from "./hooks/useHomeHeaderData";
 
 // Header dùng chung cho khu public/auth/profile.
-// Lưu ý SSR/hydration: không đọc localStorage trực tiếp trong render.
-// Nếu render server là "Đăng nhập" nhưng render client ngay lập tức là "Xin chào..." thì React sẽ báo hydration mismatch.
-type LocalUser = {
-  id: number;
-  email: string;
-  ten: string | null;
-  ho: string | null;
-  vaiTro: string;
-  anhDaiDienUrl?: string | null;
-};
-
-const NOTIFICATION_PAGE_SIZE = 10;
-
+// API thông báo + đọc session được tách sang hook useHomeHeaderData để page/component chỉ còn UI wiring.
 export function HomeHeader() {
   const pathname = usePathname();
-  const [user, setUser] = useState<LocalUser | null>(null);
+  const headerData = useHomeHeaderData();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [latestNotifications, setLatestNotifications] = useState<NotificationItem[]>([]);
-  const [loadingNotifications, setLoadingNotifications] = useState(false);
-  const [loadingMoreNotifications, setLoadingMoreNotifications] = useState(false);
-  const [notificationPage, setNotificationPage] = useState(0);
-  const [notificationHasNext, setNotificationHasNext] = useState(false);
   const notificationRef = useRef<HTMLDivElement | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    // Đọc session sau khi component đã mount để server HTML và client HTML lần đầu giống nhau.
-    // Promise.resolve() cũng tránh rule React mới về setState đồng bộ ngay trong effect.
-    Promise.resolve().then(() => {
-      if (!isMounted) {
-        return;
-      }
-
-      try {
-        const token = localStorage.getItem("token");
-        const expiresAt = token ? getJwtExpiryMs(token) : null;
-        // Nếu chỉ còn user trong localStorage nhưng token hết hạn, backend sẽ trả 403.
-        // Vì vậy header dọn session cũ trước khi chuyển UI sang trạng thái đã đăng nhập.
-        if (!token || (expiresAt !== null && expiresAt <= Date.now())) {
-          clearAdminSession();
-          setUser(null);
-          return;
-        }
-
-        const raw = localStorage.getItem("user");
-        setUser(raw ? (JSON.parse(raw) as LocalUser) : null);
-      } catch {
-        clearAdminSession();
-        setUser(null);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const role = user?.vaiTro?.toUpperCase() ?? null;
-  const isCandidate = role === "CANDIDATE";
-  const fullName = useMemo(() => {
-    if (!user) return "";
-    return `${user.ho ?? ""} ${user.ten ?? ""}`.trim() || user.email;
-  }, [user]);
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
@@ -93,95 +34,9 @@ export function HomeHeader() {
       document.removeEventListener("mousedown", handlePointerDown);
     };
   }, []);
-  const userInitial = useMemo(() => {
-    const fallback = (user?.email ?? "U").trim();
-    const source = (user?.ten ?? user?.ho ?? fallback).trim();
-    return source.charAt(0).toUpperCase();
-  }, [user]);
-
-  useEffect(() => {
-    let active = true;
-    let timer: number | null = null;
-
-    Promise.resolve().then(() => {
-      if (!active) {
-        return;
-      }
-
-      if (!user) {
-        setUnreadCount(0);
-        setLatestNotifications([]);
-        return;
-      }
-
-      const loadNotifications = async () => {
-        try {
-          setLoadingNotifications(true);
-          const [countData, listData] = await Promise.all([
-            notificationService.unreadCount(),
-            notificationService.list(0, NOTIFICATION_PAGE_SIZE),
-          ]);
-          if (!active) {
-            return;
-          }
-          setUnreadCount(countData.soChuaDoc ?? 0);
-          setLatestNotifications(listData.danhSach ?? []);
-          setNotificationPage(listData.trang ?? 0);
-          setNotificationHasNext(Boolean(listData.conTrangSau));
-        } catch {
-          if (!active) {
-            return;
-          }
-          setUnreadCount(0);
-          setLatestNotifications([]);
-          setNotificationPage(0);
-          setNotificationHasNext(false);
-        } finally {
-          if (active) {
-            setLoadingNotifications(false);
-          }
-        }
-      };
-
-      void loadNotifications();
-      timer = window.setInterval(() => {
-        void loadNotifications();
-      }, 60000);
-    });
-
-    return () => {
-      active = false;
-      if (timer !== null) {
-        window.clearInterval(timer);
-      }
-    };
-  }, [user]);
-
-  const loadMoreNotifications = async () => {
-    if (loadingMoreNotifications || loadingNotifications || !notificationHasNext) {
-      return;
-    }
-
-    try {
-      setLoadingMoreNotifications(true);
-      const nextPage = notificationPage + 1;
-      const listData = await notificationService.list(nextPage, NOTIFICATION_PAGE_SIZE);
-      setLatestNotifications((current) => {
-        const existingIds = new Set(current.map((item) => item.id));
-        const nextItems = (listData.danhSach ?? []).filter((item) => !existingIds.has(item.id));
-        return [...current, ...nextItems];
-      });
-      setNotificationPage(listData.trang ?? nextPage);
-      setNotificationHasNext(Boolean(listData.conTrangSau));
-    } catch {
-      // ignore
-    } finally {
-      setLoadingMoreNotifications(false);
-    }
-  };
 
   const handleNotificationScroll = (event: UIEvent<HTMLDivElement>) => {
-    if (loadingMoreNotifications || loadingNotifications || !notificationHasNext) {
+    if (headerData.loadingMoreNotifications || headerData.loadingNotifications || !headerData.notificationHasNext) {
       return;
     }
     const container = event.currentTarget;
@@ -189,18 +44,12 @@ export function HomeHeader() {
     if (!nearBottom) {
       return;
     }
-    void loadMoreNotifications();
+    void headerData.loadMoreNotifications();
   };
 
-  const handleClickNotification = async (item: NotificationItem) => {
+  const handleClickNotification = async (item: (typeof headerData.latestNotifications)[number]) => {
     try {
-      if (!item.daDoc) {
-        await notificationService.markRead(item.id);
-        setUnreadCount((current) => (current > 0 ? current - 1 : 0));
-        setLatestNotifications((current) =>
-          current.map((entry) => (entry.id === item.id ? { ...entry, daDoc: true } : entry))
-        );
-      }
+      await headerData.markReadAndSync(item);
     } catch {
       // Không chặn điều hướng nếu API markRead lỗi.
     }
@@ -211,13 +60,9 @@ export function HomeHeader() {
     }
   };
 
-  const handleDeleteNotification = async (item: NotificationItem) => {
+  const handleDeleteNotification = async (item: (typeof headerData.latestNotifications)[number]) => {
     try {
-      await notificationService.delete(item.id);
-      setLatestNotifications((current) => current.filter((entry) => entry.id !== item.id));
-      if (!item.daDoc) {
-        setUnreadCount((current) => (current > 0 ? current - 1 : 0));
-      }
+      await headerData.deleteNotification(item);
     } catch {
       // ignore
     }
@@ -258,7 +103,7 @@ export function HomeHeader() {
           </Link>
         </nav>
 
-        {!user && (
+        {!headerData.user && (
           <div className="flex items-center gap-2">
             <Link
               href="/auth/login"
@@ -275,7 +120,7 @@ export function HomeHeader() {
           </div>
         )}
 
-        {user && (
+        {headerData.user && (
           <div className="flex items-center gap-2">
             <div ref={notificationRef} className="relative">
               <button
@@ -288,9 +133,9 @@ export function HomeHeader() {
                 aria-label="Mở thông báo"
               >
                 <Bell className="h-5 w-5" />
-                {unreadCount > 0 ? (
+                {headerData.unreadCount > 0 ? (
                   <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-semibold text-white">
-                    {unreadCount > 99 ? "99+" : unreadCount}
+                    {headerData.unreadCount > 99 ? "99+" : headerData.unreadCount}
                   </span>
                 ) : null}
               </button>
@@ -300,31 +145,21 @@ export function HomeHeader() {
                     <p className="text-sm font-semibold text-slate-900">Thông báo</p>
                     <button
                       type="button"
-                      onClick={async () => {
-                        try {
-                          const result = await notificationService.markAllRead();
-                          if ((result.soDaCapNhat ?? 0) > 0) {
-                            setUnreadCount(0);
-                            setLatestNotifications((current) => current.map((item) => ({ ...item, daDoc: true })));
-                          }
-                        } catch {
-                          // ignore
-                        }
-                      }}
+                      onClick={() => void headerData.markAllRead()}
                       className="text-xs font-medium text-slate-600 hover:text-slate-900"
                     >
                       Đánh dấu đã đọc
                     </button>
                   </div>
                   <div className="max-h-96 overflow-y-auto" onScroll={handleNotificationScroll}>
-                    {loadingNotifications ? (
+                    {headerData.loadingNotifications ? (
                       <p className="px-2 py-4 text-xs text-slate-500">Đang tải thông báo...</p>
                     ) : null}
-                    {!loadingNotifications && latestNotifications.length === 0 ? (
+                    {!headerData.loadingNotifications && headerData.latestNotifications.length === 0 ? (
                       <p className="px-2 py-4 text-xs text-slate-500">Chưa có thông báo nào.</p>
                     ) : null}
-                    {!loadingNotifications
-                      ? latestNotifications.map((item) => (
+                    {!headerData.loadingNotifications
+                      ? headerData.latestNotifications.map((item) => (
                           <div
                             key={item.id}
                             className={`mb-1 rounded-md border px-2 py-2 ${
@@ -352,16 +187,17 @@ export function HomeHeader() {
                           </div>
                         ))
                       : null}
-                    {loadingMoreNotifications ? (
+                    {headerData.loadingMoreNotifications ? (
                       <p className="px-2 py-3 text-center text-xs text-slate-500">Đang tải thêm...</p>
                     ) : null}
-                    {!loadingMoreNotifications && notificationHasNext ? (
+                    {!headerData.loadingMoreNotifications && headerData.notificationHasNext ? (
                       <p className="px-2 py-3 text-center text-xs text-slate-500">Kéo xuống để tải thêm</p>
                     ) : null}
                   </div>
                 </div>
               ) : null}
             </div>
+
             <div ref={userMenuRef} className="relative">
               <button
                 type="button"
@@ -372,25 +208,25 @@ export function HomeHeader() {
                 className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-sm font-semibold text-white"
                 aria-label="Mở menu tài khoản"
               >
-                {user?.anhDaiDienUrl ? (
+                {headerData.user.anhDaiDienUrl ? (
                   <Image
-                    src={user.anhDaiDienUrl}
+                    src={headerData.user.anhDaiDienUrl}
                     alt="Avatar người dùng"
                     width={40}
                     height={40}
                     className="h-10 w-10 object-cover"
                   />
                 ) : (
-                  userInitial
+                  headerData.userInitial
                 )}
               </button>
               {userMenuOpen ? (
                 <div className="absolute right-0 z-20 mt-2 w-56 rounded-md border border-slate-200 bg-white p-2 shadow-lg">
                   <div className="mb-2 rounded-md bg-slate-50 px-3 py-2">
-                    <p className="text-sm font-semibold text-slate-900">{fullName}</p>
-                    <p className="text-xs text-slate-600">{user.email}</p>
+                    <p className="text-sm font-semibold text-slate-900">{headerData.fullName}</p>
+                    <p className="text-xs text-slate-600">{headerData.user.email}</p>
                   </div>
-                  {isCandidate ? (
+                  {headerData.isCandidate ? (
                     <Link
                       href="/profile"
                       onClick={() => setUserMenuOpen(false)}
@@ -400,14 +236,14 @@ export function HomeHeader() {
                     </Link>
                   ) : (
                     <Link
-                      href={role === "ADMIN" ? "/admin" : "/company-admin"}
+                      href={headerData.role === "ADMIN" ? "/admin" : "/company-admin"}
                       onClick={() => setUserMenuOpen(false)}
                       className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
                     >
                       Vào hệ thống
                     </Link>
                   )}
-                  {isCandidate ? (
+                  {headerData.isCandidate ? (
                     <Link
                       href="/messages"
                       onClick={() => setUserMenuOpen(false)}
@@ -416,7 +252,7 @@ export function HomeHeader() {
                       Tin nhắn
                     </Link>
                   ) : null}
-                  {isCandidate ? (
+                  {headerData.isCandidate ? (
                     <Link
                       href="/favorite-jobs"
                       onClick={() => setUserMenuOpen(false)}

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
-import type { AdminCatalogItem } from "@/services/admin.service";
+import type { AdminCatalogItem } from "@/services/admin/types";
 import { EmptyState } from "../../components/EmptyState";
 
 export type CatalogFormState = {

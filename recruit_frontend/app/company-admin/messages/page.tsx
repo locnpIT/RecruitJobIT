@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { ConversationList } from "./components/ConversationList";
 import { ConversationThread } from "./components/ConversationThread";
 import { RecruiterMessagesHeader } from "./components/RecruiterMessagesHeader";
@@ -7,7 +8,7 @@ import { useRecruiterInbox } from "./hooks/useRecruiterInbox";
 
 // Trang chat cho recruiter/company-admin:
 // - page chỉ giữ layout + render, còn state/realtime nằm trong hook riêng.
-export default function CompanyAdminMessagesPage() {
+function CompanyAdminMessagesContent() {
   const {
     conversations,
     selectedConversation,
@@ -47,5 +48,13 @@ export default function CompanyAdminMessagesPage() {
         />
       </div>
     </section>
+  );
+}
+
+export default function CompanyAdminMessagesPage() {
+  return (
+    <Suspense fallback={<div className="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-500">Đang tải hộp thư...</div>}>
+      <CompanyAdminMessagesContent />
+    </Suspense>
   );
 }

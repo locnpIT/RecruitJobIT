@@ -1,4 +1,4 @@
-import type { AdminJobDetail } from "@/services/admin.service";
+import type { AdminJobDetail } from "@/services/admin/types";
 
 type JobDetailModalProps = {
   open: boolean;

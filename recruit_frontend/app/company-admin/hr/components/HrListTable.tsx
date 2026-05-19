@@ -1,4 +1,4 @@
-import type { CompanyAdminHrAccount } from "@/services/company-admin.service";
+import type { CompanyAdminHrAccount } from "@/services/company-admin/types";
 
 // Bảng danh sách tài khoản HR của công ty.
 // Hiển thị thông tin cơ bản, chi nhánh phụ trách và cung cấp action cập nhật/xóa.

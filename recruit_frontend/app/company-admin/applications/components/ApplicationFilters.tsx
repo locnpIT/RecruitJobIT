@@ -1,4 +1,4 @@
-import type { CompanyAdminApplication, CompanyAdminBranch } from "@/services/company-admin.service";
+import type { CompanyAdminApplication, CompanyAdminBranch } from "@/services/company-admin/types";
 
 export type ApplicationFiltersValue = {
   status: string;
