@@ -15,8 +15,10 @@ import org.springframework.data.repository.query.Param;
  */
 public interface ThongBaoRepository extends JpaRepository<ThongBao, Integer> {
 
+    @Query("SELECT t FROM ThongBao t WHERE t.nguoiDung.id = :nguoiDungId AND t.ngayXoa IS NULL ORDER BY t.ngayTao desc")
     Page<ThongBao> findByNguoiDung_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer nguoiDungId, Pageable pageable);
 
+    @Query("SELECT t FROM ThongBao t WHERE t.id = :id AND t.nguoiDung.id = :nguoiDungId AND t.ngayXoa IS NULL")
     Optional<ThongBao> findByIdAndNguoiDung_IdAndNgayXoaIsNull(Integer id, Integer nguoiDungId);
 
     @Query("""
