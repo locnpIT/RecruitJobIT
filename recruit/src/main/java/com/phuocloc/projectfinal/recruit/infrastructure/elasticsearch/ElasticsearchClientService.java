@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,30 @@ public class ElasticsearchClientService {
 
     public boolean isEnabled() {
         return elasticsearchProperties.isEnabled();
+    }
+
+    /**
+     * Lấy thông tin cơ bản của Elasticsearch cluster để phục vụ health check vận hành.
+     */
+    public ElasticsearchClusterInfo layThongTinCluster() {
+        if (!isEnabled()) {
+            return ElasticsearchClusterInfo.builder()
+                    .clusterName(null)
+                    .nodeName(null)
+                    .version(null)
+                    .build();
+        }
+        HttpResponse<String> response = sendRequest("GET", "/", null, true);
+        try {
+            JsonNode root = objectMapper.readTree(response.body());
+            return ElasticsearchClusterInfo.builder()
+                    .clusterName(root.path("cluster_name").asText(null))
+                    .nodeName(root.path("name").asText(null))
+                    .version(root.path("version").path("number").asText(null))
+                    .build();
+        } catch (IOException ex) {
+            throw new IllegalStateException("Không parse được response Elasticsearch health", ex);
+        }
     }
 
     /**
@@ -265,5 +291,13 @@ public class ElasticsearchClientService {
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("Không serialize được Elasticsearch request body", ex);
         }
+    }
+
+    @Getter
+    @Builder
+    public static class ElasticsearchClusterInfo {
+        private String clusterName;
+        private String nodeName;
+        private String version;
     }
 }

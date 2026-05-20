@@ -12,6 +12,8 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCompanyDetailRe
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCompanyResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCandidateProofResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminDashboardStatsResponse;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminElasticsearchHealthResponse;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminElasticsearchReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageResponse;
@@ -281,6 +283,26 @@ public class AdminController {
     ) {
         requireAdmin();
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật cài đặt admin thành công", adminService.updateSettings(request)));
+    }
+
+    @GetMapping("/elasticsearch/health")
+    // Health-check Elasticsearch để admin xác nhận cluster đã sẵn sàng cho search.
+    public ResponseEntity<SuccessResponse<AdminElasticsearchHealthResponse>> elasticsearchHealth() {
+        requireAdmin();
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Lấy trạng thái Elasticsearch thành công",
+                adminService.getElasticsearchHealth()
+        ));
+    }
+
+    @PostMapping("/elasticsearch/reindex/jobs")
+    // Reindex full dữ liệu public jobs vào Elasticsearch theo thao tác thủ công từ admin.
+    public ResponseEntity<SuccessResponse<AdminElasticsearchReindexResponse>> reindexPublicJobs() {
+        requireAdmin();
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Reindex dữ liệu jobs lên Elasticsearch thành công",
+                adminService.reindexPublicJobs()
+        ));
     }
 
     @GetMapping("/system-roles")

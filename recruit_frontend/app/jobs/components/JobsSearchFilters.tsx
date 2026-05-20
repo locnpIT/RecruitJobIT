@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ChangeEvent, type ReactNode } from "react";
+import { useMemo, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { useProvinces } from "@/app/hooks/useProvinces";
 import type { PublicJobSearchMetadata, SearchJobsParams } from "@/services/public-job.service";
 
@@ -74,9 +74,17 @@ export function JobsSearchFilters({ value, metadata, onChange, onSubmit, onReset
     return selected ? String(selected.id) : "";
   }, [provinces, value.diaDiem]);
 
+  // Search thực tế được thực thi ở hook cha (useJobsSearch -> publicJobService.searchJobs).
+  // Backend sẽ tự đi nhánh Elasticsearch khi APP_ELASTICSEARCH_ENABLED=true.
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSubmit();
+  };
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <form onSubmit={handleSubmit}>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <FilterField label="Từ khóa">
           <input
             value={value.tuKhoa ?? ""}
@@ -152,26 +160,26 @@ export function JobsSearchFilters({ value, metadata, onChange, onSubmit, onReset
             placeholder="Tất cả cấp độ"
           />
         </FilterField>
-      </div>
+        </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={loading}
-          className="h-10 rounded-md bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-        >
-          Tìm kiếm
-        </button>
-        <button
-          type="button"
-          onClick={onReset}
-          disabled={loading}
-          className="h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
-        >
-          Xóa bộ lọc
-        </button>
-      </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="h-10 rounded-md bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+          >
+            Tìm kiếm
+          </button>
+          <button
+            type="button"
+            onClick={onReset}
+            disabled={loading}
+            className="h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
+          >
+            Xóa bộ lọc
+          </button>
+        </div>
+      </form>
     </section>
   );
 }

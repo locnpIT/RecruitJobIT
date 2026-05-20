@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   publicJobService,
   type PublicJobSearchMetadata,
@@ -11,17 +12,34 @@ import {
 
 const DEFAULT_PAGE_SIZE = 12;
 
+function parseOptionalNumber(raw: string | null): number | undefined {
+  if (!raw) {
+    return undefined;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function buildFiltersFromQuery(searchParams: { get: (key: string) => string | null }): SearchJobsParams {
+  return {
+    trang: 0,
+    kichThuoc: DEFAULT_PAGE_SIZE,
+    tuKhoa: searchParams.get("tuKhoa")?.trim() ?? "",
+    diaDiem: searchParams.get("diaDiem")?.trim() ?? "",
+    nganhNgheId: parseOptionalNumber(searchParams.get("nganhNgheId")),
+    loaiHinhLamViecId: parseOptionalNumber(searchParams.get("loaiHinhLamViecId")),
+    capDoKinhNghiemId: parseOptionalNumber(searchParams.get("capDoKinhNghiemId")),
+  };
+}
+
 // Dùng cho màn /jobs: quản lý metadata filter + state search + phân trang từ API.
 export function useJobsSearch() {
+  const searchParams = useSearchParams();
+  const searchParamsKey = searchParams.toString();
   const [jobs, setJobs] = useState<PublicJobSummary[]>([]);
   const [metadata, setMetadata] = useState<PublicJobSearchMetadata | null>(null);
   const [searchState, setSearchState] = useState<PublicJobSearchResponse | null>(null);
-  const [filters, setFilters] = useState<SearchJobsParams>({
-    trang: 0,
-    kichThuoc: DEFAULT_PAGE_SIZE,
-    tuKhoa: "",
-    diaDiem: "",
-  });
+  const [filters, setFilters] = useState<SearchJobsParams>(buildFiltersFromQuery(searchParams));
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -43,12 +61,13 @@ export function useJobsSearch() {
 
   useEffect(() => {
     let isMounted = true;
+    const queryFilters = buildFiltersFromQuery(new URLSearchParams(searchParamsKey));
 
     const bootstrap = async () => {
       try {
         const [metadataData, searchData] = await Promise.all([
           publicJobService.getSearchMetadata(),
-          publicJobService.searchJobs(filters),
+          publicJobService.searchJobs(queryFilters),
         ]);
         if (!isMounted) {
           return;
@@ -76,8 +95,7 @@ export function useJobsSearch() {
     return () => {
       isMounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParamsKey]);
 
   const handleSubmitFilters = async () => {
     const next = { ...filters, trang: 0 };

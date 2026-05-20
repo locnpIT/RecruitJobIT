@@ -12,6 +12,8 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCompanyDetailRe
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCompanyResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCandidateProofResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminDashboardStatsResponse;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminElasticsearchHealthResponse;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminElasticsearchReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageResponse;
@@ -21,6 +23,9 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminSettingsRespons
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminUserResponse;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyRepository;
+import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchClientService;
+import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchProperties;
+import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobElasticsearchIndexService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -47,6 +52,9 @@ public class AdminService {
     private final AdminSettingsService adminSettingsService;
     private final AdminCandidateProofService adminCandidateProofService;
     private final AdminCatalogService adminCatalogService;
+    private final ElasticsearchClientService elasticsearchClientService;
+    private final ElasticsearchProperties elasticsearchProperties;
+    private final PublicJobElasticsearchIndexService publicJobElasticsearchIndexService;
 
     @Transactional(readOnly = true)
     public AdminDashboardStatsResponse getStats() {
@@ -255,5 +263,52 @@ public class AdminService {
     @Transactional
     public void deleteCertificateType(Long id) {
         adminCatalogService.deleteCertificateType(id);
+    }
+
+    @Transactional(readOnly = true)
+    public AdminElasticsearchHealthResponse getElasticsearchHealth() {
+        if (!elasticsearchClientService.isEnabled()) {
+            return AdminElasticsearchHealthResponse.builder()
+                    .enabled(false)
+                    .reachable(false)
+                    .url(elasticsearchProperties.getUrl())
+                    .jobIndex(elasticsearchProperties.getJobIndex())
+                    .error("Elasticsearch đang tắt (app.elasticsearch.enabled=false)")
+                    .build();
+        }
+        try {
+            ElasticsearchClientService.ElasticsearchClusterInfo info = elasticsearchClientService.layThongTinCluster();
+            return AdminElasticsearchHealthResponse.builder()
+                    .enabled(true)
+                    .reachable(true)
+                    .url(elasticsearchProperties.getUrl())
+                    .jobIndex(elasticsearchProperties.getJobIndex())
+                    .clusterName(info.getClusterName())
+                    .nodeName(info.getNodeName())
+                    .version(info.getVersion())
+                    .error(null)
+                    .build();
+        } catch (RuntimeException ex) {
+            return AdminElasticsearchHealthResponse.builder()
+                    .enabled(true)
+                    .reachable(false)
+                    .url(elasticsearchProperties.getUrl())
+                    .jobIndex(elasticsearchProperties.getJobIndex())
+                    .error(ex.getMessage())
+                    .build();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public AdminElasticsearchReindexResponse reindexPublicJobs() {
+        PublicJobElasticsearchIndexService.DongBoIndexSummary summary =
+                publicJobElasticsearchIndexService.dongBoToanBoTinPublic();
+        return AdminElasticsearchReindexResponse.builder()
+                .enabled(summary.isEnabled())
+                .jobIndex(elasticsearchProperties.getJobIndex())
+                .tongTinPublic(summary.getTongTinPublic())
+                .soDaDongBo(summary.getSoDaDongBo())
+                .soThatBai(summary.getSoThatBai())
+                .build();
     }
 }

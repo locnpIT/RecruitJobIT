@@ -11,6 +11,8 @@ import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -38,20 +40,37 @@ public class PublicJobElasticsearchIndexService {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional(readOnly = true)
     public void dongBoToanBoTinPublicKhiKhoiDong() {
+        DongBoIndexSummary summary = dongBoToanBoTinPublic();
+        if (summary.isEnabled()) {
+            log.info("Elasticsearch startup reindex: tongTinPublic={}, daDongBo={}, thatBai={}",
+                    summary.getTongTinPublic(),
+                    summary.getSoDaDongBo(),
+                    summary.getSoThatBai());
+        }
+    }
+
+    /**
+     * Reindex full danh sách tin public đang active.
+     * Method này dùng cho cả startup hook và admin-trigger reindex thủ công.
+     */
+    @Transactional(readOnly = true)
+    public DongBoIndexSummary dongBoToanBoTinPublic() {
         if (!elasticsearchClientService.isEnabled()) {
-            return;
+            return new DongBoIndexSummary(false, 0, 0, 0);
         }
         List<TinTuyenDung> publicJobs = tinTuyenDungRepository.findPublicApprovedActiveJobs(LocalDateTime.now());
-        if (publicJobs.isEmpty()) {
-            return;
-        }
+        int soDaDongBo = 0;
+        int soThatBai = 0;
         for (TinTuyenDung job : publicJobs) {
             try {
                 dongBoHoacXoa(job);
+                soDaDongBo++;
             } catch (Exception ex) {
+                soThatBai++;
                 log.warn("Không backfill được job {} vào Elasticsearch", job.getId(), ex);
             }
         }
+        return new DongBoIndexSummary(true, publicJobs.size(), soDaDongBo, soThatBai);
     }
 
     /**
@@ -188,5 +207,14 @@ public class PublicJobElasticsearchIndexService {
 
     private String trimToEmpty(String value) {
         return StringUtils.hasText(value) ? value.trim() : "";
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class DongBoIndexSummary {
+        private boolean enabled;
+        private int tongTinPublic;
+        private int soDaDongBo;
+        private int soThatBai;
     }
 }
