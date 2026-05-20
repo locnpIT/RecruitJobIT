@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Eye, EyeOff, Plus } from "lucide-react";
 import type { CompanyAdminBranch } from "@/services/company-admin/types";
+import { Button } from "@/components/ui/Button";
 
 // Form tạo/cập nhật tài khoản HR.
 // Component này chỉ lo nhập liệu và chọn chi nhánh; validate nghiệp vụ được xử lý ở container/page.
@@ -143,14 +144,14 @@ export function HrCreateForm({
         </div>
       ) : null}
 
-      <button
+      <Button variant="unstyled"
         type="submit"
         disabled={isSaving}
         className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:border-slate-800 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <Plus className="h-4 w-4" />
         {isSaving ? "Đang lưu..." : isEditMode ? "Lưu cập nhật" : "Tạo HR"}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -194,14 +195,14 @@ function PasswordField({
         className="w-full border border-slate-300 px-3 py-2 pr-11 text-sm outline-none focus:border-slate-900"
         placeholder={placeholder}
       />
-      <button
+      <Button variant="unstyled"
         type="button"
         onClick={onToggle}
         className="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center text-slate-500 hover:text-slate-900"
         aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
       >
         {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-      </button>
+      </Button>
     </div>
   );
 }

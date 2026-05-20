@@ -1,5 +1,6 @@
 import type { ChatConversation } from "@/services/chat.service";
 import { buildRecruiterLabel } from "@/app/chat/utils/chat-partner-label";
+import { Button } from "@/components/ui/Button";
 
 type ChatConversationListBaseProps = {
   conversations: ChatConversation[];
@@ -63,7 +64,7 @@ export function ChatConversationListBase({
           const unread = Number(conversation.soTinChuaDoc || 0);
           return (
             <li key={conversation.id}>
-              <button
+              <Button variant="unstyled"
                 type="button"
                 onClick={() => onSelect(conversation)}
                 className={`flex w-full items-start justify-between gap-3 px-4 py-3 text-left ${
@@ -88,7 +89,7 @@ export function ChatConversationListBase({
                     {unread}
                   </span>
                 ) : null}
-              </button>
+              </Button>
             </li>
           );
         })}

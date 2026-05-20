@@ -1,4 +1,5 @@
 import type { CompanyAdminHrAccount } from "@/services/company-admin/types";
+import { Button } from "@/components/ui/Button";
 
 // Bảng danh sách tài khoản HR của công ty.
 // Hiển thị thông tin cơ bản, chi nhánh phụ trách và cung cấp action cập nhật/xóa.
@@ -46,20 +47,20 @@ export function HrListTable({ hrs, onEdit, onDelete }: HrListTableProps) {
                   <td className="py-3 text-slate-600">Đã đặt</td>
                   <td className="py-3">
                     <div className="flex gap-2">
-                      <button
+                      <Button variant="unstyled"
                         type="button"
                         onClick={() => onEdit(hr)}
                         className="rounded-md border border-slate-300 px-2.5 py-1 text-slate-700 hover:bg-slate-50"
                       >
                         Cập nhật
-                      </button>
-                      <button
+                      </Button>
+                      <Button variant="unstyled"
                         type="button"
                         onClick={() => onDelete(hr)}
                         className="rounded-md border border-rose-300 px-2.5 py-1 text-rose-700 hover:bg-rose-50"
                       >
                         Xoá
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>

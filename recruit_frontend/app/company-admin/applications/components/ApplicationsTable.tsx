@@ -1,6 +1,7 @@
 import { Download, Eye, Loader2 } from "lucide-react";
 import type { CompanyAdminApplication } from "@/services/company-admin/types";
 import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
+import { Button } from "@/components/ui/Button";
 
 type ApplicationsTableProps = {
   applications: CompanyAdminApplication[];
@@ -70,7 +71,7 @@ export function ApplicationsTable({
               <td className="py-3 text-slate-600">{formatDateTime(application.ngayTao)}</td>
               <td className="py-3 pr-4 text-right">
                 <div className="inline-flex items-center gap-2">
-                  <button
+                  <Button variant="unstyled"
                     type="button"
                     disabled={openingChatApplicationId === application.id}
                     onClick={() => onOpenChat(application.id)}
@@ -84,15 +85,15 @@ export function ApplicationsTable({
                     ) : (
                       "Gửi tin nhắn"
                     )}
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="unstyled"
                     type="button"
                     onClick={() => onOpenDetail(application.id)}
                     className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
                   >
                     <Eye className="h-4 w-4" />
                     Xem hồ sơ
-                  </button>
+                  </Button>
                 </div>
               </td>
             </tr>

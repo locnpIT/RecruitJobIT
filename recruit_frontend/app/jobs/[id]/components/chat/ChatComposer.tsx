@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/Button";
+
 type ChatComposerProps = {
   value: string;
   disabled?: boolean;
@@ -36,14 +38,15 @@ export function ChatComposer({
         placeholder="Nhập tin nhắn..."
         className="min-h-[44px] flex-1 resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
       />
-      <button
+      <Button
         type="button"
+        variant="primary"
         onClick={onSubmit}
         disabled={!canSend}
-        className="h-11 rounded-md bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+        className="h-11 px-4 text-sm font-semibold disabled:bg-slate-400"
       >
         {sending ? "Đang gửi..." : "Gửi"}
-      </button>
+      </Button>
     </div>
   );
 }

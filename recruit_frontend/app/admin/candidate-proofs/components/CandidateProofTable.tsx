@@ -1,6 +1,7 @@
 import { EmptyState } from "../../components/EmptyState";
 import { StatusPill } from "../../components/StatusPill";
 import type { AdminCandidateProof } from "@/services/admin/types";
+import { Button } from "@/components/ui/Button";
 
 type CandidateProofTableProps = {
   loading: boolean;
@@ -76,22 +77,22 @@ export function CandidateProofTable({
                 </td>
                 <td className="py-3">
                   <div className="flex flex-wrap gap-2">
-                    <button
+                    <Button variant="unstyled"
                       type="button"
                       disabled={isSubmitting || item.trangThai === "APPROVED"}
                       onClick={() => onApprove(item)}
                       className="rounded-md border border-emerald-300 px-2.5 py-1 font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Duyệt
-                    </button>
-                    <button
+                    </Button>
+                    <Button variant="unstyled"
                       type="button"
                       disabled={isSubmitting || item.trangThai === "REJECTED"}
                       onClick={() => onReject(item)}
                       className="rounded-md border border-rose-300 px-2.5 py-1 font-medium text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Từ chối
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>

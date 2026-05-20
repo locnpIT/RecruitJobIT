@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, MapPin, Search } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { useProvinces } from "@/app/hooks/useProvinces";
 
 // Hero section của homepage.
@@ -102,12 +103,13 @@ export function HeroSection() {
                   </label>
 
                   <div className="border-t border-slate-200 p-2 md:border-l md:border-t-0">
-                    <button
+                    <Button
                       type="submit"
-                      className="h-12 w-full rounded-lg bg-slate-900 px-7 text-base font-semibold text-white transition hover:bg-slate-800 md:h-full md:min-w-36"
+                      variant="primary"
+                      className="h-12 w-full rounded-lg px-7 text-base font-semibold md:h-full md:min-w-36"
                     >
                       Tìm việc
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </div>

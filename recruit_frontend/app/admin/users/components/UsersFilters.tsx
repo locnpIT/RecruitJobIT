@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/Button";
+
 type UsersFiltersProps = {
   keyword: string;
   role: string;
@@ -45,13 +47,13 @@ export function UsersFilters({
           </option>
         ))}
       </select>
-      <button
+      <Button variant="unstyled"
         type="button"
         onClick={onApply}
         className="h-10 rounded-md border border-slate-300 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
       >
         Áp dụng
-      </button>
+      </Button>
     </div>
   );
 }

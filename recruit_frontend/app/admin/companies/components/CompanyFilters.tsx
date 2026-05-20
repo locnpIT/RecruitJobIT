@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/Button";
+
 const statusOptions = [
   { value: "PENDING", label: "Chờ duyệt" },
   { value: "APPROVED", label: "Đã duyệt" },
@@ -19,7 +21,7 @@ export function CompanyFilters({ status, onStatusChange, onReload }: CompanyFilt
         {statusOptions.map((option) => {
           const active = status === option.value;
           return (
-            <button
+            <Button variant="unstyled"
               key={option.value || "all"}
               type="button"
               onClick={() => onStatusChange(option.value)}
@@ -28,17 +30,17 @@ export function CompanyFilters({ status, onStatusChange, onReload }: CompanyFilt
               }`}
             >
               {option.label}
-            </button>
+            </Button>
           );
         })}
       </div>
-      <button
+      <Button variant="unstyled"
         type="button"
         onClick={onReload}
         className="h-9 rounded-md border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
       >
         Tải lại
-      </button>
+      </Button>
     </div>
   );
 }

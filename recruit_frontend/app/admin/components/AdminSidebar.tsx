@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 
 import { adminNavItems } from "../admin-nav";
 
@@ -28,7 +29,7 @@ export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout }: 
     >
       <div className="px-4 py-5">
         <div className="mb-3 flex items-center justify-end lg:hidden">
-          <button
+          <Button variant="unstyled"
             type="button"
             aria-label="Đóng menu quản trị"
             onClick={onClose}
@@ -37,7 +38,7 @@ export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout }: 
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
             </svg>
-          </button>
+          </Button>
         </div>
 
         <Link href="/admin" onClick={onNavigate}>
@@ -63,8 +64,8 @@ export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout }: 
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`block rounded-md px-3 py-2 transition ${
-                isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
+              className={`block px-3 py-2 transition ${
+                isActive ? "bg-[#008080] text-white" : "text-slate-700 hover:bg-slate-100"
               }`}
             >
               {item.label}
@@ -73,13 +74,13 @@ export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout }: 
         })}
 
         {/* Đăng xuất ở cuối menu để tách khỏi nhóm điều hướng chính. */}
-        <button
+        <Button variant="unstyled"
           type="button"
           onClick={onLogout}
           className="mt-4 flex w-full items-center justify-center rounded-md border border-red-200 px-3 py-2 font-semibold text-red-600 transition hover:bg-red-50"
         >
           Đăng xuất
-        </button>
+        </Button>
       </nav>
     </aside>
   );

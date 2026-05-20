@@ -119,14 +119,14 @@ export function CatalogCrudSection({
             <p className="text-sm font-medium text-slate-800">
               {editingId !== null ? "Cập nhật danh mục" : "Tạo danh mục mới"}
             </p>
-            <button
+            <Button variant="unstyled"
               type="button"
               onClick={cancelEdit}
               className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800"
             >
               <X className="h-4 w-4" />
               Đóng
-            </button>
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

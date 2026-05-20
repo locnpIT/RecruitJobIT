@@ -5,18 +5,19 @@ import { cn } from "@/lib/utils";
 // Gom variant/size vào một chỗ để giữ UI nhất quán giữa public, admin và company-admin.
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "unstyled";
   size?: "sm" | "md" | "lg";
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", ...props }, ref) => {
     const variants = {
-      primary: "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-500",
-      secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200 focus:ring-slate-500",
+      primary: "bg-[#008080] text-white hover:bg-[#006d6d] focus:ring-[#008080]",
+      secondary: "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-500",
       outline: "border border-slate-300 bg-white hover:bg-slate-50 text-slate-700",
       ghost: "hover:bg-slate-100 text-slate-700",
       danger: "bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500",
+      unstyled: "",
     };
 
     const sizes = {

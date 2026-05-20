@@ -1,6 +1,7 @@
 import { ExternalLink, FileText, Loader2, MessageSquareText, X } from "lucide-react";
 import type { CompanyAdminApplication } from "@/services/company-admin/types";
 import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
+import { Button } from "@/components/ui/Button";
 
 const STATUS_ACTIONS = [
   { value: "PENDING", label: "Chờ xử lý" },
@@ -47,14 +48,14 @@ export function ApplicationDetailModal({
             </h2>
             <p className="mt-1 text-sm text-slate-600">{application?.tieuDeTinTuyenDung ?? "Tin tuyển dụng"}</p>
           </div>
-          <button
+          <Button variant="unstyled"
             type="button"
             onClick={onClose}
             className="rounded-md border border-slate-300 p-2 text-slate-600 hover:bg-slate-50"
             aria-label="Đóng chi tiết đơn ứng tuyển"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </header>
 
         {loading ? (
@@ -90,7 +91,7 @@ export function ApplicationDetailModal({
                     <div className="mt-2"><ApplicationStatusBadge status={application.trangThai} /></div>
                   </div>
                   <div className="flex flex-wrap items-center justify-end gap-2">
-                    <button
+                    <Button variant="unstyled"
                       type="button"
                       onClick={onOpenChat}
                       disabled={openingChat}
@@ -107,7 +108,7 @@ export function ApplicationDetailModal({
                           Gửi tin nhắn
                         </>
                       )}
-                    </button>
+                    </Button>
                     {application.cvUrl ? (
                       <a
                         href={application.cvUrl}
@@ -126,7 +127,7 @@ export function ApplicationDetailModal({
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   {STATUS_ACTIONS.map((status) => (
-                    <button
+                    <Button variant="unstyled"
                       key={status.value}
                       type="button"
                       disabled={savingStatus || application.trangThai?.toUpperCase() === status.value}
@@ -134,7 +135,7 @@ export function ApplicationDetailModal({
                       className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                     >
                       {savingStatus ? "Đang lưu..." : status.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>

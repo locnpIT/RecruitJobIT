@@ -51,13 +51,14 @@ export function LoginForm({ isLoading, onSubmit }: LoginFormProps) {
               placeholder="••••••••"
               className={errors.matKhau ? "border-red-500" : ""}
             />
-            <button
+            <Button
               type="button"
+              variant="unstyled"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               onClick={() => setShowPassword((current) => !current)}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
+            </Button>
           </div>
           {errors.matKhau ? <p className="mt-1 text-xs text-red-500">{errors.matKhau.message}</p> : null}
         </div>

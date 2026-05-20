@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 
 import { isCompanyApproved } from "../company-admin-status";
 import { companyAdminNavItems } from "../company-admin-nav";
@@ -66,14 +67,14 @@ export function CompanyAdminSidebar({
             <p className="mt-0.5 line-clamp-1 text-sm font-semibold text-slate-900">{companyName ?? "Doanh nghiệp"}</p>
           </div>
         </div>
-        <button
+        <Button variant="unstyled"
           type="button"
           aria-label="Đóng menu"
           onClick={onClose}
           className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-slate-700 lg:hidden"
         >
           ×
-        </button>
+        </Button>
       </div>
 
       <nav className="flex-1 px-3 py-4 text-sm">
@@ -120,7 +121,7 @@ export function CompanyAdminSidebar({
               : "Công ty đang chờ duyệt. Chỉ có thể cập nhật logo ở mục Tuỳ chỉnh."}
           </p>
         ) : null}
-        <button
+        <Button variant="unstyled"
           type="button"
           onClick={() => {
             const confirmed = window.confirm("Bạn có chắc muốn đăng xuất không?");
@@ -135,7 +136,7 @@ export function CompanyAdminSidebar({
           className="w-full rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-left text-sm font-medium text-rose-700 transition hover:bg-rose-100"
         >
           Đăng xuất
-        </button>
+        </Button>
       </div>
     </aside>
   );

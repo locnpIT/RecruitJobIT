@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Building2, Heart } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { PublicJobSummary } from "@/services/public-job.service";
 
 type PublicJobCardProps = {
@@ -69,15 +70,16 @@ export function PublicJobCard({
 
         <div className="flex shrink-0 gap-2">
           {onAction ? (
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => onAction(job)}
               disabled={actionLoading}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+              className="inline-flex h-10 items-center justify-center gap-2 px-3 text-sm font-semibold text-slate-800 disabled:text-slate-400"
             >
               <Heart className="h-4 w-4 fill-slate-900" />
               {actionLabel ?? "Bỏ lưu"}
-            </button>
+            </Button>
           ) : null}
 
           <Link

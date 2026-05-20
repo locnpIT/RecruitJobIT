@@ -1,5 +1,6 @@
 import type { CompanyProofType } from "@/services/company-admin/types";
 import type { ProofRow } from "./types";
+import { Button } from "@/components/ui/Button";
 
 type CompanyProofsSectionProps = {
   companyApproved: boolean;
@@ -41,13 +42,13 @@ export function CompanyProofsSection({
           <p className="text-sm font-medium text-slate-700">
             {proofTypes.length ? "Danh sách loại tài liệu đã có trong hệ thống" : "Đang tải loại tài liệu..."}
           </p>
-          <button
+          <Button variant="unstyled"
             type="button"
             onClick={onAddRow}
             className="inline-flex items-center justify-center border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 hover:shadow-sm"
           >
             + Thêm file
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-3">
@@ -55,14 +56,14 @@ export function CompanyProofsSection({
             <div key={row.id} className="border border-slate-200 bg-white p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <p className="text-sm font-medium text-slate-900">Minh chứng {index + 1}</p>
-                <button
+                <Button variant="unstyled"
                   type="button"
                   onClick={() => onRemoveRow(row.id)}
                   disabled={proofRows.length === 1}
                   className="inline-flex items-center justify-center border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700 transition-all duration-200 hover:border-rose-300 hover:bg-rose-50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Xoá
-                </button>
+                </Button>
               </div>
 
               <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
@@ -110,14 +111,14 @@ export function CompanyProofsSection({
           ))}
         </div>
 
-        <button
+        <Button variant="unstyled"
           type="button"
           onClick={onUploadAll}
           disabled={isSavingProofs || proofTypes.length === 0}
           className="inline-flex items-center justify-center border border-emerald-600 px-4 py-3 text-sm font-medium text-emerald-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-700 hover:bg-emerald-600 hover:text-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
         >
           {isSavingProofs ? "Đang tải lên..." : "Tải lên tất cả minh chứng"}
-        </button>
+        </Button>
       </div>
     </div>
   );

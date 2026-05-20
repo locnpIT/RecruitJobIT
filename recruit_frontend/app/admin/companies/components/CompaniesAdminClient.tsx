@@ -7,6 +7,7 @@ import { CompanyStatsCards } from "./CompanyStatsCards";
 import { CompanyTable } from "./CompanyTable";
 import { useAdminCompaniesActions } from "../hooks/useAdminCompaniesActions";
 import { useAdminCompaniesData } from "../hooks/useAdminCompaniesData";
+import { Button } from "@/components/ui/Button";
 
 // Client container cho trang admin/companies.
 export function CompaniesAdminClient() {
@@ -73,7 +74,7 @@ export function CompaniesAdminClient() {
               placeholder="Lý do từ chối..."
             />
             <div className="mt-4 flex justify-end gap-2">
-              <button
+              <Button variant="unstyled"
                 type="button"
                 disabled={actions.isMutating}
                 onClick={() => {
@@ -83,15 +84,15 @@ export function CompaniesAdminClient() {
                 className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
               >
                 Hủy
-              </button>
-              <button
+              </Button>
+              <Button variant="unstyled"
                 type="button"
                 disabled={actions.isMutating}
                 onClick={() => void actions.handleReject()}
                 className="rounded-md bg-rose-600 px-3 py-2 text-sm font-medium text-white"
               >
                 {actions.isMutating ? "Đang xử lý..." : "Xác nhận từ chối"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

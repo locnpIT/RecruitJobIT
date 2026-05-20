@@ -1,4 +1,5 @@
 import type { Province, Ward } from "@/services/location.service";
+import { Button } from "@/components/ui/Button";
 
 export type PersonalInfoFormState = {
   soDienThoai: string;
@@ -30,14 +31,14 @@ export function PersonalInfoPanel({
     <section className="rounded-xl border border-slate-200 bg-white p-5">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-900">Thông tin cá nhân</h3>
-        <button
+        <Button variant="unstyled"
           type="button"
           onClick={onSave}
           disabled={saving}
           className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {saving ? "Đang lưu..." : "Lưu thông tin"}
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

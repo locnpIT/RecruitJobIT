@@ -1,6 +1,7 @@
 import { StatusPill } from "../../components/StatusPill";
 import { EmptyState } from "../../components/EmptyState";
 import type { AdminCompany } from "@/services/admin/types";
+import { Button } from "@/components/ui/Button";
 
 type CompanyTableProps = {
   companies: AdminCompany[];
@@ -61,30 +62,30 @@ export function CompanyTable({
               <td className="py-2.5 text-slate-500">{new Date(company.ngayTao).toLocaleDateString("vi-VN")}</td>
               <td className="py-2.5">
                 <div className="flex flex-wrap gap-2">
-                  <button
+                  <Button variant="unstyled"
                     type="button"
                     disabled={isMutating || isDetailLoading}
                     onClick={() => onViewDetail(company)}
                     className="rounded-md border border-slate-300 px-2.5 py-1 text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Chi tiết
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="unstyled"
                     type="button"
                     disabled={isMutating || company.trangThai === "APPROVED"}
                     onClick={() => onApprove(company)}
                     className="rounded-md border border-emerald-300 px-2.5 py-1 text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Duyệt
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="unstyled"
                     type="button"
                     disabled={isMutating || company.trangThai === "REJECTED"}
                     onClick={() => onReject(company)}
                     className="rounded-md border border-rose-300 px-2.5 py-1 text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Từ chối
-                  </button>
+                  </Button>
                 </div>
               </td>
             </tr>

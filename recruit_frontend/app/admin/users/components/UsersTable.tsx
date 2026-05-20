@@ -1,6 +1,7 @@
 import { EmptyState } from "../../components/EmptyState";
 import { StatusPill } from "../../components/StatusPill";
 import type { AdminUser } from "@/services/admin/types";
+import { Button } from "@/components/ui/Button";
 
 type UsersTableProps = {
   users: AdminUser[];
@@ -75,7 +76,7 @@ export function UsersTable({
                 <td className="py-2.5 text-slate-600">{new Date(user.ngayTao).toLocaleDateString("vi-VN")}</td>
                 <td className="py-2.5">
                   <div className="flex gap-2">
-                    <button
+                    <Button variant="unstyled"
                       type="button"
                       disabled={isMutating}
                       onClick={() => onToggle(user)}
@@ -86,15 +87,15 @@ export function UsersTable({
                       } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
                       {user.dangHoatDong ? "Khóa" : "Kích hoạt"}
-                    </button>
-                    <button
+                    </Button>
+                    <Button variant="unstyled"
                       type="button"
                       disabled={isMutating}
                       onClick={() => onDelete(user)}
                       className="rounded-md border border-rose-300 px-2.5 py-1 font-medium text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Xoá
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -108,25 +109,25 @@ export function UsersTable({
           Hiển thị {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, users.length)} / {users.length} người dùng
         </p>
         <div className="flex gap-2">
-          <button
+          <Button variant="unstyled"
             type="button"
             disabled={page === 1}
             onClick={onPrev}
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 disabled:opacity-50"
           >
             Trước
-          </button>
+          </Button>
           <span className="rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700">
             {page}/{totalPages}
           </span>
-          <button
+          <Button variant="unstyled"
             type="button"
             disabled={page === totalPages}
             onClick={onNext}
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 disabled:opacity-50"
           >
             Sau
-          </button>
+          </Button>
         </div>
       </div>
     </>

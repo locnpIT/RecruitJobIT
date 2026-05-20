@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/Button";
 
 // Header dùng lại cho nhiều màn admin/company-admin.
 // Gom title/subtitle/actions vào một component để giữ bố cục quản trị nhất quán.
@@ -32,20 +33,20 @@ export function PageHeader({
           <div className="flex flex-wrap items-center gap-2">
             {actions}
             {secondaryAction ? (
-              <button
+              <Button variant="unstyled"
                 type="button"
                 className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
                 {secondaryAction}
-              </button>
+              </Button>
             ) : null}
             {primaryAction ? (
-              <button
+              <Button variant="unstyled"
                 type="button"
                 className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
               >
                 {primaryAction}
-              </button>
+              </Button>
             ) : null}
           </div>
         ) : null}

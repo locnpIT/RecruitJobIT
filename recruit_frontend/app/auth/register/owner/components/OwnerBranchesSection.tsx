@@ -77,13 +77,14 @@ export function OwnerBranchesSection({
                   Chi nhánh chính
                 </label>
                 {fields.length > 1 ? (
-                  <button
+                  <Button
                     type="button"
+                    variant="unstyled"
                     onClick={() => onRemoveBranch(index)}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-100"
                   >
                     <Minus size={16} />
-                  </button>
+                  </Button>
                 ) : null}
               </div>
             </div>

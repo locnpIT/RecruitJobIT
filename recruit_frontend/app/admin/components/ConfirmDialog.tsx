@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
+
 // Confirm dialog dùng chung cho các thao tác nhạy cảm ở admin:
 // xóa, từ chối, ẩn, khóa/kích hoạt...
 type ConfirmDialogProps = {
@@ -33,15 +35,15 @@ export function ConfirmDialog({
         <h3 className="text-base font-semibold text-slate-900">{title}</h3>
         <p className="mt-2 text-sm text-slate-600">{description}</p>
         <div className="mt-5 flex justify-end gap-2">
-          <button
+          <Button variant="unstyled"
             type="button"
             disabled={isLoading}
             onClick={onCancel}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button variant="unstyled"
             type="button"
             disabled={isLoading}
             onClick={onConfirm}
@@ -50,7 +52,7 @@ export function ConfirmDialog({
             }`}
           >
             {isLoading ? "Đang xử lý..." : confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

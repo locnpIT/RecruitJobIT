@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import type { AdminCompanyDetail } from "@/services/admin/types";
+import { Button } from "@/components/ui/Button";
 
 type CompanyDetailModalProps = {
   company: AdminCompanyDetail;
@@ -28,14 +29,14 @@ export function CompanyDetailModal({
               {company.congTy.maSoThue} · {company.congTy.trangThai}
             </p>
           </div>
-          <button
+          <Button variant="unstyled"
             type="button"
             onClick={onClose}
             className="inline-flex h-9 w-9 items-center justify-center border border-slate-300 text-slate-700"
             aria-label="Đóng"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         <div className="grid gap-6 p-5 lg:grid-cols-[1fr_320px]">
@@ -112,22 +113,22 @@ export function CompanyDetailModal({
 
             <Section title="Thao tác">
               <div className="flex gap-2">
-                <button
+                <Button variant="unstyled"
                   type="button"
                   disabled={isMutating || company.congTy.trangThai === "APPROVED"}
                   onClick={() => void onApprove()}
                   className="flex-1 border border-emerald-300 px-3 py-2 text-sm font-medium text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Duyệt
-                </button>
-                <button
+                </Button>
+                <Button variant="unstyled"
                   type="button"
                   disabled={isMutating || company.congTy.trangThai === "REJECTED"}
                   onClick={() => void onReject()}
                   className="flex-1 border border-rose-300 px-3 py-2 text-sm font-medium text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Từ chối
-                </button>
+                </Button>
               </div>
             </Section>
           </div>

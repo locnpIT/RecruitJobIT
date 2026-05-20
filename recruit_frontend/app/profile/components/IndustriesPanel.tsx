@@ -1,5 +1,6 @@
 import type { CandidateProfileMetadata } from "@/services/candidate-profile.service";
 import { ProfileActionButton } from "./ProfileActionButton";
+import { Button } from "@/components/ui/Button";
 
 // Panel chọn ngành nghề quan tâm của ứng viên.
 // Dữ liệu lưu theo dạng danh sách id, backend xử lý replace-all giống kỹ năng.
@@ -37,7 +38,7 @@ export function IndustriesPanel({
           {metadata?.nganhNghes?.map((industry) => {
             const active = selectedIndustryIds.includes(industry.id);
             return (
-              <button
+              <Button variant="unstyled"
                 key={industry.id}
                 type="button"
                 onClick={() => onToggleIndustry(industry.id)}
@@ -48,7 +49,7 @@ export function IndustriesPanel({
                 }`}
               >
                 {industry.ten}
-              </button>
+              </Button>
             );
           })}
         </div>

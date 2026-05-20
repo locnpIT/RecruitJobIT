@@ -45,14 +45,14 @@ export function PackageFormModal({
             <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
             <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
           </div>
-          <button
+          <Button variant="unstyled"
             type="button"
             className="rounded-md border border-slate-200 p-2 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
             onClick={onClose}
             aria-label="Đóng"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4 px-5 py-5">

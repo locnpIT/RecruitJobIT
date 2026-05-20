@@ -3,15 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type UIEvent } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { clearAdminSession } from "@/lib/admin-session";
+import { Button } from "@/components/ui/Button";
 import { useHomeHeaderData } from "./hooks/useHomeHeaderData";
 
 // Header dùng chung cho khu public/auth/profile.
 // API thông báo + đọc session được tách sang hook useHomeHeaderData để page/component chỉ còn UI wiring.
 export function HomeHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const headerData = useHomeHeaderData();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -105,26 +107,26 @@ export function HomeHeader() {
 
         {!headerData.user && (
           <div className="flex items-center gap-2">
-            <Link
-              href="/auth/login"
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
+            <Button type="button" variant="outline" className="h-10 px-4" onClick={() => router.push("/auth/login")}>
               Đăng nhập
-            </Link>
-            <Link
-              href="/auth/register/candidate"
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              className="h-10 px-4"
+              onClick={() => router.push("/auth/register/candidate")}
             >
               Đăng ký
-            </Link>
+            </Button>
           </div>
         )}
 
         {headerData.user && (
           <div className="flex items-center gap-2">
             <div ref={notificationRef} className="relative">
-              <button
+              <Button
                 type="button"
+                variant="unstyled"
                 onClick={() => {
                   setNotificationOpen((current) => !current);
                   setUserMenuOpen(false);
@@ -138,18 +140,19 @@ export function HomeHeader() {
                     {headerData.unreadCount > 99 ? "99+" : headerData.unreadCount}
                   </span>
                 ) : null}
-              </button>
+              </Button>
               {notificationOpen ? (
                 <div className="absolute right-0 z-20 mt-2 w-80 rounded-md border border-slate-200 bg-white p-2 shadow-lg">
                   <div className="mb-2 flex items-center justify-between px-1">
                     <p className="text-sm font-semibold text-slate-900">Thông báo</p>
-                    <button
+                    <Button
                       type="button"
+                      variant="unstyled"
                       onClick={() => void headerData.markAllRead()}
                       className="text-xs font-medium text-slate-600 hover:text-slate-900"
                     >
                       Đánh dấu đã đọc
-                    </button>
+                    </Button>
                   </div>
                   <div className="max-h-96 overflow-y-auto" onScroll={handleNotificationScroll}>
                     {headerData.loadingNotifications ? (
@@ -167,22 +170,24 @@ export function HomeHeader() {
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2">
-                              <button
+                              <Button
                                 type="button"
+                                variant="unstyled"
                                 onClick={() => void handleClickNotification(item)}
                                 className="flex-1 text-left hover:bg-slate-50"
                               >
                                 <p className="text-xs font-semibold text-slate-900">{item.tieuDe}</p>
                                 <p className="mt-1 text-xs text-slate-600">{item.noiDung}</p>
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 type="button"
+                                variant="unstyled"
                                 onClick={() => void handleDeleteNotification(item)}
                                 className="rounded px-1.5 py-0.5 text-[11px] font-medium text-rose-700 hover:bg-rose-50"
                                 aria-label="Xoá thông báo"
                               >
                                 Xoá
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         ))
@@ -199,8 +204,9 @@ export function HomeHeader() {
             </div>
 
             <div ref={userMenuRef} className="relative">
-              <button
+              <Button
                 type="button"
+                variant="unstyled"
                 onClick={() => {
                   setUserMenuOpen((current) => !current);
                   setNotificationOpen(false);
@@ -219,7 +225,7 @@ export function HomeHeader() {
                 ) : (
                   headerData.userInitial
                 )}
-              </button>
+              </Button>
               {userMenuOpen ? (
                 <div className="absolute right-0 z-20 mt-2 w-56 rounded-md border border-slate-200 bg-white p-2 shadow-lg">
                   <div className="mb-2 rounded-md bg-slate-50 px-3 py-2">
@@ -261,8 +267,9 @@ export function HomeHeader() {
                       Việc làm yêu thích
                     </Link>
                   ) : null}
-                  <button
+                  <Button
                     type="button"
+                    variant="unstyled"
                     onClick={() => {
                       clearAdminSession();
                       window.location.assign("/");
@@ -270,7 +277,7 @@ export function HomeHeader() {
                     className="mt-1 block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                   >
                     Đăng xuất
-                  </button>
+                  </Button>
                 </div>
               ) : null}
             </div>

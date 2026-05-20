@@ -2,6 +2,7 @@
 
 import { useMemo, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { useProvinces } from "@/app/hooks/useProvinces";
+import { Button } from "@/components/ui/Button";
 import type { PublicJobSearchMetadata, SearchJobsParams } from "@/services/public-job.service";
 
 type JobsSearchFiltersProps = {
@@ -163,21 +164,23 @@ export function JobsSearchFilters({ value, metadata, onChange, onSubmit, onReset
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={loading}
-            className="h-10 rounded-md bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="h-10 px-4 text-sm font-semibold disabled:bg-slate-400"
           >
             Tìm kiếm
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="secondary"
             onClick={onReset}
             disabled={loading}
-            className="h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400"
+            className="h-10 px-4 text-sm font-semibold disabled:bg-slate-500"
           >
             Xóa bộ lọc
-          </button>
+          </Button>
         </div>
       </form>
     </section>

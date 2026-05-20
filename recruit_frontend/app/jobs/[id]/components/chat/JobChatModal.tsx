@@ -1,4 +1,5 @@
 import { MessageCircle, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { ChatConversation, ChatMessage } from "@/services/chat.service";
 import { buildRecruiterLabel } from "@/app/chat/utils/chat-partner-label";
 import { ChatComposer } from "./ChatComposer";
@@ -54,14 +55,15 @@ export function JobChatModal({
               </h2>
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="unstyled"
             onClick={onClose}
             className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50"
             aria-label="Đóng chat"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </header>
 
         <div className="px-5 py-4">

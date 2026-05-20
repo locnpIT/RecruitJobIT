@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/Button";
+
 type CandidateProofToolbarProps = {
   status: string;
   statusOptions: string[];
@@ -21,13 +23,13 @@ export function CandidateProofToolbar({ status, statusOptions, onStatusChange, o
         ))}
       </select>
 
-      <button
+      <Button variant="unstyled"
         type="button"
         onClick={onReload}
         className="h-10 rounded-md border border-slate-300 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
       >
         Tải lại
-      </button>
+      </Button>
     </div>
   );
 }

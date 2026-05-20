@@ -1,4 +1,5 @@
 import { Upload } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 type CompanyLogoSectionProps = {
   companyLogo: string | null;
@@ -46,7 +47,7 @@ export function CompanyLogoSection({
             </div>
           ) : null}
 
-          <button
+          <Button variant="unstyled"
             type="button"
             onClick={onUpload}
             disabled={isSaving}
@@ -54,7 +55,7 @@ export function CompanyLogoSection({
           >
             <Upload className="h-4 w-4" />
             {isSaving ? "Đang lưu..." : "Cập nhật logo"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

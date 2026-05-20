@@ -86,9 +86,9 @@ export function JobFormModal({
             <h3 className="text-lg font-semibold text-slate-950">{editingJobId == null ? "Tạo tin tuyển dụng" : "Cập nhật tin tuyển dụng"}</h3>
             <p className="mt-1 text-sm text-slate-500">Nhập thông tin tin tuyển dụng cho chi nhánh.</p>
           </div>
-          <button type="button" className="rounded-md border border-slate-300 px-2 py-1 text-slate-600 hover:bg-slate-50" onClick={onClose}>
+          <Button variant="unstyled" type="button" className="rounded-md border border-slate-300 px-2 py-1 text-slate-600 hover:bg-slate-50" onClick={onClose}>
             Đóng
-          </button>
+          </Button>
         </div>
 
         <form className="space-y-4" onSubmit={onSubmit}>

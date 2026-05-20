@@ -91,19 +91,19 @@ export function CatalogsAdminClient() {
             const isActive = item.key === data.activeTab;
             const itemCount = data.data[item.key].length;
             return (
-              <button
+              <Button variant="unstyled"
                 key={item.key}
                 type="button"
                 onClick={() => data.setActiveTab(item.key)}
-                className={`rounded-lg border px-3 py-3 text-left transition ${
+                className={`border px-3 py-3 text-left transition ${
                   isActive
-                    ? "border-slate-900 bg-slate-900 text-white"
+                    ? "bg-[#008080] text-white"
                     : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                 }`}
               >
                 <p className="text-sm font-semibold">{item.label}</p>
                 <p className={`mt-1 text-xs ${isActive ? "text-slate-200" : "text-slate-500"}`}>{itemCount} item</p>
-              </button>
+              </Button>
             );
           })}
         </div>

@@ -1,5 +1,6 @@
 import type { CandidateProfileMetadata } from "@/services/candidate-profile.service";
 import { ProfileActionButton } from "./ProfileActionButton";
+import { Button } from "@/components/ui/Button";
 
 // Panel chọn kỹ năng của ứng viên.
 // Luồng lưu kỹ năng hiện tại là replace-all theo danh sách skill id đang được chọn trên UI.
@@ -35,7 +36,7 @@ export function SkillsPanel({
           {metadata?.kyNangs?.map((skill) => {
             const active = selectedSkillIds.includes(skill.id);
             return (
-              <button
+              <Button variant="unstyled"
                 key={skill.id}
                 type="button"
                 onClick={() => onToggleSkill(skill.id)}
@@ -46,7 +47,7 @@ export function SkillsPanel({
                 }`}
               >
                 {skill.ten}
-              </button>
+              </Button>
             );
           })}
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/Button";
 
 import { CompanyAdminSidebar } from "./CompanyAdminSidebar";
 import { useCompanyAdminShellData } from "../hooks/useCompanyAdminShellData";
@@ -29,18 +30,18 @@ export function CompanyAdminShell({ children }: CompanyAdminShellProps) {
           <h1 className="text-base font-semibold text-slate-900">Doanh nghiệp</h1>
         </div>
 
-        <button
+        <Button variant="unstyled"
           type="button"
           aria-label="Mở menu"
           onClick={() => setIsMenuOpen(true)}
           className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700"
         >
           ☰
-        </button>
+        </Button>
       </header>
 
       {isMenuOpen ? (
-        <button
+        <Button variant="unstyled"
           type="button"
           aria-label="Đóng menu"
           onClick={() => setIsMenuOpen(false)}

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Bookmark, Building2, ExternalLink, Globe2, MapPin, MessageCircle, Send, ShieldCheck, Users } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { PublicJobDetail } from "@/services/public-job.service";
 
 type JobSidebarProps = {
@@ -89,33 +90,36 @@ export function JobSidebar({
         ) : null}
 
         <div className="mt-6 space-y-3">
-          <button
+          <Button
             type="button"
+            variant="primary"
             onClick={onApply}
             disabled={isApplied || applicationLoading}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-semibold disabled:bg-slate-400"
           >
             <Send className="h-4 w-4" />
             {isApplied ? "Đã ứng tuyển" : applicationLoading ? "Đang kiểm tra..." : "Ứng tuyển ngay"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             onClick={onToggleFavorite}
             disabled={favoriteLoading}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-semibold text-slate-800"
           >
             <Bookmark className={`h-4 w-4 ${isFavorite ? "fill-slate-900" : ""}`} />
             {isFavorite ? "Đã lưu tin tuyển dụng" : "Lưu tin tuyển dụng"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             onClick={onOpenChat}
             disabled={chatLoading}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-semibold text-slate-800 disabled:bg-slate-100"
           >
             <MessageCircle className="h-4 w-4" />
             {chatLoading ? "Đang mở chat..." : "Chat với nhà tuyển dụng"}
-          </button>
+          </Button>
         </div>
       </section>
 

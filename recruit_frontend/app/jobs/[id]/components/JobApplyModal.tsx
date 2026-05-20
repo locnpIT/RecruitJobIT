@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FileUp, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { CandidateProfileListItem } from "@/services/candidate-profile.service";
 import type { PublicJobDetail } from "@/services/public-job.service";
 
@@ -50,14 +51,15 @@ export function JobApplyModal({
             <h2 className="mt-1 text-lg font-semibold text-slate-950">{job.tieuDe}</h2>
             <p className="mt-1 text-sm text-slate-500">{job.congTy}</p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="unstyled"
             onClick={onClose}
             className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50"
             aria-label="Đóng modal ứng tuyển"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-5 px-5 py-5">
@@ -147,21 +149,23 @@ export function JobApplyModal({
         </div>
 
         <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-5 py-4 sm:flex-row sm:justify-end">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onClose}
-            className="h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="h-10 px-4 text-sm font-semibold text-slate-700"
           >
             Hủy
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
             onClick={onSubmit}
             disabled={!canSubmit}
-            className="h-10 rounded-md bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="h-10 px-5 text-sm font-semibold disabled:bg-slate-400"
           >
             {submitting ? "Đang gửi..." : "Gửi ứng tuyển"}
-          </button>
+          </Button>
         </div>
       </section>
     </div>

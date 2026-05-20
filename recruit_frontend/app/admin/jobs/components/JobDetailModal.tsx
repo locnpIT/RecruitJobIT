@@ -1,4 +1,5 @@
 import type { AdminJobDetail } from "@/services/admin/types";
+import { Button } from "@/components/ui/Button";
 
 type JobDetailModalProps = {
   open: boolean;
@@ -20,9 +21,9 @@ export function JobDetailModal({ open, detail, onClose }: JobDetailModalProps) {
             <h3 className="text-base font-semibold text-slate-900">{detail.tongQuan.tieuDe ?? "Chi tiết tin"}</h3>
             <p className="mt-1 text-sm text-slate-500">{detail.tongQuan.congTyTen ?? "-"} • {detail.tongQuan.diaDiem ?? "-"}</p>
           </div>
-          <button type="button" className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-600" onClick={onClose}>
+          <Button variant="unstyled" type="button" className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-600" onClick={onClose}>
             Đóng
-          </button>
+          </Button>
         </div>
 
         <div className="mt-4 space-y-4 text-sm text-slate-700">

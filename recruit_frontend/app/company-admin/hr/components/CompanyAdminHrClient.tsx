@@ -7,6 +7,7 @@ import { HrCreateForm } from "./HrCreateForm";
 import { HrListTable } from "./HrListTable";
 import { useCompanyAdminHrActions } from "../hooks/useCompanyAdminHrActions";
 import { useCompanyAdminHrData } from "../hooks/useCompanyAdminHrData";
+import { Button } from "@/components/ui/Button";
 
 // Client container cho trang /company-admin/hr.
 export function CompanyAdminHrClient() {
@@ -58,13 +59,13 @@ export function CompanyAdminHrClient() {
               <p className="text-sm font-semibold text-slate-900">Tạo mới nhân sự</p>
               <p className="mt-1 text-sm text-slate-500">Bấm tạo mới để mở form nhập thông tin HR.</p>
             </div>
-            <button
+            <Button variant="unstyled"
               type="button"
               onClick={actions.handleOpenCreateModal}
               className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
             >
               Tạo mới
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -83,13 +84,13 @@ export function CompanyAdminHrClient() {
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">Nhập thông tin và gán chi nhánh cho nhân sự.</p>
               </div>
-              <button
+              <Button variant="unstyled"
                 type="button"
                 className="rounded-md border border-slate-300 px-2 py-1 text-slate-600 hover:bg-slate-50"
                 onClick={() => actions.setIsCreateModalOpen(false)}
               >
                 Đóng
-              </button>
+              </Button>
             </div>
 
             <HrCreateForm

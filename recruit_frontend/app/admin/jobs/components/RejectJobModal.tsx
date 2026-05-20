@@ -1,4 +1,5 @@
 import type { AdminJob } from "@/services/admin/types";
+import { Button } from "@/components/ui/Button";
 
 type RejectJobModalProps = {
   rejectingJob: AdminJob | null;
@@ -28,22 +29,22 @@ export function RejectJobModal({ rejectingJob, rejectReason, submitting, onReaso
           placeholder="Ví dụ: Nội dung chưa rõ ràng, thiếu quyền lợi..."
         />
         <div className="mt-4 flex justify-end gap-2">
-          <button
+          <Button variant="unstyled"
             type="button"
             disabled={submitting}
             onClick={onCancel}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             Huỷ
-          </button>
-          <button
+          </Button>
+          <Button variant="unstyled"
             type="button"
             disabled={submitting}
             onClick={onConfirm}
             className="rounded-md bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
           >
             {submitting ? "Đang xử lý..." : "Xác nhận từ chối"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
