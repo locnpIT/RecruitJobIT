@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "./_shared/path-param";
 
 export type PublicJobSummary = {
   id: number;
@@ -6,8 +7,7 @@ export type PublicJobSummary = {
   tieuDe: string;
   congTyId: number | null;
   congTyTen: string;
-  congTyLogoUrl: string | null;
-  logoUrl?: string | null;
+  logoUrl: string | null;
   diaDiem: string;
   mucLuong: string;
   capDo: string;
@@ -25,6 +25,7 @@ export type PublicJobDetail = {
   congTyId: number | null;
   trangThai: string;
   congTy: string;
+  logoUrl: string | null;
   congTyDaXacMinh: boolean;
   nhaTuyenDungId: number | null;
   nhaTuyenDungTen: string | null;
@@ -100,7 +101,8 @@ export const publicJobService = {
   },
 
   getJobDetail: async (jobId: string | number): Promise<PublicJobDetail> => {
-    const response = await apiClient.get(`/public/jobs/${jobId}`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.get(`/public/jobs/${safeJobId}`);
     return response.data.data as PublicJobDetail;
   },
 
@@ -115,17 +117,20 @@ export const publicJobService = {
   },
 
   getFavoriteStatus: async (jobId: string | number): Promise<FavoriteJobStatus> => {
-    const response = await apiClient.get(`/candidate/favorite-jobs/${jobId}/status`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.get(`/candidate/favorite-jobs/${safeJobId}/status`);
     return response.data.data as FavoriteJobStatus;
   },
 
   addFavorite: async (jobId: string | number): Promise<FavoriteJobStatus> => {
-    const response = await apiClient.post(`/candidate/favorite-jobs/${jobId}`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.post(`/candidate/favorite-jobs/${safeJobId}`);
     return response.data.data as FavoriteJobStatus;
   },
 
   removeFavorite: async (jobId: string | number): Promise<FavoriteJobStatus> => {
-    const response = await apiClient.delete(`/candidate/favorite-jobs/${jobId}`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.delete(`/candidate/favorite-jobs/${safeJobId}`);
     return response.data.data as FavoriteJobStatus;
   },
 

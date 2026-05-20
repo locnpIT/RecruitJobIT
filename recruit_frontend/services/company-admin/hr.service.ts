@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "@/services/_shared/path-param";
 import type { CompanyAdminHrAccount, CreateCompanyHrPayload, UpdateCompanyHrPayload } from "./types";
 
 // Dùng cho màn company-admin/hr.
@@ -14,11 +15,13 @@ export const companyAdminHrService = {
   },
 
   updateHr: async (hrUserId: number, payload: UpdateCompanyHrPayload): Promise<CompanyAdminHrAccount> => {
-    const response = await apiClient.patch(`/company-admin/hrs/${hrUserId}`, payload);
+    const safeHrUserId = requirePathParam(hrUserId, "hrUserId");
+    const response = await apiClient.patch(`/company-admin/hrs/${safeHrUserId}`, payload);
     return response.data.data as CompanyAdminHrAccount;
   },
 
   deleteHr: async (hrUserId: number): Promise<void> => {
-    await apiClient.delete(`/company-admin/hrs/${hrUserId}`);
+    const safeHrUserId = requirePathParam(hrUserId, "hrUserId");
+    await apiClient.delete(`/company-admin/hrs/${safeHrUserId}`);
   },
 };

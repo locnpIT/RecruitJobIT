@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "./_shared/path-param";
 
 export type ChatConversation = {
   id: number;
@@ -44,12 +45,14 @@ export type CreateChatMessagePayload = {
 // - gửi message có validation phía backend
 export const chatService = {
   openByJob: async (jobId: number | string): Promise<ChatConversation> => {
-    const response = await apiClient.post(`/chats/jobs/${jobId}/open`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.post(`/chats/jobs/${safeJobId}/open`);
     return response.data.data as ChatConversation;
   },
 
   openByApplication: async (applicationId: number | string): Promise<ChatConversation> => {
-    const response = await apiClient.post(`/chats/applications/${applicationId}/open`);
+    const safeApplicationId = requirePathParam(applicationId, "applicationId");
+    const response = await apiClient.post(`/chats/applications/${safeApplicationId}/open`);
     return response.data.data as ChatConversation;
   },
 
@@ -59,7 +62,8 @@ export const chatService = {
   },
 
   listMessages: async (cuocTroChuyenId: number | string): Promise<ChatMessage[]> => {
-    const response = await apiClient.get(`/chats/conversations/${cuocTroChuyenId}/messages`);
+    const safeConversationId = requirePathParam(cuocTroChuyenId, "cuocTroChuyenId");
+    const response = await apiClient.get(`/chats/conversations/${safeConversationId}/messages`);
     return response.data.data as ChatMessage[];
   },
 
@@ -67,7 +71,8 @@ export const chatService = {
     cuocTroChuyenId: number | string,
     payload: CreateChatMessagePayload
   ): Promise<ChatMessage> => {
-    const response = await apiClient.post(`/chats/conversations/${cuocTroChuyenId}/messages`, payload);
+    const safeConversationId = requirePathParam(cuocTroChuyenId, "cuocTroChuyenId");
+    const response = await apiClient.post(`/chats/conversations/${safeConversationId}/messages`, payload);
     return response.data.data as ChatMessage;
   },
 };

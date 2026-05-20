@@ -29,9 +29,7 @@ export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
   return (
     <article className="rounded-lg border border-slate-200 bg-white">
       <div className="space-y-8 p-6">
-        <JobTextSection icon={BriefcaseBusiness} title="Mô tả công việc" items={job.moTa} />
-        <JobTextSection icon={UserRound} title="Yêu cầu ứng viên" items={job.yeuCau} />
-        <JobTextSection icon={Medal} title="Phúc lợi" items={job.phucLoi} />
+       
 
         <section className="border-t border-slate-200 pt-7">
           <h2 className="text-lg font-semibold text-slate-950">Thông tin công việc</h2>
@@ -60,6 +58,11 @@ export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
             })}
           </div>
         </section>
+
+
+         <JobTextSection icon={BriefcaseBusiness} title="Mô tả công việc" items={job.moTa} />
+        <JobTextSection icon={UserRound} title="Yêu cầu ứng viên" items={job.yeuCau} />
+        <JobTextSection icon={Medal} title="Phúc lợi" items={job.phucLoi} />
 
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
           <div className="flex items-start gap-3">

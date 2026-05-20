@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type Dispatch, type SetStateAction } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { authService } from "@/services/auth.service";
 import { companyAdminJobsService } from "@/services/company-admin/jobs.service";
@@ -29,16 +29,17 @@ export function useCompanyAdminJobActions({
   const [cvTemplateFileName, setCvTemplateFileName] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
 
-  const { register, handleSubmit, reset, watch, setValue } = useForm<JobFormValues>({
+  const { control, register, handleSubmit, reset, setValue } = useForm<JobFormValues>({
     defaultValues: {
       batBuocCV: false,
       kyNangIds: [],
     },
   });
 
-  const batBuocCV = watch("batBuocCV");
-  const mauCvUrlValue = watch("mauCvUrl");
-  const selectedKyNangIds = watch("kyNangIds") ?? [];
+  // Dùng useWatch để theo dõi field value ổn định hơn với React Compiler.
+  const batBuocCV = useWatch({ control, name: "batBuocCV" });
+  const mauCvUrlValue = useWatch({ control, name: "mauCvUrl" });
+  const selectedKyNangIds = useWatch({ control, name: "kyNangIds" }) ?? [];
 
   const chiNhanhField = register("chiNhanhId", { valueAsNumber: true });
   const batBuocCVField = register("batBuocCV", {

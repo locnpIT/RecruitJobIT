@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "./_shared/path-param";
 
 export interface NotificationItem {
   id: number;
@@ -34,7 +35,8 @@ export const notificationService = {
   },
 
   markRead: async (notificationId: number): Promise<NotificationItem> => {
-    const response = await apiClient.patch(`/notifications/${notificationId}/read`);
+    const safeNotificationId = requirePathParam(notificationId, "notificationId");
+    const response = await apiClient.patch(`/notifications/${safeNotificationId}/read`);
     return response.data.data as NotificationItem;
   },
 
@@ -44,6 +46,7 @@ export const notificationService = {
   },
 
   delete: async (notificationId: number): Promise<void> => {
-    await apiClient.delete(`/notifications/${notificationId}`);
+    const safeNotificationId = requirePathParam(notificationId, "notificationId");
+    await apiClient.delete(`/notifications/${safeNotificationId}`);
   },
 };

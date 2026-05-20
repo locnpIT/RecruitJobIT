@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "@/services/_shared/path-param";
 import type { AdminCatalogItem, UpsertAdminCatalogItemPayload } from "./types";
 
 // Dùng cho màn admin/catalogs.
@@ -14,12 +15,14 @@ export const adminCatalogsService = {
   },
 
   updateSystemRole: async (id: number, payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
-    const response = await apiClient.patch(`/admin/system-roles/${id}`, payload);
+    const safeId = requirePathParam(id, "id");
+    const response = await apiClient.patch(`/admin/system-roles/${safeId}`, payload);
     return response.data.data as AdminCatalogItem;
   },
 
   deleteSystemRole: async (id: number): Promise<void> => {
-    await apiClient.delete(`/admin/system-roles/${id}`);
+    const safeId = requirePathParam(id, "id");
+    await apiClient.delete(`/admin/system-roles/${safeId}`);
   },
 
   listCompanyRoles: async (): Promise<AdminCatalogItem[]> => {
@@ -33,12 +36,14 @@ export const adminCatalogsService = {
   },
 
   updateCompanyRole: async (id: number, payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
-    const response = await apiClient.patch(`/admin/company-roles/${id}`, payload);
+    const safeId = requirePathParam(id, "id");
+    const response = await apiClient.patch(`/admin/company-roles/${safeId}`, payload);
     return response.data.data as AdminCatalogItem;
   },
 
   deleteCompanyRole: async (id: number): Promise<void> => {
-    await apiClient.delete(`/admin/company-roles/${id}`);
+    const safeId = requirePathParam(id, "id");
+    await apiClient.delete(`/admin/company-roles/${safeId}`);
   },
 
   listProofTypes: async (): Promise<AdminCatalogItem[]> => {
@@ -52,12 +57,14 @@ export const adminCatalogsService = {
   },
 
   updateProofType: async (id: number, payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
-    const response = await apiClient.patch(`/admin/proof-types/${id}`, payload);
+    const safeId = requirePathParam(id, "id");
+    const response = await apiClient.patch(`/admin/proof-types/${safeId}`, payload);
     return response.data.data as AdminCatalogItem;
   },
 
   deleteProofType: async (id: number): Promise<void> => {
-    await apiClient.delete(`/admin/proof-types/${id}`);
+    const safeId = requirePathParam(id, "id");
+    await apiClient.delete(`/admin/proof-types/${safeId}`);
   },
 
   listCertificateTypes: async (): Promise<AdminCatalogItem[]> => {
@@ -71,11 +78,13 @@ export const adminCatalogsService = {
   },
 
   updateCertificateType: async (id: number, payload: UpsertAdminCatalogItemPayload): Promise<AdminCatalogItem> => {
-    const response = await apiClient.patch(`/admin/certificate-types/${id}`, payload);
+    const safeId = requirePathParam(id, "id");
+    const response = await apiClient.patch(`/admin/certificate-types/${safeId}`, payload);
     return response.data.data as AdminCatalogItem;
   },
 
   deleteCertificateType: async (id: number): Promise<void> => {
-    await apiClient.delete(`/admin/certificate-types/${id}`);
+    const safeId = requirePathParam(id, "id");
+    await apiClient.delete(`/admin/certificate-types/${safeId}`);
   },
 };

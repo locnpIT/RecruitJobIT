@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Bookmark, Building2, ExternalLink, Globe2, MapPin, MessageCircle, Send, ShieldCheck, Users } from "lucide-react";
 import type { PublicJobDetail } from "@/services/public-job.service";
@@ -28,13 +29,27 @@ export function JobSidebar({
   onApply,
   onOpenChat,
 }: JobSidebarProps) {
+  const companyLogoUrl = job.logoUrl;
+
   return (
     <aside className="space-y-4">
       <section className="rounded-lg border border-slate-200 bg-white p-5">
         <div className="flex gap-4">
-          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-slate-900 text-lg font-bold text-white">
-            {job.congTy.slice(0, 1)}
-          </div>
+          {companyLogoUrl ? (
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <Image
+                src={companyLogoUrl}
+                alt={`Logo ${job.congTy}`}
+                width={64}
+                height={64}
+                className="h-16 w-16 object-contain p-1"
+              />
+            </div>
+          ) : (
+            <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-slate-900 text-lg font-bold text-white">
+              {job.congTy.slice(0, 1)}
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-semibold text-slate-950">{job.congTy}</h2>
@@ -113,9 +128,21 @@ export function JobSidebar({
               href={`/jobs/${item.id}`}
               className="flex gap-3 py-3 first:pt-0 last:pb-0"
             >
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-md border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">
-                {item.congTyTen.slice(0, 2)}
-              </div>
+              {item.logoUrl ? (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white">
+                  <Image
+                    src={item.logoUrl}
+                    alt={`Logo ${item.congTyTen}`}
+                    width={44}
+                    height={44}
+                    className="h-11 w-11 object-contain p-1"
+                  />
+                </div>
+              ) : (
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-md border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">
+                  {item.congTyTen.slice(0, 2)}
+                </div>
+              )}
               <div>
                 <p className="line-clamp-1 text-sm font-semibold text-slate-900">{item.tieuDe}</p>
                 <p className="mt-1 text-xs text-slate-500">{item.congTyTen}</p>

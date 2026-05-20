@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "@/services/_shared/path-param";
 import type {
   AdminPackage,
   AdminPackageSubscription,
@@ -24,11 +25,13 @@ export const adminPackagesService = {
   },
 
   updatePackage: async (packageId: number, payload: UpdatePackagePayload): Promise<AdminPackage> => {
-    const response = await apiClient.patch(`/admin/packages/${packageId}`, payload);
+    const safePackageId = requirePathParam(packageId, "packageId");
+    const response = await apiClient.patch(`/admin/packages/${safePackageId}`, payload);
     return response.data.data as AdminPackage;
   },
 
   deletePackage: async (packageId: number): Promise<void> => {
-    await apiClient.delete(`/admin/packages/${packageId}`);
+    const safePackageId = requirePathParam(packageId, "packageId");
+    await apiClient.delete(`/admin/packages/${safePackageId}`);
   },
 };

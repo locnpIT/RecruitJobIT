@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "./_shared/path-param";
 
 export type CandidateJobApplication = {
   id: number;
@@ -27,7 +28,8 @@ export type CreateJobApplicationPayload = {
 // Backend enforce rule: luôn phải chọn hồ sơ; nếu tin bắt buộc CV thì cvUrl là bắt buộc.
 export const candidateApplicationService = {
   getApplicationStatus: async (jobId: string | number): Promise<CandidateJobApplicationStatus> => {
-    const response = await apiClient.get(`/candidate/applications/jobs/${jobId}/status`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.get(`/candidate/applications/jobs/${safeJobId}/status`);
     return response.data.data as CandidateJobApplicationStatus;
   },
 
@@ -35,7 +37,8 @@ export const candidateApplicationService = {
     jobId: string | number,
     payload: CreateJobApplicationPayload
   ): Promise<CandidateJobApplication> => {
-    const response = await apiClient.post(`/candidate/applications/jobs/${jobId}`, payload);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.post(`/candidate/applications/jobs/${safeJobId}`, payload);
     return response.data.data as CandidateJobApplication;
   },
 

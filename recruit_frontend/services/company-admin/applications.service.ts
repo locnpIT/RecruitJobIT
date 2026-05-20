@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "@/services/_shared/path-param";
 import type { CompanyAdminApplication } from "./types";
 
 // Dùng cho màn company-admin/applications.
@@ -11,7 +12,8 @@ export const companyAdminApplicationsService = {
   },
 
   getApplicationDetail: async (applicationId: number): Promise<CompanyAdminApplication> => {
-    const response = await apiClient.get(`/company-admin/applications/${applicationId}`);
+    const safeApplicationId = requirePathParam(applicationId, "applicationId");
+    const response = await apiClient.get(`/company-admin/applications/${safeApplicationId}`);
     return response.data.data as CompanyAdminApplication;
   },
 
@@ -19,7 +21,8 @@ export const companyAdminApplicationsService = {
     applicationId: number,
     trangThai: string
   ): Promise<CompanyAdminApplication> => {
-    const response = await apiClient.patch(`/company-admin/applications/${applicationId}/status`, {
+    const safeApplicationId = requirePathParam(applicationId, "applicationId");
+    const response = await apiClient.patch(`/company-admin/applications/${safeApplicationId}/status`, {
       trangThai,
     });
     return response.data.data as CompanyAdminApplication;

@@ -20,7 +20,7 @@ export function PublicJobCard({
   onAction,
   actionLoading,
 }: PublicJobCardProps) {
-  const companyLogoUrl = job.congTyLogoUrl ?? job.logoUrl ?? null;
+  const companyLogoUrl = job.logoUrl;
   const isFeatured = variant === "featured";
 
   return (

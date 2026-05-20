@@ -49,9 +49,6 @@ export function JobDetailClient({ jobId }: JobDetailClientProps) {
           <>
             <JobDetailHero
               job={jobDetail.job}
-              isFavorite={jobDetail.isFavorite}
-              favoriteLoading={jobDetail.favoriteLoading}
-              onToggleFavorite={jobDetail.handleToggleFavorite}
             />
 
             <section className="mx-auto grid w-full max-w-6xl gap-5 px-4 py-6 lg:grid-cols-[1fr_360px] lg:py-7">

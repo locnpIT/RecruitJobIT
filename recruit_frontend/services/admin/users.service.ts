@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "@/services/_shared/path-param";
 import type { AdminUser, UpdateUserStatusPayload } from "./types";
 
 // Dùng cho màn admin/users.
@@ -9,11 +10,13 @@ export const adminUsersService = {
   },
 
   updateUserStatus: async (userId: number, payload: UpdateUserStatusPayload): Promise<AdminUser> => {
-    const response = await apiClient.patch(`/admin/users/${userId}/status`, payload);
+    const safeUserId = requirePathParam(userId, "userId");
+    const response = await apiClient.patch(`/admin/users/${safeUserId}/status`, payload);
     return response.data.data as AdminUser;
   },
 
   deleteUser: async (userId: number): Promise<void> => {
-    await apiClient.delete(`/admin/users/${userId}`);
+    const safeUserId = requirePathParam(userId, "userId");
+    await apiClient.delete(`/admin/users/${safeUserId}`);
   },
 };

@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "@/services/_shared/path-param";
 import type {
   CompanyAdminJob,
   CompanyJobMetadata,
@@ -26,11 +27,13 @@ export const companyAdminJobsService = {
   },
 
   updateJob: async (jobId: number, payload: UpdateCompanyJobPayload): Promise<CompanyAdminJob> => {
-    const response = await apiClient.patch(`/company-admin/jobs/${jobId}`, payload);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.patch(`/company-admin/jobs/${safeJobId}`, payload);
     return response.data.data as CompanyAdminJob;
   },
 
   deleteJob: async (jobId: number): Promise<void> => {
-    await apiClient.delete(`/company-admin/jobs/${jobId}`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    await apiClient.delete(`/company-admin/jobs/${safeJobId}`);
   },
 };

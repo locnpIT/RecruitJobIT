@@ -1,4 +1,5 @@
 import apiClient from "@/lib/api-client";
+import { requirePathParam } from "@/services/_shared/path-param";
 import type { AdminJob, AdminJobDetail, ReviewJobPayload } from "./types";
 
 // Dùng cho màn admin/jobs.
@@ -15,22 +16,26 @@ export const adminJobsService = {
   },
 
   getJobDetail: async (jobId: number): Promise<AdminJobDetail> => {
-    const response = await apiClient.get(`/admin/jobs/${jobId}`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.get(`/admin/jobs/${safeJobId}`);
     return response.data.data as AdminJobDetail;
   },
 
   approveJob: async (jobId: number): Promise<AdminJob> => {
-    const response = await apiClient.patch(`/admin/jobs/${jobId}/approve`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.patch(`/admin/jobs/${safeJobId}/approve`);
     return response.data.data as AdminJob;
   },
 
   rejectJob: async (jobId: number, payload: ReviewJobPayload): Promise<AdminJob> => {
-    const response = await apiClient.patch(`/admin/jobs/${jobId}/reject`, payload);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.patch(`/admin/jobs/${safeJobId}/reject`, payload);
     return response.data.data as AdminJob;
   },
 
   hideJob: async (jobId: number): Promise<AdminJob> => {
-    const response = await apiClient.patch(`/admin/jobs/${jobId}/hide`);
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.patch(`/admin/jobs/${safeJobId}/hide`);
     return response.data.data as AdminJob;
   },
 };

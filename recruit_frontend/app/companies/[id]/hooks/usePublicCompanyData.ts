@@ -6,12 +6,17 @@ import type { PublicJobSummary } from "@/services/public-job.service";
 
 // Dùng cho màn /companies/[id]: nạp profile công ty public và danh sách job public của công ty.
 export function usePublicCompanyData(companyId: string) {
+  const hasValidCompanyId = companyId.trim().length > 0;
   const [company, setCompany] = useState<PublicCompanyDetail | null>(null);
   const [jobs, setJobs] = useState<PublicJobSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!hasValidCompanyId) {
+      return;
+    }
+
     let isMounted = true;
 
     Promise.all([
@@ -40,12 +45,12 @@ export function usePublicCompanyData(companyId: string) {
     return () => {
       isMounted = false;
     };
-  }, [companyId]);
+  }, [companyId, hasValidCompanyId]);
 
   return {
     company,
     jobs,
-    loading,
-    error,
+    loading: hasValidCompanyId ? loading : false,
+    error: hasValidCompanyId ? error : "Không tìm thấy công ty hoặc công ty chưa có dữ liệu public.",
   };
 }

@@ -139,6 +139,7 @@ public class PublicJobService {
     @Transactional(readOnly = true)
     public PublicJobDetailResponse getJobDetail(Long jobId) {
         TinTuyenDung job = requirePublicJob(jobId);
+        String companyLogoUrl = resolveCompany(job) == null ? null : resolveCompany(job).getLogoUrl();
         List<PublicJobSummaryResponse> similarJobs = tinTuyenDungRepository.findPublicApprovedActiveJobs(LocalDateTime.now()).stream()
                 .filter(item -> !Objects.equals(item.getId(), job.getId()))
                 .filter(item -> sameIndustry(item, job) || sameLocation(item, job))
@@ -153,6 +154,7 @@ public class PublicJobService {
                 .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
                 .trangThai("Đang tuyển dụng")
                 .congTy(resolveCompanyName(job))
+                .logoUrl(companyLogoUrl)
                 .congTyDaXacMinh(isCompanyApproved(resolveCompany(job)))
                 .nhaTuyenDungId(job.getNguoiDang() == null || job.getNguoiDang().getId() == null ? null : job.getNguoiDang().getId().longValue())
                 .nhaTuyenDungTen(resolveRecruiterName(job))
@@ -198,7 +200,6 @@ public class PublicJobService {
                 .tieuDe(job.getTieuDe())
                 .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
                 .congTyTen(resolveCompanyName(job))
-                .congTyLogoUrl(companyLogoUrl)
                 .logoUrl(companyLogoUrl)
                 .diaDiem(resolveLocation(job))
                 .mucLuong(formatSalary(job))

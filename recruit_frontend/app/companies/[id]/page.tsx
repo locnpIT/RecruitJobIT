@@ -12,8 +12,8 @@ import { usePublicCompanyData } from "./hooks/usePublicCompanyData";
 // - hiển thị thông tin công ty đã duyệt
 // - liệt kê các tin tuyển dụng public đang còn hiệu lực của công ty đó.
 export default function PublicCompanyPage() {
-  const params = useParams<{ id: string }>();
-  const companyId = params.id;
+  const params = useParams<{ id?: string }>();
+  const companyId = typeof params.id === "string" ? params.id : "";
   const { company, jobs, loading, error } = usePublicCompanyData(companyId);
 
   return (

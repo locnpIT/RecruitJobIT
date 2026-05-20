@@ -1,5 +1,6 @@
 import apiClient from "@/lib/api-client";
 import type { PublicJobSummary } from "@/services/public-job.service";
+import { requirePathParam } from "./_shared/path-param";
 
 export type PublicTopCompany = {
   id: number;
@@ -23,12 +24,14 @@ export const publicCompanyService = {
   },
 
   getCompanyDetail: async (companyId: string | number): Promise<PublicCompanyDetail> => {
-    const response = await apiClient.get(`/public/companies/${companyId}`);
+    const safeCompanyId = requirePathParam(companyId, "companyId");
+    const response = await apiClient.get(`/public/companies/${safeCompanyId}`);
     return response.data.data as PublicCompanyDetail;
   },
 
   listCompanyJobs: async (companyId: string | number, gioiHan = 12): Promise<PublicJobSummary[]> => {
-    const response = await apiClient.get(`/public/companies/${companyId}/jobs`, { params: { gioiHan } });
+    const safeCompanyId = requirePathParam(companyId, "companyId");
+    const response = await apiClient.get(`/public/companies/${safeCompanyId}/jobs`, { params: { gioiHan } });
     return response.data.data as PublicJobSummary[];
   },
 };

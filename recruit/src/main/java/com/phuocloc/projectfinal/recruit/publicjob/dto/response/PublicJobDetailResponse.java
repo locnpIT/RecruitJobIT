@@ -18,6 +18,7 @@ public class PublicJobDetailResponse {
     private Long congTyId;
     private String trangThai;
     private String congTy;
+    private String logoUrl;
     private Boolean congTyDaXacMinh;
     private Long nhaTuyenDungId;
     private String nhaTuyenDungTen;

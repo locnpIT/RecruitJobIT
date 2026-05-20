@@ -1,29 +1,32 @@
-import { Clock, Heart, MapPin, Share2, ShieldCheck, Users } from "lucide-react";
+import Image from "next/image";
+import { Clock, MapPin, ShieldCheck, Users } from "lucide-react";
 import type { PublicJobDetail } from "@/services/public-job.service";
 
 type JobDetailHeroProps = {
   job: PublicJobDetail;
-  isFavorite: boolean;
-  favoriteLoading: boolean;
-  onToggleFavorite: () => void;
 };
+
+// Mỗi lần reload trang, module được load lại và chọn ngẫu nhiên 1 background 1..5.
+const HERO_BACKGROUND_IMAGE_URL = `/background-job-detail-${Math.floor(Math.random() * 5) + 1}.png`;
 
 // Hero đầu trang chi tiết job.
 // Phần này tập trung vào thông tin ra quyết định nhanh: trạng thái, tiêu đề, công ty,
 // địa điểm, hình thức làm việc và tag kỹ năng để ứng viên biết có nên đọc tiếp hay không.
-export function JobDetailHero({ job, isFavorite, favoriteLoading, onToggleFavorite }: JobDetailHeroProps) {
+export function JobDetailHero({ job }: JobDetailHeroProps) {
   return (
-    <section className="border-b border-slate-200 bg-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[1.12fr_0.88fr] lg:py-10">
-        <div>
-          <nav className="flex items-center gap-2 text-sm text-slate-500">
-            <span>Trang chủ</span>
-            <span>/</span>
-            <span>Tìm việc</span>
-            <span>/</span>
-            <span className="text-slate-800">Chi tiết công việc</span>
-          </nav>
+    <section className="relative overflow-hidden border-b border-slate-200">
+      <Image
+        src={HERO_BACKGROUND_IMAGE_URL}
+        alt="Background job detail"
+        fill
+        sizes="100vw"
+        className="object-cover object-center"
+        priority
+      />
+      <div className="absolute inset-0 bg-white/58" />
 
+      <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[1.12fr_0.88fr] lg:py-10">
+        <div>
           <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             {job.trangThai}
@@ -64,32 +67,34 @@ export function JobDetailHero({ job, isFavorite, favoriteLoading, onToggleFavori
           </div>
         </div>
 
-        <div
-          className="relative hidden min-h-72 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 lg:block"
-          style={{
-            backgroundImage: "url('/background_2.png')",
-            backgroundPosition: "center",
-            backgroundSize: "cover",
-          }}
-        >
-          <div className="absolute right-4 top-4 flex gap-2">
-            <button
-              type="button"
-              onClick={onToggleFavorite}
-              disabled={favoriteLoading}
-              className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm"
-              aria-label={isFavorite ? "Bỏ lưu tin tuyển dụng" : "Lưu tin tuyển dụng"}
+        <div className="group relative hidden min-h-72 overflow-hidden rounded-lg border border-slate-200 bg-white/95 lg:block">
+          {job.logoUrl ? (
+            <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-slate-100">
+              <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-slate-200/60 blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 h-36 w-36 rounded-full bg-slate-300/40 blur-3xl" />
+              <Image
+                src={job.logoUrl}
+                alt={`Logo ${job.congTy}`}
+                fill
+                className="object-contain p-10 transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.72),transparent_44%),radial-gradient(circle_at_82%_82%,rgba(148,163,184,0.2),transparent_42%)]" />
+              <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/50" />
+            </div>
+          ) : (
+            <div
+              className="absolute inset-0 grid place-items-center bg-slate-100"
+              style={{
+                backgroundImage: "url('/background_2.png')",
+                backgroundPosition: "center",
+                backgroundSize: "cover",
+              }}
             >
-              <Heart className={`h-5 w-5 ${isFavorite ? "fill-slate-900" : ""}`} />
-            </button>
-            <button
-              type="button"
-              className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-800 shadow-sm"
-              aria-label="Chia sẻ tin tuyển dụng"
-            >
-              <Share2 className="h-5 w-5" />
-            </button>
-          </div>
+              <div className="grid h-28 w-28 place-items-center rounded-2xl bg-slate-900 text-3xl font-bold text-white/95 shadow-sm transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
+                {job.congTy.slice(0, 1)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
