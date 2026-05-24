@@ -162,6 +162,7 @@ export interface CompanyAdminApplication {
   gioiThieuBanThan: string | null;
   mucTieuNgheNghiep: string | null;
   hocVans?: CompanyAdminApplicationEducation[];
+  kinhNghiems?: CompanyAdminApplicationWorkExperience[];
   chungChis?: CompanyAdminApplicationCertificate[];
   kyNangs?: CompanyAdminApplicationSkill[];
 }
@@ -188,6 +189,15 @@ export interface CompanyAdminApplicationCertificate {
   trangThai: string | null;
 }
 
+export interface CompanyAdminApplicationWorkExperience {
+  id: number | null;
+  tenCongTy: string | null;
+  chucDanh: string | null;
+  moTaCongViec: string | null;
+  thoiGianBatDau: string | null;
+  thoiGianKetThuc: string | null;
+}
+
 export interface CompanyAdminApplicationSkill {
   id: number | null;
   ten: string | null;
@@ -204,8 +214,12 @@ export interface CompanyCandidateSemanticMatch {
   mucTieuNgheNghiep: string | null;
   gioiThieuBanThan: string | null;
   diemPhuHop: number | null;
+  lyDoPhuHop?: string | null;
   tinHieuKhop: string[];
+  diemManh?: string[];
+  kinhNghiemLienQuan?: string[];
   canKiemTraThem: string[];
+  goiYHanhDong?: string | null;
 }
 
 export interface CompanyAdminHrBranch {

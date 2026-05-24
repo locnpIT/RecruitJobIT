@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, ClipboardList, UsersRound } from "lucide-react";
+import { BriefcaseBusiness, ClipboardList } from "lucide-react";
 import type { ApplicationMatchingMode } from "./types";
 
 type ApplicationMatchingModeTabsProps = {
@@ -19,17 +19,11 @@ const modes = [
     description: "Xếp hạng ứng viên phù hợp với tin tuyển dụng đang chọn.",
     icon: BriefcaseBusiness,
   },
-  {
-    value: "candidate-to-jobs" as const,
-    label: "AI theo ứng viên",
-    description: "Xem các tin trong chi nhánh phù hợp với một ứng viên.",
-    icon: UsersRound,
-  },
 ];
 
 export function ApplicationMatchingModeTabs({ value, onChange }: ApplicationMatchingModeTabsProps) {
   return (
-    <div className="grid gap-2 lg:grid-cols-3">
+    <div className="grid gap-2 lg:grid-cols-2">
       {modes.map((mode) => {
         const Icon = mode.icon;
         const isActive = value === mode.value;

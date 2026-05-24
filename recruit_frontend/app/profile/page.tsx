@@ -202,28 +202,14 @@ export default function ProfilePage() {
               />
             </section>
 
-            <section className="sticky bottom-4 z-20 mt-6 rounded-lg border border-teal-200 bg-white/95 p-4 shadow-lg backdrop-blur">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">Lưu hồ sơ vào AI Matching</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Các thay đổi phía trên đã lưu vào hồ sơ. Bấm nút này một lần sau khi chỉnh xong để cập nhật chỉ mục Qdrant.
-                  </p>
-                  {actions.hasUnsyncedProfileChanges ? (
-                    <p className="mt-1 text-xs font-medium text-amber-700">Có thay đổi chưa đồng bộ AI.</p>
-                  ) : (
-                    <p className="mt-1 text-xs font-medium text-teal-700">Hồ sơ đã sẵn sàng cho AI Matching.</p>
-                  )}
-                </div>
-                <ProfileActionButton
-                  type="button"
-                  disabled={actions.savingProfileIndex}
-                  onClick={() => void actions.handleSaveProfileIndex()}
-                  className="shrink-0"
-                >
-                  {actions.savingProfileIndex ? "Đang lưu hồ sơ..." : "Lưu hồ sơ"}
-                </ProfileActionButton>
-              </div>
+            <section className="mt-8 flex justify-end">
+              <ProfileActionButton
+                type="button"
+                disabled={actions.savingProfileIndex}
+                onClick={() => void actions.handleSaveProfileIndex()}
+              >
+                {actions.savingProfileIndex ? "Đang lưu hồ sơ..." : "Lưu hồ sơ"}
+              </ProfileActionButton>
             </section>
           </>
         )}

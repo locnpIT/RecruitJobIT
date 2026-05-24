@@ -5,7 +5,6 @@ import type { CompanyAdminApplication } from "@/services/company-admin/types";
 import { ApplicationsTable } from "../ApplicationsTable";
 import { useApplicationsMatchingPreview } from "../../hooks/useApplicationsMatchingPreview";
 import { ApplicationCandidateMatchesTable } from "./ApplicationCandidateMatchesTable";
-import { ApplicationJobMatchesList } from "./ApplicationJobMatchesList";
 import { ApplicationMatchInsightPanel } from "./ApplicationMatchInsightPanel";
 import { ApplicationMatchingControls } from "./ApplicationMatchingControls";
 import { ApplicationMatchingModeTabs } from "./ApplicationMatchingModeTabs";
@@ -40,7 +39,7 @@ export function ApplicationsMatchingSection({
             <h2 className="text-base font-semibold text-slate-950">Workspace xử lý ứng viên</h2>
           </div>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-            Quản lý đơn ứng tuyển và chuyển sang AI Matching khi cần ưu tiên ứng viên theo tin tuyển dụng hoặc gợi ý tin phù hợp với một ứng viên.
+            Quản lý đơn ứng tuyển và dùng AI Matching để chủ động tìm ứng viên phù hợp theo tin tuyển dụng.
           </p>
         </div>
         <span className="w-fit rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
@@ -61,14 +60,10 @@ export function ApplicationsMatchingSection({
       ) : (
         <>
           <ApplicationMatchingControls
-            mode={matching.mode}
             jobs={matching.jobs}
-            candidates={matching.candidates}
             selectedJobId={matching.selectedJobId}
-            selectedCandidateId={matching.selectedCandidateId}
             minimumScore={matching.minimumScore}
             onJobChange={matching.setSelectedJobId}
-            onCandidateChange={matching.setSelectedCandidateId}
             onMinimumScoreChange={matching.setMinimumScore}
             jobLockedByFilter={Boolean(activeFilterJobId)}
           />
@@ -86,32 +81,18 @@ export function ApplicationsMatchingSection({
           ) : null}
 
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-            {matching.mode === "job-to-candidates" ? (
-              <ApplicationCandidateMatchesTable
-                matches={matching.candidateMatches}
-                selectedMatchKey={matching.selectedCandidateMatch?.matchKey}
-                openingChatApplicationId={openingChatApplicationId}
-                onSelectMatch={matching.selectCandidateMatch}
-                onOpenChat={onOpenChat}
-                onOpenDetail={onOpenDetail}
-              />
-            ) : (
-              <ApplicationJobMatchesList
-                matches={matching.jobMatches}
-                selectedApplicationId={matching.selectedJobMatch?.applicationId}
-                onSelectApplication={matching.selectApplication}
-                onOpenDetail={onOpenDetail}
-              />
-            )}
+            <ApplicationCandidateMatchesTable
+              matches={matching.candidateMatches}
+              selectedMatchKey={matching.selectedCandidateMatch?.matchKey}
+              openingChatApplicationId={openingChatApplicationId}
+              onSelectMatch={matching.selectCandidateMatch}
+              onOpenChat={onOpenChat}
+              onOpenDetail={onOpenDetail}
+            />
 
             <ApplicationMatchInsightPanel
-              candidateMatch={matching.mode === "job-to-candidates" ? matching.selectedCandidateMatch : null}
-              jobMatch={matching.mode === "candidate-to-jobs" ? matching.selectedJobMatch : null}
-              dataSourceLabel={
-                matching.mode === "job-to-candidates" && matching.usingSemanticMatches
-                  ? "Điểm matching được lấy từ Qdrant semantic search theo vector hồ sơ ứng viên và tin tuyển dụng."
-                  : "Điểm hiện tại là preview từ dữ liệu đơn ứng tuyển, dùng khi Qdrant chưa có kết quả phù hợp."
-              }
+              candidateMatch={matching.selectedCandidateMatch}
+              dataSourceLabel="Điểm matching chỉ lấy từ Qdrant semantic search theo vector hồ sơ ứng viên và tin tuyển dụng."
             />
           </div>
         </>

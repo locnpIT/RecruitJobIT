@@ -25,6 +25,10 @@ public class CandidateSemanticMatchResponse {
     private String mucTieuNgheNghiep;
     private String gioiThieuBanThan;
     private Double diemPhuHop;
+    private String lyDoPhuHop;
     private List<String> tinHieuKhop;
+    private List<String> diemManh;
+    private List<String> kinhNghiemLienQuan;
     private List<String> canKiemTraThem;
+    private String goiYHanhDong;
 }

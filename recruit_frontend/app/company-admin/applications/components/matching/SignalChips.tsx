@@ -9,6 +9,10 @@ export function SignalChips({ items, tone = "match" }: SignalChipsProps) {
       ? "bg-slate-100 text-slate-700"
       : "border border-amber-200 bg-amber-50 text-amber-700";
 
+  if (!items.length) {
+    return <p className="text-xs text-slate-500">Chưa có dữ liệu rõ ràng.</p>;
+  }
+
   return (
     <div className="flex flex-wrap gap-1.5">
       {items.map((item) => (

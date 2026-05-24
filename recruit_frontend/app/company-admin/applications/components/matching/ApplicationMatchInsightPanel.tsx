@@ -1,25 +1,26 @@
-import { AlertTriangle, CheckCircle2, Sparkles } from "lucide-react";
-import type { ApplicationCandidateMatch, ApplicationJobMatch } from "./types";
+import { AlertTriangle, BriefcaseBusiness, CheckCircle2, Lightbulb, Sparkles, Target } from "lucide-react";
+import type { ApplicationCandidateMatch } from "./types";
 import { MatchScoreBadge } from "./MatchScoreBadge";
 import { SignalChips } from "./SignalChips";
 
 type ApplicationMatchInsightPanelProps = {
   candidateMatch?: ApplicationCandidateMatch | null;
-  jobMatch?: ApplicationJobMatch | null;
   dataSourceLabel?: string;
 };
 
 export function ApplicationMatchInsightPanel({
   candidateMatch,
-  jobMatch,
-  dataSourceLabel = "Điểm hiện tại dùng dữ liệu preview từ đơn ứng tuyển khi Qdrant chưa trả kết quả.",
+  dataSourceLabel = "Điểm hiện tại được lấy từ nguồn matching đang chọn.",
 }: ApplicationMatchInsightPanelProps) {
-  const title = candidateMatch?.candidateName ?? jobMatch?.jobTitle ?? "Chưa chọn kết quả";
-  const subtitle = candidateMatch?.jobTitle ?? jobMatch?.candidateName ?? "Chọn một dòng matching để xem lý do.";
-  const score = candidateMatch?.score ?? jobMatch?.score ?? null;
-  const reason = candidateMatch?.reason ?? jobMatch?.reason ?? "";
-  const matchedSignals = candidateMatch?.matchedSignals ?? jobMatch?.matchedSignals ?? [];
-  const gaps = candidateMatch?.gaps ?? jobMatch?.gaps ?? [];
+  const title = candidateMatch?.candidateName ?? "Chưa chọn kết quả";
+  const subtitle = candidateMatch?.jobTitle ?? "Chọn một dòng matching để xem lý do.";
+  const score = candidateMatch?.score ?? null;
+  const reason = candidateMatch?.reason ?? "";
+  const matchedSignals = candidateMatch?.matchedSignals ?? [];
+  const strengths = candidateMatch?.strengths ?? [];
+  const relevantExperiences = candidateMatch?.relevantExperiences ?? [];
+  const gaps = candidateMatch?.gaps ?? [];
+  const actionSuggestion = candidateMatch?.actionSuggestion ?? "";
 
   return (
     <aside className="rounded-lg border border-slate-200 bg-white p-4">
@@ -32,21 +33,38 @@ export function ApplicationMatchInsightPanel({
         {score == null ? null : <MatchScoreBadge score={score} />}
       </div>
 
-      {reason ? (
-        <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
-          <div className="flex gap-2">
-            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
-            <p className="text-sm leading-6 text-slate-700">{reason}</p>
-          </div>
+      <section className="mt-4">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <Sparkles className="h-4 w-4 text-teal-600" />
+          Vì sao phù hợp
         </div>
-      ) : null}
+        <p className="rounded-md bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700">
+          {reason || "Chọn một kết quả để xem phân tích phù hợp."}
+        </p>
+      </section>
+
+      <section className="mt-4">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <Target className="h-4 w-4 text-teal-600" />
+          Tín hiệu khớp
+        </div>
+        <SignalChips items={matchedSignals} />
+      </section>
 
       <section className="mt-4">
         <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <CheckCircle2 className="h-4 w-4 text-teal-600" />
-          Tín hiệu khớp
+          Điểm mạnh
         </div>
-        <SignalChips items={matchedSignals} />
+        <SignalChips items={strengths} />
+      </section>
+
+      <section className="mt-4">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <BriefcaseBusiness className="h-4 w-4 text-teal-600" />
+          Kinh nghiệm liên quan
+        </div>
+        <SignalList items={relevantExperiences} />
       </section>
 
       <section className="mt-4">
@@ -57,9 +75,35 @@ export function ApplicationMatchInsightPanel({
         <SignalChips items={gaps} tone="gap" />
       </section>
 
+      {actionSuggestion ? (
+        <section className="mt-4">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <Lightbulb className="h-4 w-4 text-slate-600" />
+            Gợi ý hành động
+          </div>
+          <p className="text-sm leading-6 text-slate-700">{actionSuggestion}</p>
+        </section>
+      ) : null}
+
       <p className="mt-4 border-t border-slate-200 pt-4 text-xs leading-5 text-slate-500">
         {dataSourceLabel}
       </p>
     </aside>
+  );
+}
+
+function SignalList({ items }: { items: string[] }) {
+  if (!items.length) {
+    return <p className="text-xs text-slate-500">Chưa có kinh nghiệm đủ rõ để phân tích sâu.</p>;
+  }
+
+  return (
+    <ul className="space-y-2">
+      {items.map((item) => (
+        <li key={item} className="rounded-md bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700">
+          {item}
+        </li>
+      ))}
+    </ul>
   );
 }

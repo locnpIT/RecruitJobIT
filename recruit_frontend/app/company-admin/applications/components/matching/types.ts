@@ -1,14 +1,8 @@
-export type ApplicationMatchingMode = "applications" | "job-to-candidates" | "candidate-to-jobs";
+export type ApplicationMatchingMode = "applications" | "job-to-candidates";
 
 export type ApplicationMatchingJobOption = {
   id: number;
   title: string;
-};
-
-export type ApplicationMatchingCandidateOption = {
-  id: number;
-  name: string;
-  profileTitle: string;
 };
 
 export type ApplicationCandidateMatch = {
@@ -22,18 +16,9 @@ export type ApplicationCandidateMatch = {
   status: string | null;
   score: number;
   matchedSignals: string[];
+  strengths: string[];
+  relevantExperiences: string[];
   gaps: string[];
   reason: string;
-};
-
-export type ApplicationJobMatch = {
-  applicationId: number;
-  candidateName: string;
-  jobId: number;
-  jobTitle: string;
-  status: string | null;
-  score: number;
-  matchedSignals: string[];
-  gaps: string[];
-  reason: string;
+  actionSuggestion: string | null;
 };

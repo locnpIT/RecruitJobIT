@@ -174,6 +174,34 @@ export function ApplicationDetailModal({
               )}
             </section>
 
+            <section className="rounded-lg border border-slate-200 p-4">
+              <h3 className="font-semibold text-slate-950">Kinh nghiệm làm việc</h3>
+              {application.kinhNghiems?.length ? (
+                <div className="mt-3 space-y-5">
+                  {application.kinhNghiems.map((experience) => (
+                    <div key={experience.id} className="text-sm text-slate-700">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="font-medium text-slate-900">
+                            {experience.chucDanh ?? "Chưa cập nhật chức danh"}
+                          </p>
+                          <p className="text-slate-600">{experience.tenCongTy ?? "--"}</p>
+                        </div>
+                        <p className="shrink-0 text-xs font-medium text-slate-500">
+                          {formatDate(experience.thoiGianBatDau)} - {formatDate(experience.thoiGianKetThuc)}
+                        </p>
+                      </div>
+                      {experience.moTaCongViec ? (
+                        <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">{experience.moTaCongViec}</p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-slate-500">Chưa cập nhật kinh nghiệm làm việc.</p>
+              )}
+            </section>
+
             <div className="grid gap-5 lg:grid-cols-2">
               <section className="rounded-lg border border-slate-200 p-4">
                 <h3 className="font-semibold text-slate-950">Học vấn</h3>

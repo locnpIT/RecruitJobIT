@@ -25,6 +25,7 @@ import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
 import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoChungChiRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoHocVanRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoKinhNghiemRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangUngVienRepository;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
@@ -116,6 +117,7 @@ public class CompanyAdminService {
     private final DonUngTuyenRepository donUngTuyenRepository;
     private final KyNangTinTuyenDungRepository kyNangTinTuyenDungRepository;
     private final HoSoHocVanRepository hoSoHocVanRepository;
+    private final HoSoKinhNghiemRepository hoSoKinhNghiemRepository;
     private final HoSoChungChiRepository hoSoChungChiRepository;
     private final KyNangUngVienRepository kyNangUngVienRepository;
     private final KyNangRepository kyNangRepository;
@@ -871,10 +873,11 @@ public class CompanyAdminService {
                 .gioiThieuBanThan(profile == null ? null : profile.getGioiThieuBanThan())
                 .mucTieuNgheNghiep(profile == null ? null : profile.getMucTieuNgheNghiep());
 
-        // List API giữ payload gọn; detail API mới trả đầy đủ học vấn/chứng chỉ/kỹ năng.
+        // List API giữ payload gọn; detail API mới trả đầy đủ dữ liệu hồ sơ.
         if (includeProfileDetail && profile != null && profile.getId() != null) {
             builder
                     .hocVans(mapEducationItems(profile.getId()))
+                    .kinhNghiems(mapWorkExperienceItems(profile.getId()))
                     .chungChis(mapCertificateItems(profile.getId()))
                     .kyNangs(mapSkillItems(profile.getId()));
         }
@@ -895,6 +898,21 @@ public class CompanyAdminService {
                         .thoiGianKetThuc(item.getThoiGianKetThuc())
                         .duongDanTep(item.getDuongDanTep())
                         .trangThai(item.getTrangThai())
+                        .build())
+                .toList();
+    }
+
+    private List<CompanyAdminApplicationResponse.KinhNghiemItem> mapWorkExperienceItems(Integer profileId) {
+        return hoSoKinhNghiemRepository.findByHoSoUngVien_IdOrderByKinhNghiem_ThoiGianBatDauDesc(profileId).stream()
+                .map(link -> link.getKinhNghiem())
+                .filter(Objects::nonNull)
+                .map(item -> CompanyAdminApplicationResponse.KinhNghiemItem.builder()
+                        .id(item.getId() == null ? null : item.getId().longValue())
+                        .tenCongTy(item.getTenCongTy())
+                        .chucDanh(item.getChucDanh())
+                        .moTaCongViec(item.getMoTaCongViec())
+                        .thoiGianBatDau(item.getThoiGianBatDau())
+                        .thoiGianKetThuc(item.getThoiGianKetThuc())
                         .build())
                 .toList();
     }
