@@ -48,10 +48,14 @@ export function OwnerRegisterClient() {
           />
 
           <OwnerProofUploadSection
-            register={form.register}
-            errors={form.errors}
-            fileName={form.fileName}
-            onFileNameChange={form.setFileName}
+            proofTypes={form.proofTypes}
+            proofTypesLoading={form.proofTypesLoading}
+            proofRows={form.proofRows}
+            proofError={form.proofError}
+            onAddRow={form.addProofRow}
+            onRemoveRow={form.removeProofRow}
+            onTypeChange={form.updateProofType}
+            onFileChange={form.updateProofFile}
           />
 
           <OwnerSubmitBar isLoading={form.isLoading} />

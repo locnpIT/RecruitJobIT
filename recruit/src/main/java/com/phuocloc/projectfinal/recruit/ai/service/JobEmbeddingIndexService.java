@@ -4,11 +4,15 @@ import com.phuocloc.projectfinal.recruit.domain.ai.entity.ChiMucNhungTinTuyenDun
 import com.phuocloc.projectfinal.recruit.domain.ai.repository.ChiMucNhungTinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.KyNangTinTuyenDungRepository;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantProperties;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,10 +32,31 @@ public class JobEmbeddingIndexService {
     private static final String TRANG_THAI_LOI = "FAILED";
 
     private final ChiMucNhungTinTuyenDungRepository chiMucRepository;
+    private final TinTuyenDungRepository tinTuyenDungRepository;
     private final KyNangTinTuyenDungRepository kyNangTinTuyenDungRepository;
     private final TextEmbeddingService vanBanNhungService;
     private final QdrantClientService qdrantClientService;
     private final QdrantProperties qdrantProperties;
+
+    @Transactional
+    public DongBoIndexSummary dongBoToanBoTinPublic() {
+        if (!qdrantClientService.isEnabled()) {
+            return new DongBoIndexSummary(false, 0, 0, 0);
+        }
+        List<TinTuyenDung> jobs = tinTuyenDungRepository.findPublicApprovedActiveJobs(LocalDateTime.now());
+        int success = 0;
+        int failed = 0;
+        for (TinTuyenDung job : jobs) {
+            try {
+                dongBoHoacTamDungChiMuc(job);
+                success++;
+            } catch (RuntimeException ex) {
+                failed++;
+                log.warn("Reindex Qdrant thất bại cho tin tuyển dụng {}", job.getId(), ex);
+            }
+        }
+        return new DongBoIndexSummary(true, jobs.size(), success, failed);
+    }
 
     /**
      * Đồng bộ hoặc tạm dừng index cho một tin tuyển dụng.
@@ -81,19 +106,73 @@ public class JobEmbeddingIndexService {
     }
 
     /**
-     * Lưu trạng thái index trong DB để có thể quan sát và retry theo job.
+     * Ghi log trạng thái index mới để giữ quan hệ 1-nhiều giữa tin tuyển dụng và lịch sử đồng bộ.
      */
     private void luuTrangThai(TinTuyenDung tinTuyenDung, String maDiem, String trangThai) {
-        ChiMucNhungTinTuyenDung chiMuc = chiMucRepository.findByTinTuyenDung_Id(tinTuyenDung.getId())
-                .orElseGet(ChiMucNhungTinTuyenDung::new);
+        ChiMucNhungTinTuyenDung chiMuc = new ChiMucNhungTinTuyenDung();
         chiMuc.setTinTuyenDung(tinTuyenDung);
         chiMuc.setMaDiem(maDiem);
         chiMuc.setTrangThai(trangThai);
+        chiMuc.setNgayTao(LocalDateTime.now());
         chiMucRepository.save(chiMuc);
     }
 
     private String taoMaDiem(Integer tinTuyenDungId) {
-        return "tin-tuyen-dung-" + tinTuyenDungId;
+        return UUID.nameUUIDFromBytes(("tin-tuyen-dung-" + tinTuyenDungId).getBytes(StandardCharsets.UTF_8)).toString();
+    }
+
+    /**
+     * Tạo vector truy vấn cho một job bất kỳ, kể cả job chưa APPROVED.
+     * Dùng cho matching nội bộ HR, không phụ thuộc trạng thái public index.
+     */
+    public List<Float> taoVectorTruyVan(TinTuyenDung tinTuyenDung) {
+        return vanBanNhungService.taoVector(ghepNoiDungNhung(tinTuyenDung));
+    }
+
+    /**
+     * Lazy-load vector tin tuyển dụng cho luồng HR matching.
+     *
+     * <p>Nếu bảng chỉ mục đã ghi nhận point INDEXED và Qdrant còn giữ vector thì dùng lại vector đó.
+     * Nếu chưa có chỉ mục hoặc point đã mất khỏi Qdrant, service sẽ tạo embedding một lần,
+     * upsert vào collection tin tuyển dụng và lưu thêm một dòng lịch sử sync trong DB.</p>
+     */
+    @Transactional
+    public List<Float> layHoacTaoVectorChiMucChoMatching(TinTuyenDung tinTuyenDung) {
+        if (tinTuyenDung == null || tinTuyenDung.getId() == null) {
+            throw new IllegalArgumentException("Thiếu tin tuyển dụng để tạo vector matching");
+        }
+        if (!qdrantClientService.isEnabled()) {
+            return taoVectorTruyVan(tinTuyenDung);
+        }
+
+        var latestIndex = chiMucRepository.findFirstByTinTuyenDung_IdOrderByIdDesc(tinTuyenDung.getId());
+        if (latestIndex.isPresent()
+                && TRANG_THAI_DA_CHI_MUC.equalsIgnoreCase(latestIndex.get().getTrangThai())
+                && StringUtils.hasText(latestIndex.get().getMaDiem())) {
+            var existingVector = qdrantClientService.getPointVector(
+                    qdrantProperties.getKhoTinTuyenDung(),
+                    latestIndex.get().getMaDiem()
+            );
+            if (existingVector.isPresent()) {
+                return existingVector.get();
+            }
+        }
+
+        String pointId = taoMaDiem(tinTuyenDung.getId());
+        try {
+            List<Float> vector = taoVectorTruyVan(tinTuyenDung);
+            qdrantClientService.upsertPoint(
+                    qdrantProperties.getKhoTinTuyenDung(),
+                    pointId,
+                    vector,
+                    taoPayload(tinTuyenDung)
+            );
+            luuTrangThai(tinTuyenDung, pointId, TRANG_THAI_DA_CHI_MUC);
+            return vector;
+        } catch (Exception ex) {
+            luuTrangThai(tinTuyenDung, pointId, TRANG_THAI_LOI);
+            throw ex;
+        }
     }
 
     /**
@@ -157,5 +236,8 @@ public class JobEmbeddingIndexService {
             return;
         }
         sb.append(label).append(": ").append(value.trim()).append('\n');
+    }
+
+    public record DongBoIndexSummary(boolean enabled, int tongSo, int soDaDongBo, int soThatBai) {
     }
 }

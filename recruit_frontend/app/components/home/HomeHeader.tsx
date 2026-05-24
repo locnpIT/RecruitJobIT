@@ -131,7 +131,7 @@ export function HomeHeader() {
                   setNotificationOpen((current) => !current);
                   setUserMenuOpen(false);
                 }}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100"
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-md p-0 text-slate-700 hover:bg-slate-100"
                 aria-label="Mở thông báo"
               >
                 <Bell className="h-5 w-5" />
@@ -211,17 +211,21 @@ export function HomeHeader() {
                   setUserMenuOpen((current) => !current);
                   setNotificationOpen(false);
                 }}
-                className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-sm font-semibold text-white"
+                className={`inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full p-0 text-sm font-semibold ${
+                  headerData.user.anhDaiDienUrl ? "bg-slate-100" : "bg-slate-900 text-white"
+                }`}
                 aria-label="Mở menu tài khoản"
               >
                 {headerData.user.anhDaiDienUrl ? (
-                  <Image
-                    src={headerData.user.anhDaiDienUrl}
-                    alt="Avatar người dùng"
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 object-cover"
-                  />
+                  <span className="relative block h-10 w-10 overflow-hidden rounded-full">
+                    <Image
+                      src={headerData.user.anhDaiDienUrl}
+                      alt="Avatar người dùng"
+                      fill
+                      sizes="40px"
+                      className="object-cover object-center"
+                    />
+                  </span>
                 ) : (
                   headerData.userInitial
                 )}

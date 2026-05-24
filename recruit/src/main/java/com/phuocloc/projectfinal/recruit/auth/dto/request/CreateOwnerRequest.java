@@ -3,6 +3,7 @@ package com.phuocloc.projectfinal.recruit.auth.dto.request;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -72,9 +73,18 @@ public class CreateOwnerRequest {
     @Size(max = 10000, message = "Đường dẫn minh chứng không được vượt quá 10000 ký tự")
     private String duongDanMinhChung;
 
-    @AssertTrue(message = "Cần upload tepMinhChung hoặc cung cấp duongDanMinhChung")
+    @Min(value = 1, message = "loaiTaiLieuId không hợp lệ")
+    private Long loaiTaiLieuId;
+
+    @Valid
+    private List<ProofDocumentRequest> minhChungs = new ArrayList<>();
+
+    @AssertTrue(message = "Cần upload tepMinhChung hoặc cung cấp duongDanMinhChung/minhChungs")
     public boolean isMinhChungDuocCungCap() {
-        return (tepMinhChung != null && !tepMinhChung.isEmpty()) || StringUtils.hasText(duongDanMinhChung);
+        boolean hasSingleProof = (tepMinhChung != null && !tepMinhChung.isEmpty()) || StringUtils.hasText(duongDanMinhChung);
+        boolean hasBatchProofs = minhChungs != null
+                && minhChungs.stream().anyMatch(item -> item != null && StringUtils.hasText(item.getDuongDanMinhChung()));
+        return hasSingleProof || hasBatchProofs;
     }
 
     @AssertTrue(message = "File minh chứng chỉ hỗ trợ PDF, JPG, PNG")
@@ -114,5 +124,20 @@ public class CreateOwnerRequest {
 
         @NotNull(message = "Chi nhánh chính không được để trống")
         private Boolean laTruSoChinh;
+    }
+
+    @Getter
+    @Setter
+    public static class ProofDocumentRequest {
+        @NotNull(message = "loaiTaiLieuId không được để trống")
+        @Min(value = 1, message = "loaiTaiLieuId không hợp lệ")
+        private Long loaiTaiLieuId;
+
+        @NotBlank(message = "duongDanMinhChung không được để trống")
+        @Size(max = 10000, message = "Đường dẫn minh chứng không được vượt quá 10000 ký tự")
+        private String duongDanMinhChung;
+
+        @Size(max = 255, message = "Tên tệp không được vượt quá 255 ký tự")
+        private String tenTep;
     }
 }

@@ -103,7 +103,7 @@ export function CompanyAdminSidebar({
                 href={item.href}
                 onClick={onNavigate}
                 className={`mb-1 block rounded-md px-3 py-2 transition ${
-                  isActive ? "bg-slate-900 font-semibold text-white" : "text-slate-700 hover:bg-slate-100"
+                  isActive ? "bg-[#008080] font-semibold text-white" : "text-slate-700 hover:bg-slate-100"
                 }`}
               >
                 {item.label}

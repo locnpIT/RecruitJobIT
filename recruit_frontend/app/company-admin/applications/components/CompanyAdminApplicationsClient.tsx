@@ -5,8 +5,8 @@ import { isCompanyApproved } from "../../company-admin-status";
 import { CompanyAdminRestrictedNotice } from "../../components/CompanyAdminRestrictedNotice";
 import { ApplicationDetailModal } from "./ApplicationDetailModal";
 import { ApplicationFilters } from "./ApplicationFilters";
+import { ApplicationsMatchingSection } from "./matching/ApplicationsMatchingSection";
 import { ApplicationsPageHeader } from "./ApplicationsPageHeader";
-import { ApplicationsTable } from "./ApplicationsTable";
 import { useCompanyAdminApplicationsActions } from "../hooks/useCompanyAdminApplicationsActions";
 import { useCompanyAdminApplicationsData } from "../hooks/useCompanyAdminApplicationsData";
 
@@ -62,9 +62,11 @@ export function CompanyAdminApplicationsClient() {
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{data.error}</div>
       ) : null}
 
-      <ApplicationsTable
-        applications={data.filteredApplications}
+      <ApplicationsMatchingSection
+        applications={data.applications}
+        filteredApplications={data.filteredApplications}
         loading={data.isLoadingApplications}
+        activeFilterJobId={data.filters.jobId}
         openingChatApplicationId={actions.openingChatApplicationId}
         onOpenChat={actions.handleOpenChat}
         onOpenDetail={actions.handleOpenDetail}

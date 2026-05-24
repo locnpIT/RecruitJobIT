@@ -10,6 +10,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface ChiMucNhungHoSoUngVienRepository extends JpaRepository<ChiMucNhungHoSoUngVien, Integer> {
 
-    Optional<ChiMucNhungHoSoUngVien> findByHoSoUngVien_Id(Integer hoSoUngVienId);
+    Optional<ChiMucNhungHoSoUngVien> findFirstByHoSoUngVien_IdOrderByIdDesc(Integer hoSoUngVienId);
 }
-

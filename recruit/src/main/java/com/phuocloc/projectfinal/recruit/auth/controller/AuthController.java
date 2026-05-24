@@ -10,6 +10,7 @@ import com.phuocloc.projectfinal.recruit.auth.dto.response.CreateOwnerResponse;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.UserProfileResponse;
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
 import com.phuocloc.projectfinal.recruit.auth.service.AuthService;
+import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeResponse;
 import com.phuocloc.projectfinal.recruit.common.response.SuccessResponse;
 import com.phuocloc.projectfinal.recruit.infrastructure.cloudinary.CloudinaryStorageService;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -66,6 +68,13 @@ public class AuthController {
         CreateOwnerResponse data = authService.registerOwner(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponse<>(HttpStatus.CREATED, "Đăng ký chủ công ty thành công", data));
+    }
+
+    @GetMapping("/proof-types")
+    // Danh sách loại tài liệu public cho form đăng ký công ty (owner).
+    public ResponseEntity<SuccessResponse<List<CompanyProofTypeResponse>>> getOwnerProofTypes() {
+        List<CompanyProofTypeResponse> data = authService.listOwnerProofTypes();
+        return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách loại tài liệu thành công", data));
     }
 
     @PostMapping("/login")

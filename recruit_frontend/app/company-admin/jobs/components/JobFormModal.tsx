@@ -4,6 +4,7 @@ import type { UseFormRegisterReturn } from "react-hook-form";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import type { CompanyAdminBranch, CompanyJobMetadataOption } from "@/services/company-admin/types";
 import { JobSkillsMultiSelect } from "./JobSkillsMultiSelect";
 
@@ -45,6 +46,10 @@ type JobFormModalProps = {
   onKyNangIdsChange: (nextIds: number[]) => void;
   batBuocCV?: boolean;
   mauCvUrlValue?: string;
+  moTaValue: string;
+  yeuCauValue: string;
+  phucLoiValue: string;
+  onRichTextChange: (name: "moTa" | "yeuCau" | "phucLoi", value: string) => void;
   isUploadingCvTemplate: boolean;
   cvTemplateFileName: string | null;
   onUploadCvTemplate: (file: File | null) => void;
@@ -70,6 +75,10 @@ export function JobFormModal({
   onKyNangIdsChange,
   batBuocCV,
   mauCvUrlValue,
+  moTaValue,
+  yeuCauValue,
+  phucLoiValue,
+  onRichTextChange,
   isUploadingCvTemplate,
   cvTemplateFileName,
   onUploadCvTemplate,
@@ -153,17 +162,30 @@ export function JobFormModal({
           <Field label="Số lượng tuyển" inputProps={register("soLuongTuyen", { valueAsNumber: true })} placeholder="2" type="number" />
           <Field label="Lương tối thiểu" inputProps={register("luongToiThieu", { valueAsNumber: true })} placeholder="15000000" type="number" />
           <Field label="Lương tối đa" inputProps={register("luongToiDa", { valueAsNumber: true })} placeholder="25000000" type="number" />
-          <Field label="Phúc lợi" inputProps={register("phucLoi")} placeholder="Thưởng, bảo hiểm, phụ cấp..." />
+          <input type="hidden" {...register("phucLoi")} />
+          <input type="hidden" {...register("moTa")} />
+          <input type="hidden" {...register("yeuCau")} />
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Mô tả</label>
-            <textarea {...register("moTa")} rows={4} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Mô tả công việc..." />
-          </div>
+          <RichTextEditor
+            label="Phúc lợi"
+            value={phucLoiValue}
+            onChange={(value) => onRichTextChange("phucLoi", value)}
+            placeholder="Thưởng, bảo hiểm, phụ cấp..."
+          />
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Yêu cầu</label>
-            <textarea {...register("yeuCau")} rows={4} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Yêu cầu ứng viên..." />
-          </div>
+          <RichTextEditor
+            label="Mô tả công việc"
+            value={moTaValue}
+            onChange={(value) => onRichTextChange("moTa", value)}
+            placeholder="Mô tả công việc..."
+          />
+
+          <RichTextEditor
+            label="Yêu cầu ứng viên"
+            value={yeuCauValue}
+            onChange={(value) => onRichTextChange("yeuCau", value)}
+            placeholder="Yêu cầu ứng viên..."
+          />
 
           <Field label="Hạn nộp" inputProps={register("denHanLuc")} type="datetime-local" />
 

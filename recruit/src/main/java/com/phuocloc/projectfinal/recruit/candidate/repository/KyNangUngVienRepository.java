@@ -11,5 +11,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface KyNangUngVienRepository extends JpaRepository<KyNangUngVien, KyNangUngVienId> {
     List<KyNangUngVien> findByHoSoUngVien_Id(Integer hoSoUngVienId);
+
+    boolean existsByHoSoUngVien_IdAndKyNang_Id(Integer hoSoUngVienId, Integer kyNangId);
+
     void deleteByHoSoUngVien_Id(Integer hoSoUngVienId);
 }

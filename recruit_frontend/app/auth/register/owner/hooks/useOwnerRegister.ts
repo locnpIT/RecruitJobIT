@@ -5,18 +5,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { authService, type RegisterOwnerPayload } from "@/services/auth.service";
+import { authService, type OwnerProofTypeOption, type RegisterOwnerPayload } from "@/services/auth.service";
 import { locationService, type Province, type Ward } from "@/services/location.service";
 import { defaultBranch, ownerRegisterSchema, type OwnerFormValues } from "../components/types";
+import type { OwnerProofRow } from "../components/OwnerProofUploadSection";
 
-// Dùng cho màn auth/register/owner: quản lý form đăng ký owner + tải tỉnh/thành và phường/xã theo chi nhánh.
+// Dùng cho màn auth/register/owner: quản lý form đăng ký owner + tải tỉnh/thành, phường/xã
+// và danh sách nhiều minh chứng doanh nghiệp.
 export function useOwnerRegister() {
   const [isLoading, setIsLoading] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [proofError, setProofError] = useState<string | null>(null);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [wardOptionsByProvinceId, setWardOptionsByProvinceId] = useState<Record<number, Ward[]>>({});
   const [wardLoadingProvinceIds, setWardLoadingProvinceIds] = useState<number[]>([]);
   const [primaryBranchIndex, setPrimaryBranchIndex] = useState(0);
+  const [proofTypes, setProofTypes] = useState<OwnerProofTypeOption[]>([]);
+  const [proofTypesLoading, setProofTypesLoading] = useState(true);
+  const [nextProofRowId, setNextProofRowId] = useState(2);
+  const [proofRows, setProofRows] = useState<OwnerProofRow[]>([{ id: 1, loaiTaiLieuId: "", file: null }]);
   const router = useRouter();
 
   const {
@@ -42,6 +48,11 @@ export function useOwnerRegister() {
     name: "chiNhanhs",
   });
 
+  const defaultProofTypeId = useMemo(() => {
+    const firstId = proofTypes.find((item) => item.id != null)?.id;
+    return firstId == null ? "" : String(firstId);
+  }, [proofTypes]);
+
   useEffect(() => {
     let active = true;
     locationService
@@ -60,6 +71,44 @@ export function useOwnerRegister() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    setProofTypesLoading(true);
+
+    authService
+      .getOwnerProofTypes()
+      .then((items) => {
+        if (!active) {
+          return;
+        }
+        setProofTypes(items);
+      })
+      .catch(() => {
+        if (!active) {
+          return;
+        }
+        toast.error("Không tải được danh sách loại tài liệu.");
+      })
+      .finally(() => {
+        if (active) {
+          setProofTypesLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!defaultProofTypeId) {
+      return;
+    }
+    setProofRows((current) =>
+      current.map((row) => (row.loaiTaiLieuId ? row : { ...row, loaiTaiLieuId: defaultProofTypeId })),
+    );
+  }, [defaultProofTypeId]);
 
   useEffect(() => {
     const provinceIdsToLoad = Array.from(
@@ -117,9 +166,30 @@ export function useOwnerRegister() {
 
   const onSubmit = async (data: OwnerFormValues) => {
     setIsLoading(true);
+    setProofError(null);
+
     try {
-      const signatureData = await authService.getCloudinarySignature("proof");
-      const fileUrl = await authService.uploadToCloudinary(data.tepMinhChung[0], signatureData);
+      const hasPartialProof = proofRows.some((row) => (row.file && !row.loaiTaiLieuId) || (!row.file && row.loaiTaiLieuId));
+      if (hasPartialProof) {
+        throw new Error("Mỗi minh chứng cần chọn đủ loại tài liệu và tệp.");
+      }
+
+      const rowsToUpload = proofRows.filter((row) => row.file && row.loaiTaiLieuId);
+      if (rowsToUpload.length === 0) {
+        throw new Error("Vui lòng thêm ít nhất một minh chứng doanh nghiệp.");
+      }
+
+      const uploadedProofs: RegisterOwnerPayload["minhChungs"] = [];
+      for (const row of rowsToUpload) {
+        const signatureData = await authService.getCloudinarySignature("proof");
+        const file = row.file as File;
+        const fileUrl = await authService.uploadToCloudinary(file, signatureData);
+        uploadedProofs.push({
+          loaiTaiLieuId: Number(row.loaiTaiLieuId),
+          duongDanMinhChung: fileUrl,
+          tenTep: file.name,
+        });
+      }
 
       const payload: RegisterOwnerPayload = {
         ho: data.ho,
@@ -138,19 +208,19 @@ export function useOwnerRegister() {
           tinhThanhId: Number(branch.tinhThanhId),
           laTruSoChinh: index === primaryBranchIndex,
         })),
-        duongDanMinhChung: fileUrl,
+        minhChungs: uploadedProofs,
       };
 
       await authService.registerOwner(payload);
-
       toast.success("Đăng ký công ty thành công! Đang chờ duyệt.");
       router.push("/auth/login");
     } catch (error: unknown) {
-      const message =
+      const backendMessage =
         typeof error === "object" && error !== null && "response" in error
-          ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message ??
-            "Đăng ký thất bại. Vui lòng thử lại.")
-          : "Đăng ký thất bại. Vui lòng thử lại.";
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      const message = backendMessage ?? (error instanceof Error ? error.message : "Đăng ký thất bại. Vui lòng thử lại.");
+      setProofError(message.includes("minh chứng") ? message : null);
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -171,6 +241,30 @@ export function useOwnerRegister() {
     }
   };
 
+  const addProofRow = () => {
+    setProofRows((current) => [...current, { id: nextProofRowId, loaiTaiLieuId: defaultProofTypeId, file: null }]);
+    setNextProofRowId((current) => current + 1);
+  };
+
+  const removeProofRow = (rowId: number) => {
+    setProofRows((current) => {
+      if (current.length === 1) {
+        return current;
+      }
+      return current.filter((row) => row.id !== rowId);
+    });
+  };
+
+  const updateProofType = (rowId: number, nextTypeId: string) => {
+    setProofRows((current) =>
+      current.map((row) => (row.id === rowId ? { ...row, loaiTaiLieuId: nextTypeId } : row)),
+    );
+  };
+
+  const updateProofFile = (rowId: number, nextFile: File | null) => {
+    setProofRows((current) => current.map((row) => (row.id === rowId ? { ...row, file: nextFile } : row)));
+  };
+
   const provinceOptions = useMemo(
     () => provinces.map((province) => ({ value: String(province.id), label: province.ten })),
     [provinces],
@@ -185,10 +279,13 @@ export function useOwnerRegister() {
 
   return {
     isLoading,
-    fileName,
+    proofError,
     wardOptionsByProvinceId,
     wardLoadingProvinceIds,
     primaryBranchIndex,
+    proofTypes,
+    proofTypesLoading,
+    proofRows,
     register,
     control,
     setValue,
@@ -197,11 +294,14 @@ export function useOwnerRegister() {
     fields,
     watchedBranches,
     provinceOptions,
-    setFileName,
     setPrimaryBranchIndex,
     onSubmit,
     addBranch,
     removeBranch,
+    addProofRow,
+    removeProofRow,
+    updateProofType,
+    updateProofFile,
     getProvinceLabel,
   };
 }

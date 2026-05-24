@@ -1,8 +1,8 @@
 package com.phuocloc.projectfinal.recruit.ai.service;
 
-import com.phuocloc.projectfinal.recruit.candidate.repository.ChungChiUngVienRepository;
-import com.phuocloc.projectfinal.recruit.candidate.repository.HocVanUngVienRepository;
-import com.phuocloc.projectfinal.recruit.candidate.repository.KinhNghiemLamViecUngVienRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoChungChiRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoHocVanRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoKinhNghiemRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangUngVienRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.NganhNgheUngVienRepository;
 import com.phuocloc.projectfinal.recruit.domain.ai.entity.ChiMucNhungDonUngTuyen;
@@ -11,9 +11,12 @@ import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
 import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantProperties;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,11 +35,11 @@ public class ApplicationEmbeddingIndexService {
     private static final String TRANG_THAI_LOI = "FAILED";
 
     private final ChiMucNhungDonUngTuyenRepository chiMucRepository;
-    private final KinhNghiemLamViecUngVienRepository kinhNghiemRepository;
-    private final HocVanUngVienRepository hocVanRepository;
-    private final ChungChiUngVienRepository chungChiRepository;
-    private final KyNangUngVienRepository kyNangRepository;
     private final NganhNgheUngVienRepository nganhNgheRepository;
+    private final HoSoHocVanRepository hoSoHocVanRepository;
+    private final HoSoKinhNghiemRepository hoSoKinhNghiemRepository;
+    private final HoSoChungChiRepository hoSoChungChiRepository;
+    private final KyNangUngVienRepository kyNangUngVienRepository;
     private final TextEmbeddingService vanBanNhungService;
     private final CvContentExtractionService trichXuatNoiDungCvService;
     private final QdrantClientService qdrantClientService;
@@ -67,19 +70,19 @@ public class ApplicationEmbeddingIndexService {
     }
 
     /**
-     * Lưu trạng thái đồng bộ vào DB để HR/admin có thể theo dõi chất lượng dữ liệu semantic.
+     * Ghi log trạng thái index mới để giữ quan hệ 1-nhiều giữa đơn ứng tuyển và lịch sử đồng bộ.
      */
     private void luuTrangThai(DonUngTuyen donUngTuyen, String maDiem, String trangThai) {
-        ChiMucNhungDonUngTuyen chiMuc = chiMucRepository.findByDonUngTuyen_Id(donUngTuyen.getId())
-                .orElseGet(ChiMucNhungDonUngTuyen::new);
+        ChiMucNhungDonUngTuyen chiMuc = new ChiMucNhungDonUngTuyen();
         chiMuc.setDonUngTuyen(donUngTuyen);
         chiMuc.setMaDiem(maDiem);
         chiMuc.setTrangThai(trangThai);
+        chiMuc.setNgayTao(LocalDateTime.now());
         chiMucRepository.save(chiMuc);
     }
 
     private String taoMaDiem(Integer donUngTuyenId) {
-        return "don-ung-tuyen-" + donUngTuyenId;
+        return UUID.nameUUIDFromBytes(("don-ung-tuyen-" + donUngTuyenId).getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     /**
@@ -131,7 +134,7 @@ public class ApplicationEmbeddingIndexService {
             append(sb, "Gioi thieu ban than", donUngTuyen.getHoSoUngVien().getGioiThieuBanThan());
 
             if (hoSoId != null) {
-                kyNangRepository.findByHoSoUngVien_Id(hoSoId).forEach(item -> {
+                kyNangUngVienRepository.findByHoSoUngVien_Id(hoSoId).forEach(item -> {
                     if (item.getKyNang() != null) {
                         append(sb, "Ky nang", item.getKyNang().getTen());
                     }
@@ -141,19 +144,31 @@ public class ApplicationEmbeddingIndexService {
                         append(sb, "Nganh nghe quan tam", item.getNganhNghe().getTen());
                     }
                 });
-                kinhNghiemRepository.findByHoSoUngVien_IdOrderByThoiGianBatDauDesc(hoSoId).forEach(item -> {
+                hoSoKinhNghiemRepository.findByHoSoUngVien_IdOrderByKinhNghiem_ThoiGianBatDauDesc(hoSoId).forEach(link -> {
+                    var item = link.getKinhNghiem();
+                    if (item == null) {
+                        return;
+                    }
                     append(sb, "Kinh nghiem", item.getChucDanh());
                     append(sb, "Cong ty", item.getTenCongTy());
                     append(sb, "Mo ta cong viec", item.getMoTaCongViec());
                     appendKhoangThoiGian(sb, "Thoi gian kinh nghiem", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
                 });
-                hocVanRepository.findByHoSoUngVien_IdOrderByThoiGianBatDauDesc(hoSoId).forEach(item -> {
+                hoSoHocVanRepository.findByHoSoUngVien_IdOrderByHocVan_ThoiGianBatDauDesc(hoSoId).forEach(link -> {
+                    var item = link.getHocVan();
+                    if (item == null) {
+                        return;
+                    }
                     append(sb, "Hoc van", item.getBacHoc());
                     append(sb, "Chuyen nganh", item.getChuyenNganh());
                     append(sb, "Truong", item.getTenTruong());
                     appendKhoangThoiGian(sb, "Thoi gian hoc", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
                 });
-                chungChiRepository.findByHoSoUngVien_IdOrderByNgayBatDauDesc(hoSoId).forEach(item -> {
+                hoSoChungChiRepository.findByHoSoUngVien_IdOrderByChungChi_NgayBatDauDesc(hoSoId).forEach(link -> {
+                    var item = link.getChungChi();
+                    if (item == null) {
+                        return;
+                    }
                     append(sb, "Chung chi", item.getTenChungChi());
                     if (item.getLoaiChungChi() != null) {
                         append(sb, "Loai chung chi", item.getLoaiChungChi().getTen());

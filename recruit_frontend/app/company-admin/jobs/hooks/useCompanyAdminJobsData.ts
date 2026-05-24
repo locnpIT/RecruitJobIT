@@ -6,6 +6,7 @@ import { companyAdminJobsService } from "@/services/company-admin/jobs.service";
 import { companyAdminSettingsService } from "@/services/company-admin/settings.service";
 import type {
   CompanyAdminBranch,
+  CompanyAdminCompany,
   CompanyAdminJob,
   CompanyJobMetadataOption,
 } from "@/services/company-admin/types";
@@ -16,6 +17,7 @@ export function useCompanyAdminJobsData() {
   const [branches, setBranches] = useState<CompanyAdminBranch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [jobs, setJobs] = useState<CompanyAdminJob[]>([]);
+  const [company, setCompany] = useState<CompanyAdminCompany | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [companyStatus, setCompanyStatus] = useState<string | null>(null);
@@ -37,6 +39,7 @@ export function useCompanyAdminJobsData() {
         }
 
         setCompanyStatus(response.congTy.trangThai ?? null);
+        setCompany(response.congTy ?? null);
         setCanPostJobs(Boolean(response.congTy.coQuyenDangBai));
 
         if (!isCompanyApproved(response.congTy.trangThai)) {
@@ -133,6 +136,7 @@ export function useCompanyAdminJobsData() {
     selectedBranchId,
     selectedBranch,
     jobs,
+    company,
     setJobs,
     isLoading,
     isLoadingJobs,

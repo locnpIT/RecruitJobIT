@@ -1,18 +1,24 @@
 package com.phuocloc.projectfinal.recruit.candidate.service;
 
 import com.phuocloc.projectfinal.recruit.ai.service.CandidateProfileEmbeddingIndexService;
+import com.phuocloc.projectfinal.recruit.candidate.dto.request.CreateCandidateProfileRequest;
+import com.phuocloc.projectfinal.recruit.candidate.dto.request.ToggleProfileItemSelectionRequest;
+import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateCandidateSummaryRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateKyNangUngVienRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateNganhNgheUngVienRequest;
-import com.phuocloc.projectfinal.recruit.candidate.dto.request.CreateCandidateProfileRequest;
-import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateCandidateSummaryRequest;
-import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertKinhNghiemLamViecRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertChungChiRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertHocVanRequest;
+import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertKinhNghiemLamViecRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileListItemResponse;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileMetadataResponse;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileResponse;
+import com.phuocloc.projectfinal.recruit.candidate.dto.response.ProfileItemSelectionResponse;
+import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.CandidateProfileRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.ChungChiUngVienRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoChungChiRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoHocVanRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoKinhNghiemRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.HocVanUngVienRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KinhNghiemLamViecUngVienRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangRepository;
@@ -22,7 +28,11 @@ import com.phuocloc.projectfinal.recruit.candidate.repository.NganhNgheUngVienRe
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.KyNang;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.NganhNghe;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.NganhNgheRepository;
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.ChungChiUngVien;
+import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoChungChi;
+import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoHocVan;
+import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoKinhNghiem;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HocVanUngVien;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.KinhNghiemLamViecUngVien;
@@ -42,15 +52,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-/**
- * Nghiệp vụ hồ sơ ứng viên.
- *
- * <p>Service này triển khai toàn bộ CRUD cho hồ sơ ứng viên và các thành phần con
- * (học vấn, chứng chỉ, kỹ năng), đồng thời đảm bảo ownership thông qua
- * {@link CandidateProfileAccessService}.
- * Sau mỗi thao tác mutate, service cũng trigger đồng bộ chỉ mục nhúng hồ sơ
- * để semantic search luôn bám sát dữ liệu profile mới nhất.</p>
- */
 public class CandidateProfileService {
 
     private static final String PROOF_STATUS_UNVERIFIED = "UNVERIFIED";
@@ -58,6 +59,7 @@ public class CandidateProfileService {
 
     private final CandidateProfileAccessService accessService;
     private final CandidateProfileMapper candidateProfileMapper;
+    private final UsersRepository usersRepository;
     private final CandidateProfileRepository candidateProfileRepository;
     private final HocVanUngVienRepository hocVanUngVienRepository;
     private final KinhNghiemLamViecUngVienRepository kinhNghiemLamViecUngVienRepository;
@@ -67,6 +69,9 @@ public class CandidateProfileService {
     private final NganhNgheUngVienRepository nganhNgheUngVienRepository;
     private final NganhNgheRepository nganhNgheRepository;
     private final LoaiChungChiRepository loaiChungChiRepository;
+    private final HoSoHocVanRepository hoSoHocVanRepository;
+    private final HoSoKinhNghiemRepository hoSoKinhNghiemRepository;
+    private final HoSoChungChiRepository hoSoChungChiRepository;
     private final CandidateProfileEmbeddingIndexService chiMucNhungHoSoUngVienService;
 
     @Transactional(readOnly = true)
@@ -77,10 +82,10 @@ public class CandidateProfileService {
 
     @Transactional(readOnly = true)
     public List<CandidateProfileListItemResponse> listProfiles(Long userId) {
-        // Danh sách hồ sơ để frontend hiển thị selector profile.
         return accessService.listProfiles(userId).stream()
                 .map(profile -> CandidateProfileListItemResponse.builder()
                         .id(profile.getId() == null ? null : profile.getId().longValue())
+                        .tenHoSo(profile.getTenHoSo())
                         .tieuDe(buildProfileTitle(profile))
                         .mucTieuNgheNghiep(profile.getMucTieuNgheNghiep())
                         .gioiThieuBanThan(profile.getGioiThieuBanThan())
@@ -91,16 +96,31 @@ public class CandidateProfileService {
 
     @Transactional
     public CandidateProfileListItemResponse createProfile(Long userId, CreateCandidateProfileRequest request) {
-        HoSoUngVien baseProfile = accessService.requireProfile(userId);
+        Integer nguoiDungId = accessService.toInt(userId, "userId");
+        NguoiDung nguoiDung = usersRepository.findById(nguoiDungId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
+        HoSoUngVien baseProfile = candidateProfileRepository
+                .findFirstByNguoiDung_IdOrderByNgayCapNhatDesc(nguoiDungId)
+                .orElse(null);
+
         HoSoUngVien profile = new HoSoUngVien();
-        profile.setNguoiDung(baseProfile.getNguoiDung());
+        profile.setNguoiDung(nguoiDung);
+        profile.setTenHoSo(accessService.trimToNull(request == null ? null : request.getTenHoSo()));
         profile.setGioiThieuBanThan(accessService.trimToNull(request == null ? null : request.getGioiThieuBanThan()));
         profile.setMucTieuNgheNghiep(accessService.trimToNull(request == null ? null : request.getMucTieuNgheNghiep()));
         profile = candidateProfileRepository.save(profile);
-        dongBoChiMucHoSo(profile);
+
+        if (profile.getTenHoSo() == null) {
+            profile.setTenHoSo("Hồ sơ #" + profile.getId());
+            profile = candidateProfileRepository.save(profile);
+        }
+
+        Integer sourceProfileId = baseProfile == null ? null : baseProfile.getId();
+        ganMacDinhTatCaNoiDungHienCo(profile, nguoiDungId, sourceProfileId);
 
         return CandidateProfileListItemResponse.builder()
                 .id(profile.getId() == null ? null : profile.getId().longValue())
+                .tenHoSo(profile.getTenHoSo())
                 .tieuDe(buildProfileTitle(profile))
                 .mucTieuNgheNghiep(profile.getMucTieuNgheNghiep())
                 .gioiThieuBanThan(profile.getGioiThieuBanThan())
@@ -111,6 +131,15 @@ public class CandidateProfileService {
     @Transactional(readOnly = true)
     public CandidateProfileResponse getProfileById(Long userId, Long profileId) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
+        return mapProfile(profile);
+    }
+
+    @Transactional
+    public CandidateProfileResponse syncProfileIndex(Long userId, Long profileId) {
+        HoSoUngVien profile = profileId == null
+                ? accessService.requireProfile(userId)
+                : accessService.requireProfileById(userId, profileId);
+        dongBoChiMucHoSo(profile);
         return mapProfile(profile);
     }
 
@@ -126,219 +155,115 @@ public class CandidateProfileService {
     @Transactional
     public CandidateProfileResponse.HocVanItem createHocVan(Long userId, UpsertHocVanRequest request) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        HocVanUngVien entity = new HocVanUngVien();
-        applyHocVan(entity, profile, request);
-        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapHocVan(saved);
+        return createHocVanInternal(profile, request);
     }
 
     @Transactional
     public CandidateProfileResponse.HocVanItem createHocVan(Long userId, Long profileId, UpsertHocVanRequest request) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        HocVanUngVien entity = new HocVanUngVien();
-        applyHocVan(entity, profile, request);
-        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapHocVan(saved);
+        return createHocVanInternal(profile, request);
     }
 
     @Transactional
     public CandidateProfileResponse.HocVanItem updateHocVan(Long userId, Long hocVanId, UpsertHocVanRequest request) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        HocVanUngVien entity = hocVanUngVienRepository.findById(accessService.toInt(hocVanId, "hocVanId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        applyHocVan(entity, profile, request);
-        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapHocVan(saved);
+        return updateHocVanInternal(profile, hocVanId, request);
     }
 
     @Transactional
     public CandidateProfileResponse.HocVanItem updateHocVan(Long userId, Long profileId, Long hocVanId, UpsertHocVanRequest request) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        HocVanUngVien entity = hocVanUngVienRepository.findById(accessService.toInt(hocVanId, "hocVanId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        applyHocVan(entity, profile, request);
-        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapHocVan(saved);
+        return updateHocVanInternal(profile, hocVanId, request);
     }
 
     @Transactional
     public void deleteHocVan(Long userId, Long hocVanId) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        HocVanUngVien entity = hocVanUngVienRepository.findById(accessService.toInt(hocVanId, "hocVanId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        hocVanUngVienRepository.delete(entity);
-        dongBoChiMucHoSo(profile);
+        deleteHocVanInternal(profile, hocVanId);
     }
 
     @Transactional
     public void deleteHocVan(Long userId, Long profileId, Long hocVanId) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        HocVanUngVien entity = hocVanUngVienRepository.findById(accessService.toInt(hocVanId, "hocVanId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        hocVanUngVienRepository.delete(entity);
-        dongBoChiMucHoSo(profile);
+        deleteHocVanInternal(profile, hocVanId);
     }
 
     @Transactional
     public CandidateProfileResponse.KinhNghiemItem createKinhNghiem(Long userId, UpsertKinhNghiemLamViecRequest request) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        KinhNghiemLamViecUngVien entity = new KinhNghiemLamViecUngVien();
-        applyKinhNghiem(entity, profile, request);
-        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapKinhNghiem(saved);
+        return createKinhNghiemInternal(profile, request);
     }
 
     @Transactional
     public CandidateProfileResponse.KinhNghiemItem createKinhNghiem(Long userId, Long profileId, UpsertKinhNghiemLamViecRequest request) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        KinhNghiemLamViecUngVien entity = new KinhNghiemLamViecUngVien();
-        applyKinhNghiem(entity, profile, request);
-        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapKinhNghiem(saved);
+        return createKinhNghiemInternal(profile, request);
     }
 
     @Transactional
     public CandidateProfileResponse.KinhNghiemItem updateKinhNghiem(Long userId, Long kinhNghiemId, UpsertKinhNghiemLamViecRequest request) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        KinhNghiemLamViecUngVien entity = kinhNghiemLamViecUngVienRepository.findById(accessService.toInt(kinhNghiemId, "kinhNghiemId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        applyKinhNghiem(entity, profile, request);
-        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapKinhNghiem(saved);
+        return updateKinhNghiemInternal(profile, kinhNghiemId, request);
     }
 
     @Transactional
     public CandidateProfileResponse.KinhNghiemItem updateKinhNghiem(Long userId, Long profileId, Long kinhNghiemId, UpsertKinhNghiemLamViecRequest request) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        KinhNghiemLamViecUngVien entity = kinhNghiemLamViecUngVienRepository.findById(accessService.toInt(kinhNghiemId, "kinhNghiemId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        applyKinhNghiem(entity, profile, request);
-        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapKinhNghiem(saved);
+        return updateKinhNghiemInternal(profile, kinhNghiemId, request);
     }
 
     @Transactional
     public void deleteKinhNghiem(Long userId, Long kinhNghiemId) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        KinhNghiemLamViecUngVien entity = kinhNghiemLamViecUngVienRepository.findById(accessService.toInt(kinhNghiemId, "kinhNghiemId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        kinhNghiemLamViecUngVienRepository.delete(entity);
-        dongBoChiMucHoSo(profile);
+        deleteKinhNghiemInternal(profile, kinhNghiemId);
     }
 
     @Transactional
     public void deleteKinhNghiem(Long userId, Long profileId, Long kinhNghiemId) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        KinhNghiemLamViecUngVien entity = kinhNghiemLamViecUngVienRepository.findById(accessService.toInt(kinhNghiemId, "kinhNghiemId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        kinhNghiemLamViecUngVienRepository.delete(entity);
-        dongBoChiMucHoSo(profile);
+        deleteKinhNghiemInternal(profile, kinhNghiemId);
     }
 
     @Transactional
     public CandidateProfileResponse.ChungChiItem createChungChi(Long userId, UpsertChungChiRequest request) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        ChungChiUngVien entity = new ChungChiUngVien();
-        applyChungChi(entity, profile, request);
-        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapChungChi(saved);
+        return createChungChiInternal(profile, request);
     }
 
     @Transactional
     public CandidateProfileResponse.ChungChiItem createChungChi(Long userId, Long profileId, UpsertChungChiRequest request) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        ChungChiUngVien entity = new ChungChiUngVien();
-        applyChungChi(entity, profile, request);
-        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapChungChi(saved);
+        return createChungChiInternal(profile, request);
     }
 
     @Transactional
     public CandidateProfileResponse.ChungChiItem updateChungChi(Long userId, Long chungChiId, UpsertChungChiRequest request) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        ChungChiUngVien entity = chungChiUngVienRepository.findById(accessService.toInt(chungChiId, "chungChiId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        applyChungChi(entity, profile, request);
-        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapChungChi(saved);
+        return updateChungChiInternal(profile, chungChiId, request);
     }
 
     @Transactional
     public CandidateProfileResponse.ChungChiItem updateChungChi(Long userId, Long profileId, Long chungChiId, UpsertChungChiRequest request) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        ChungChiUngVien entity = chungChiUngVienRepository.findById(accessService.toInt(chungChiId, "chungChiId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        applyChungChi(entity, profile, request);
-        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
-        dongBoChiMucHoSo(profile);
-        return candidateProfileMapper.mapChungChi(saved);
+        return updateChungChiInternal(profile, chungChiId, request);
     }
 
     @Transactional
     public void deleteChungChi(Long userId, Long chungChiId) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        ChungChiUngVien entity = chungChiUngVienRepository.findById(accessService.toInt(chungChiId, "chungChiId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        chungChiUngVienRepository.delete(entity);
-        dongBoChiMucHoSo(profile);
+        deleteChungChiInternal(profile, chungChiId);
     }
 
     @Transactional
     public void deleteChungChi(Long userId, Long profileId, Long chungChiId) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        ChungChiUngVien entity = chungChiUngVienRepository.findById(accessService.toInt(chungChiId, "chungChiId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
-        accessService.ensureOwner(profile, entity.getHoSoUngVien());
-        chungChiUngVienRepository.delete(entity);
-        dongBoChiMucHoSo(profile);
+        deleteChungChiInternal(profile, chungChiId);
     }
 
     @Transactional
     public List<CandidateProfileResponse.KyNangItem> updateSkills(Long userId, UpdateKyNangUngVienRequest request) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        List<Integer> incoming = request.getKyNangIds() == null ? List.of() : request.getKyNangIds();
-        Set<Integer> dedup = new LinkedHashSet<>();
-        incoming.stream().filter(Objects::nonNull).forEach(dedup::add);
-
-        List<KyNang> skills = dedup.isEmpty() ? List.of() : kyNangRepository.findAllById(dedup);
-        if (skills.size() != dedup.size()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Một hoặc nhiều kỹ năng không hợp lệ");
-        }
-
-        // Replace-all strategy để đồng bộ tuyệt đối state kỹ năng theo payload.
-        kyNangUngVienRepository.deleteByHoSoUngVien_Id(profile.getId());
-        List<KyNangUngVien> newLinks = new ArrayList<>();
-        for (KyNang skill : skills) {
-            KyNangUngVien link = new KyNangUngVien();
-            link.setHoSoUngVien(profile);
-            link.setKyNang(skill);
-            newLinks.add(link);
-        }
-        kyNangUngVienRepository.saveAll(newLinks);
-        dongBoChiMucHoSo(profile);
-        return newLinks.stream().map(link -> candidateProfileMapper.mapKyNang(link.getKyNang())).toList();
+        return updateSkillsByProfile(profile, request);
     }
 
     @Transactional
@@ -362,19 +287,178 @@ public class CandidateProfileService {
     @Transactional
     public CandidateProfileResponse updateSummary(Long userId, UpdateCandidateSummaryRequest request) {
         HoSoUngVien profile = accessService.requireProfile(userId);
-        profile.setGioiThieuBanThan(accessService.trimToNull(request == null ? null : request.getGioiThieuBanThan()));
-        profile.setMucTieuNgheNghiep(accessService.trimToNull(request == null ? null : request.getMucTieuNgheNghiep()));
-        dongBoChiMucHoSo(profile);
-        return mapProfile(profile);
+        return updateSummaryInternal(profile, request);
     }
 
     @Transactional
     public CandidateProfileResponse updateSummary(Long userId, Long profileId, UpdateCandidateSummaryRequest request) {
         HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
-        profile.setGioiThieuBanThan(accessService.trimToNull(request == null ? null : request.getGioiThieuBanThan()));
-        profile.setMucTieuNgheNghiep(accessService.trimToNull(request == null ? null : request.getMucTieuNgheNghiep()));
-        dongBoChiMucHoSo(profile);
-        return mapProfile(profile);
+        return updateSummaryInternal(profile, request);
+    }
+
+    @Transactional
+    public ProfileItemSelectionResponse updateHocVanSelection(Long userId, Long profileId, Long hocVanId, ToggleProfileItemSelectionRequest request) {
+        HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
+        Integer hocVanInt = accessService.toInt(hocVanId, "hocVanId");
+        HocVanUngVien hocVan = hocVanUngVienRepository.findById(hocVanInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
+        ensureOwner(profile.getNguoiDung(), hocVan.getNguoiDung());
+        boolean selected = request != null && Boolean.TRUE.equals(request.getDuocChon());
+        if (selected) {
+            if (!hoSoHocVanRepository.existsByHoSoUngVien_IdAndHocVan_Id(profile.getId(), hocVanInt)) {
+                hoSoHocVanRepository.save(new HoSoHocVan(profile, hocVan));
+            }
+        } else {
+            hoSoHocVanRepository.deleteByHoSoUngVien_IdAndHocVan_Id(profile.getId(), hocVanInt);
+        }
+        return ProfileItemSelectionResponse.builder()
+                .profileId(profileId)
+                .itemId(hocVanId)
+                .loai("HOC_VAN")
+                .duocChon(selected)
+                .build();
+    }
+
+    @Transactional
+    public ProfileItemSelectionResponse updateKinhNghiemSelection(Long userId, Long profileId, Long kinhNghiemId, ToggleProfileItemSelectionRequest request) {
+        HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
+        Integer kinhNghiemInt = accessService.toInt(kinhNghiemId, "kinhNghiemId");
+        KinhNghiemLamViecUngVien kinhNghiem = kinhNghiemLamViecUngVienRepository.findById(kinhNghiemInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
+        ensureOwner(profile.getNguoiDung(), kinhNghiem.getNguoiDung());
+        boolean selected = request != null && Boolean.TRUE.equals(request.getDuocChon());
+        if (selected) {
+            if (!hoSoKinhNghiemRepository.existsByHoSoUngVien_IdAndKinhNghiem_Id(profile.getId(), kinhNghiemInt)) {
+                hoSoKinhNghiemRepository.save(new HoSoKinhNghiem(profile, kinhNghiem));
+            }
+        } else {
+            hoSoKinhNghiemRepository.deleteByHoSoUngVien_IdAndKinhNghiem_Id(profile.getId(), kinhNghiemInt);
+        }
+        return ProfileItemSelectionResponse.builder()
+                .profileId(profileId)
+                .itemId(kinhNghiemId)
+                .loai("KINH_NGHIEM")
+                .duocChon(selected)
+                .build();
+    }
+
+    @Transactional
+    public ProfileItemSelectionResponse updateChungChiSelection(Long userId, Long profileId, Long chungChiId, ToggleProfileItemSelectionRequest request) {
+        HoSoUngVien profile = accessService.requireProfileById(userId, profileId);
+        Integer chungChiInt = accessService.toInt(chungChiId, "chungChiId");
+        ChungChiUngVien chungChi = chungChiUngVienRepository.findById(chungChiInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
+        ensureOwner(profile.getNguoiDung(), chungChi.getNguoiDung());
+        boolean selected = request != null && Boolean.TRUE.equals(request.getDuocChon());
+        if (selected) {
+            if (!hoSoChungChiRepository.existsByHoSoUngVien_IdAndChungChi_Id(profile.getId(), chungChiInt)) {
+                hoSoChungChiRepository.save(new HoSoChungChi(profile, chungChi));
+            }
+        } else {
+            hoSoChungChiRepository.deleteByHoSoUngVien_IdAndChungChi_Id(profile.getId(), chungChiInt);
+        }
+        return ProfileItemSelectionResponse.builder()
+                .profileId(profileId)
+                .itemId(chungChiId)
+                .loai("CHUNG_CHI")
+                .duocChon(selected)
+                .build();
+    }
+
+    private CandidateProfileResponse.HocVanItem createHocVanInternal(HoSoUngVien profile, UpsertHocVanRequest request) {
+        NguoiDung nguoiDung = profile.getNguoiDung();
+        HocVanUngVien entity = new HocVanUngVien();
+        applyHocVan(entity, nguoiDung, request);
+        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
+        hoSoHocVanRepository.save(new HoSoHocVan(profile, saved));
+        return candidateProfileMapper.mapHocVan(saved, true);
+    }
+
+    private CandidateProfileResponse.HocVanItem updateHocVanInternal(HoSoUngVien profile, Long hocVanId, UpsertHocVanRequest request) {
+        NguoiDung nguoiDung = profile.getNguoiDung();
+        Integer hocVanInt = accessService.toInt(hocVanId, "hocVanId");
+        HocVanUngVien entity = hocVanUngVienRepository.findById(hocVanInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
+        ensureOwner(nguoiDung, entity.getNguoiDung());
+        applyHocVan(entity, nguoiDung, request);
+        HocVanUngVien saved = hocVanUngVienRepository.save(entity);
+        if (!hoSoHocVanRepository.existsByHoSoUngVien_IdAndHocVan_Id(profile.getId(), hocVanInt)) {
+            hoSoHocVanRepository.save(new HoSoHocVan(profile, saved));
+        }
+        return candidateProfileMapper.mapHocVan(saved, true);
+    }
+
+    private void deleteHocVanInternal(HoSoUngVien profile, Long hocVanId) {
+        Integer hocVanInt = accessService.toInt(hocVanId, "hocVanId");
+        HocVanUngVien entity = hocVanUngVienRepository.findById(hocVanInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy học vấn"));
+        ensureOwner(profile.getNguoiDung(), entity.getNguoiDung());
+        hoSoHocVanRepository.deleteByHocVan_Id(hocVanInt);
+        hocVanUngVienRepository.delete(entity);
+    }
+
+    private CandidateProfileResponse.KinhNghiemItem createKinhNghiemInternal(HoSoUngVien profile, UpsertKinhNghiemLamViecRequest request) {
+        NguoiDung nguoiDung = profile.getNguoiDung();
+        KinhNghiemLamViecUngVien entity = new KinhNghiemLamViecUngVien();
+        applyKinhNghiem(entity, nguoiDung, request);
+        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
+        hoSoKinhNghiemRepository.save(new HoSoKinhNghiem(profile, saved));
+        return candidateProfileMapper.mapKinhNghiem(saved, true);
+    }
+
+    private CandidateProfileResponse.KinhNghiemItem updateKinhNghiemInternal(HoSoUngVien profile, Long kinhNghiemId, UpsertKinhNghiemLamViecRequest request) {
+        NguoiDung nguoiDung = profile.getNguoiDung();
+        Integer kinhNghiemInt = accessService.toInt(kinhNghiemId, "kinhNghiemId");
+        KinhNghiemLamViecUngVien entity = kinhNghiemLamViecUngVienRepository.findById(kinhNghiemInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
+        ensureOwner(nguoiDung, entity.getNguoiDung());
+        applyKinhNghiem(entity, nguoiDung, request);
+        KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
+        if (!hoSoKinhNghiemRepository.existsByHoSoUngVien_IdAndKinhNghiem_Id(profile.getId(), kinhNghiemInt)) {
+            hoSoKinhNghiemRepository.save(new HoSoKinhNghiem(profile, saved));
+        }
+        return candidateProfileMapper.mapKinhNghiem(saved, true);
+    }
+
+    private void deleteKinhNghiemInternal(HoSoUngVien profile, Long kinhNghiemId) {
+        Integer kinhNghiemInt = accessService.toInt(kinhNghiemId, "kinhNghiemId");
+        KinhNghiemLamViecUngVien entity = kinhNghiemLamViecUngVienRepository.findById(kinhNghiemInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
+        ensureOwner(profile.getNguoiDung(), entity.getNguoiDung());
+        hoSoKinhNghiemRepository.deleteByKinhNghiem_Id(kinhNghiemInt);
+        kinhNghiemLamViecUngVienRepository.delete(entity);
+    }
+
+    private CandidateProfileResponse.ChungChiItem createChungChiInternal(HoSoUngVien profile, UpsertChungChiRequest request) {
+        NguoiDung nguoiDung = profile.getNguoiDung();
+        ChungChiUngVien entity = new ChungChiUngVien();
+        applyChungChi(entity, nguoiDung, request);
+        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
+        hoSoChungChiRepository.save(new HoSoChungChi(profile, saved));
+        return candidateProfileMapper.mapChungChi(saved, true);
+    }
+
+    private CandidateProfileResponse.ChungChiItem updateChungChiInternal(HoSoUngVien profile, Long chungChiId, UpsertChungChiRequest request) {
+        NguoiDung nguoiDung = profile.getNguoiDung();
+        Integer chungChiInt = accessService.toInt(chungChiId, "chungChiId");
+        ChungChiUngVien entity = chungChiUngVienRepository.findById(chungChiInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
+        ensureOwner(nguoiDung, entity.getNguoiDung());
+        applyChungChi(entity, nguoiDung, request);
+        ChungChiUngVien saved = chungChiUngVienRepository.save(entity);
+        if (!hoSoChungChiRepository.existsByHoSoUngVien_IdAndChungChi_Id(profile.getId(), chungChiInt)) {
+            hoSoChungChiRepository.save(new HoSoChungChi(profile, saved));
+        }
+        return candidateProfileMapper.mapChungChi(saved, true);
+    }
+
+    private void deleteChungChiInternal(HoSoUngVien profile, Long chungChiId) {
+        Integer chungChiInt = accessService.toInt(chungChiId, "chungChiId");
+        ChungChiUngVien entity = chungChiUngVienRepository.findById(chungChiInt)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chứng chỉ"));
+        ensureOwner(profile.getNguoiDung(), entity.getNguoiDung());
+        hoSoChungChiRepository.deleteByChungChi_Id(chungChiInt);
+        chungChiUngVienRepository.delete(entity);
     }
 
     private List<CandidateProfileResponse.KyNangItem> updateSkillsByProfile(HoSoUngVien profile, UpdateKyNangUngVienRequest request) {
@@ -387,18 +471,19 @@ public class CandidateProfileService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Một hoặc nhiều kỹ năng không hợp lệ");
         }
 
-        // Replace-all strategy tương tự updateSkills(userId, request).
-        kyNangUngVienRepository.deleteByHoSoUngVien_Id(profile.getId());
-        List<KyNangUngVien> newLinks = new ArrayList<>();
-        for (KyNang skill : skills) {
-            KyNangUngVien link = new KyNangUngVien();
-            link.setHoSoUngVien(profile);
-            link.setKyNang(skill);
-            newLinks.add(link);
+        Integer profileId = profile.getId();
+        if (profileId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hồ sơ ứng viên không hợp lệ");
         }
-        kyNangUngVienRepository.saveAll(newLinks);
-        dongBoChiMucHoSo(profile);
-        return newLinks.stream().map(link -> candidateProfileMapper.mapKyNang(link.getKyNang())).toList();
+
+        kyNangUngVienRepository.deleteByHoSoUngVien_Id(profileId);
+        if (!skills.isEmpty()) {
+            List<KyNangUngVien> newProfileSkills = skills.stream()
+                    .map(skill -> new KyNangUngVien(profile, skill))
+                    .toList();
+            kyNangUngVienRepository.saveAll(newProfileSkills);
+        }
+        return skills.stream().map(skill -> candidateProfileMapper.mapKyNang(skill, true)).toList();
     }
 
     private List<CandidateProfileResponse.NganhNgheItem> updateIndustriesByProfile(HoSoUngVien profile, UpdateNganhNgheUngVienRequest request) {
@@ -411,7 +496,6 @@ public class CandidateProfileService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Một hoặc nhiều ngành nghề không hợp lệ");
         }
 
-        // Replace-all strategy tương tự kỹ năng.
         nganhNgheUngVienRepository.deleteByHoSoUngVien_Id(profile.getId());
         List<NganhNgheUngVien> newLinks = new ArrayList<>();
         for (NganhNghe industry : industries) {
@@ -421,20 +505,37 @@ public class CandidateProfileService {
             newLinks.add(link);
         }
         nganhNgheUngVienRepository.saveAll(newLinks);
-        dongBoChiMucHoSo(profile);
         return newLinks.stream().map(link -> candidateProfileMapper.mapNganhNghe(link.getNganhNghe())).toList();
     }
 
+    private CandidateProfileResponse updateSummaryInternal(HoSoUngVien profile, UpdateCandidateSummaryRequest request) {
+        profile.setTenHoSo(accessService.trimToNull(request == null ? null : request.getTenHoSo()));
+        profile.setGioiThieuBanThan(accessService.trimToNull(request == null ? null : request.getGioiThieuBanThan()));
+        profile.setMucTieuNgheNghiep(accessService.trimToNull(request == null ? null : request.getMucTieuNgheNghiep()));
+        if (profile.getTenHoSo() == null && profile.getId() != null) {
+            profile.setTenHoSo("Hồ sơ #" + profile.getId());
+        }
+        return mapProfile(profile);
+    }
+
     private String buildProfileTitle(HoSoUngVien profile) {
-        if (profile == null || profile.getId() == null) return "Hồ sơ";
+        if (profile == null) {
+            return "Hồ sơ";
+        }
+        if (org.springframework.util.StringUtils.hasText(profile.getTenHoSo())) {
+            return profile.getTenHoSo();
+        }
+        if (profile.getId() == null) {
+            return "Hồ sơ";
+        }
         return "Hồ sơ #" + profile.getId();
     }
 
-    private void applyHocVan(HocVanUngVien entity, HoSoUngVien profile, UpsertHocVanRequest request) {
+    private void applyHocVan(HocVanUngVien entity, NguoiDung nguoiDung, UpsertHocVanRequest request) {
         if (request == null || !org.springframework.util.StringUtils.hasText(request.getTenTruong())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tenTruong không hợp lệ");
         }
-        entity.setHoSoUngVien(profile);
+        entity.setNguoiDung(nguoiDung);
         entity.setTenTruong(request.getTenTruong().trim());
         entity.setChuyenNganh(accessService.trimToNull(request.getChuyenNganh()));
         entity.setBacHoc(accessService.trimToNull(request.getBacHoc()));
@@ -444,11 +545,11 @@ public class CandidateProfileService {
         entity.setTrangThai(resolveProofStatus(entity.getDuongDanTep()));
     }
 
-    private void applyKinhNghiem(KinhNghiemLamViecUngVien entity, HoSoUngVien profile, UpsertKinhNghiemLamViecRequest request) {
+    private void applyKinhNghiem(KinhNghiemLamViecUngVien entity, NguoiDung nguoiDung, UpsertKinhNghiemLamViecRequest request) {
         if (request == null || !org.springframework.util.StringUtils.hasText(request.getTenCongTy())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tenCongTy không hợp lệ");
         }
-        entity.setHoSoUngVien(profile);
+        entity.setNguoiDung(nguoiDung);
         entity.setTenCongTy(request.getTenCongTy().trim());
         entity.setChucDanh(accessService.trimToNull(request.getChucDanh()));
         entity.setMoTaCongViec(accessService.trimToNull(request.getMoTaCongViec()));
@@ -456,13 +557,13 @@ public class CandidateProfileService {
         entity.setThoiGianKetThuc(request.getThoiGianKetThuc());
     }
 
-    private void applyChungChi(ChungChiUngVien entity, HoSoUngVien profile, UpsertChungChiRequest request) {
+    private void applyChungChi(ChungChiUngVien entity, NguoiDung nguoiDung, UpsertChungChiRequest request) {
         if (request == null || request.getLoaiChungChiId() == null || !org.springframework.util.StringUtils.hasText(request.getTenChungChi())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu chứng chỉ không hợp lệ");
         }
         LoaiChungChi loai = loaiChungChiRepository.findById(request.getLoaiChungChiId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại chứng chỉ"));
-        entity.setHoSoUngVien(profile);
+        entity.setNguoiDung(nguoiDung);
         entity.setLoaiChungChi(loai);
         entity.setTenChungChi(request.getTenChungChi().trim());
         entity.setNgayBatDau(request.getNgayBatDau());
@@ -478,21 +579,49 @@ public class CandidateProfileService {
     }
 
     private CandidateProfileResponse mapProfile(HoSoUngVien profile) {
-        List<CandidateProfileResponse.HocVanItem> hocVans = hocVanUngVienRepository.findByHoSoUngVien_IdOrderByThoiGianBatDauDesc(profile.getId())
-                .stream().map(candidateProfileMapper::mapHocVan).toList();
-        List<CandidateProfileResponse.KinhNghiemItem> kinhNghiems = kinhNghiemLamViecUngVienRepository.findByHoSoUngVien_IdOrderByThoiGianBatDauDesc(profile.getId())
-                .stream().map(candidateProfileMapper::mapKinhNghiem).toList();
-        List<CandidateProfileResponse.ChungChiItem> chungChis = chungChiUngVienRepository.findByHoSoUngVien_IdOrderByNgayBatDauDesc(profile.getId())
-                .stream().map(candidateProfileMapper::mapChungChi).toList();
-        List<CandidateProfileResponse.KyNangItem> kyNangs = kyNangUngVienRepository.findByHoSoUngVien_Id(profile.getId())
-                .stream().map(link -> candidateProfileMapper.mapKyNang(link.getKyNang())).toList();
-        List<CandidateProfileResponse.NganhNgheItem> nganhNghes = nganhNgheUngVienRepository.findByHoSoUngVien_Id(profile.getId())
+        Integer profileId = profile.getId();
+        Integer nguoiDungId = profile.getNguoiDung() == null ? null : profile.getNguoiDung().getId();
+        if (nguoiDungId == null || profileId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hồ sơ ứng viên không hợp lệ");
+        }
+
+        Set<Integer> selectedHocVanIds = hoSoHocVanRepository.findByHoSoUngVien_Id(profileId).stream()
+                .filter(link -> link.getHocVan() != null && link.getHocVan().getId() != null)
+                .map(link -> link.getHocVan().getId())
+                .collect(java.util.stream.Collectors.toSet());
+        Set<Integer> selectedKinhNghiemIds = hoSoKinhNghiemRepository.findByHoSoUngVien_Id(profileId).stream()
+                .filter(link -> link.getKinhNghiem() != null && link.getKinhNghiem().getId() != null)
+                .map(link -> link.getKinhNghiem().getId())
+                .collect(java.util.stream.Collectors.toSet());
+        Set<Integer> selectedChungChiIds = hoSoChungChiRepository.findByHoSoUngVien_Id(profileId).stream()
+                .filter(link -> link.getChungChi() != null && link.getChungChi().getId() != null)
+                .map(link -> link.getChungChi().getId())
+                .collect(java.util.stream.Collectors.toSet());
+        List<CandidateProfileResponse.HocVanItem> hocVans = hocVanUngVienRepository.findByNguoiDung_IdOrderByThoiGianBatDauDesc(nguoiDungId)
+                .stream()
+                .map(item -> candidateProfileMapper.mapHocVan(item, item.getId() != null && selectedHocVanIds.contains(item.getId())))
+                .toList();
+        List<CandidateProfileResponse.KinhNghiemItem> kinhNghiems = kinhNghiemLamViecUngVienRepository.findByNguoiDung_IdOrderByThoiGianBatDauDesc(nguoiDungId)
+                .stream()
+                .map(item -> candidateProfileMapper.mapKinhNghiem(item, item.getId() != null && selectedKinhNghiemIds.contains(item.getId())))
+                .toList();
+        List<CandidateProfileResponse.ChungChiItem> chungChis = chungChiUngVienRepository.findByNguoiDung_IdOrderByNgayBatDauDesc(nguoiDungId)
+                .stream()
+                .map(item -> candidateProfileMapper.mapChungChi(item, item.getId() != null && selectedChungChiIds.contains(item.getId())))
+                .toList();
+        List<CandidateProfileResponse.KyNangItem> kyNangs = kyNangUngVienRepository.findByHoSoUngVien_Id(profileId)
+                .stream()
+                .filter(link -> link.getKyNang() != null)
+                .map(link -> candidateProfileMapper.mapKyNang(link.getKyNang(), true))
+                .toList();
+        List<CandidateProfileResponse.NganhNgheItem> nganhNghes = nganhNgheUngVienRepository.findByHoSoUngVien_Id(profileId)
                 .stream()
                 .map(link -> candidateProfileMapper.mapNganhNghe(link.getNganhNghe()))
                 .toList();
 
         return CandidateProfileResponse.builder()
                 .hoSoUngVienId(profile.getId() == null ? null : profile.getId().longValue())
+                .tenHoSo(profile.getTenHoSo())
                 .gioiThieuBanThan(profile.getGioiThieuBanThan())
                 .mucTieuNgheNghiep(profile.getMucTieuNgheNghiep())
                 .hocVans(hocVans)
@@ -503,15 +632,55 @@ public class CandidateProfileService {
                 .build();
     }
 
-    /**
-     * Hook đồng bộ semantic index cho hồ sơ ứng viên.
-     *
-     * <p>Giữ thành helper riêng để mọi điểm mutate gọi cùng một chỗ,
-     * tránh bỏ sót luồng update chỉ mục khi mở rộng tính năng sau này.</p>
-     */
+    private void ganMacDinhTatCaNoiDungHienCo(HoSoUngVien profile, Integer nguoiDungId, Integer sourceProfileId) {
+        if (profile == null || profile.getId() == null || nguoiDungId == null) {
+            return;
+        }
+
+        List<HoSoHocVan> hocVanLinks = hocVanUngVienRepository.findByNguoiDung_IdOrderByThoiGianBatDauDesc(nguoiDungId)
+                .stream()
+                .map(item -> new HoSoHocVan(profile, item))
+                .toList();
+        if (!hocVanLinks.isEmpty()) {
+            hoSoHocVanRepository.saveAll(hocVanLinks);
+        }
+
+        List<HoSoKinhNghiem> kinhNghiemLinks = kinhNghiemLamViecUngVienRepository.findByNguoiDung_IdOrderByThoiGianBatDauDesc(nguoiDungId)
+                .stream()
+                .map(item -> new HoSoKinhNghiem(profile, item))
+                .toList();
+        if (!kinhNghiemLinks.isEmpty()) {
+            hoSoKinhNghiemRepository.saveAll(kinhNghiemLinks);
+        }
+
+        List<HoSoChungChi> chungChiLinks = chungChiUngVienRepository.findByNguoiDung_IdOrderByNgayBatDauDesc(nguoiDungId)
+                .stream()
+                .map(item -> new HoSoChungChi(profile, item))
+                .toList();
+        if (!chungChiLinks.isEmpty()) {
+            hoSoChungChiRepository.saveAll(chungChiLinks);
+        }
+
+        if (sourceProfileId != null) {
+            List<KyNangUngVien> kyNangLinks = kyNangUngVienRepository.findByHoSoUngVien_Id(sourceProfileId).stream()
+                    .filter(item -> item.getKyNang() != null)
+                    .map(item -> new KyNangUngVien(profile, item.getKyNang()))
+                    .toList();
+            if (!kyNangLinks.isEmpty()) {
+                kyNangUngVienRepository.saveAll(kyNangLinks);
+            }
+        }
+    }
+
+    private void ensureOwner(NguoiDung expectedUser, NguoiDung actualUser) {
+        Integer expectedId = expectedUser == null ? null : expectedUser.getId();
+        Integer actualId = actualUser == null ? null : actualUser.getId();
+        if (!Objects.equals(expectedId, actualId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Không có quyền thao tác dữ liệu này");
+        }
+    }
+
     private void dongBoChiMucHoSo(HoSoUngVien profile) {
         chiMucNhungHoSoUngVienService.dongBoChiMuc(profile);
     }
-
-    
 }

@@ -1,6 +1,8 @@
 package com.phuocloc.projectfinal.recruit.company.controller.companyadmin;
 
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
+import com.phuocloc.projectfinal.recruit.ai.dto.response.CandidateSemanticMatchResponse;
+import com.phuocloc.projectfinal.recruit.ai.service.SemanticMatchingService;
 import com.phuocloc.projectfinal.recruit.common.response.SuccessResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.request.CreateCompanyHrRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.CreateCompanyJobRequest;
@@ -49,6 +51,7 @@ public class CompanySubAdminController {
 
     private final CompanyAdminService companyAdminService;
     private final CompanyHrManagementService companyHrManagementService;
+    private final SemanticMatchingService semanticMatchingService;
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('CANDIDATE')")
@@ -172,6 +175,18 @@ public class CompanySubAdminController {
         var data = companyAdminService.createJob(principal, request);
         return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
                 .body(new SuccessResponse<>(org.springframework.http.HttpStatus.CREATED, "Tạo tin tuyển dụng thành công", data));
+    }
+
+    @GetMapping("/jobs/{jobId}/candidate-matches")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    // HR tìm hồ sơ ứng viên phù hợp với một tin tuyển dụng bằng Qdrant semantic search.
+    public ResponseEntity<SuccessResponse<java.util.List<CandidateSemanticMatchResponse>>> getCandidateMatchesForJob(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long jobId,
+            @RequestParam(required = false, defaultValue = "10") Integer limit
+    ) {
+        var data = semanticMatchingService.timUngVienPhuHopChoTin(principal, jobId, limit);
+        return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách ứng viên phù hợp thành công", data));
     }
 
     @PatchMapping("/jobs/{jobId}")

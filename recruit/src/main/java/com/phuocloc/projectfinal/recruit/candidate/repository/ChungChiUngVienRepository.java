@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * Định nghĩa truy vấn phục vụ các luồng nghiệp vụ của hệ thống.
  */
 public interface ChungChiUngVienRepository extends JpaRepository<ChungChiUngVien, Integer> {
-    List<ChungChiUngVien> findByHoSoUngVien_IdOrderByNgayBatDauDesc(Integer hoSoUngVienId);
+    List<ChungChiUngVien> findByNguoiDung_IdOrderByNgayBatDauDesc(Integer nguoiDungId);
 
     List<ChungChiUngVien> findByTrangThaiOrderByIdDesc(String trangThai);
 }

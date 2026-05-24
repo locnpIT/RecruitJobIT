@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { authService, type UserProfileResponse } from "@/services/auth.service";
 import {
   candidateProfileService,
+  type UpsertCertificatePayload,
+  type UpsertEducationPayload,
+  type UpsertWorkExperiencePayload,
   type CandidateCertificateItem,
   type CandidateEducationItem,
   type CandidateProfile,
@@ -15,29 +18,37 @@ import type { PersonalInfoFormState } from "../components/PersonalInfoPanel";
 import type { LocalUser } from "./types";
 import type { SummaryFormState } from "./useCandidateProfileData";
 
-const EMPTY_EDU = {
-  tenTruong: "",
-  chuyenNganh: "",
-  bacHoc: "",
-  thoiGianBatDau: "",
-  thoiGianKetThuc: "",
-  duongDanTep: "",
+type EducationFormState = {
+  tenTruong: string;
+  chuyenNganh: string;
+  bacHoc: string;
+  thoiGianBatDau: string;
+  thoiGianKetThuc: string;
+  duongDanTep: string;
 };
 
-const EMPTY_CERT = {
-  loaiChungChiId: "",
-  tenChungChi: "",
-  ngayBatDau: "",
-  ngayHetHan: "",
-  duongDanTep: "",
+type CertificateFormState = {
+  loaiChungChiId: string;
+  tenChungChi: string;
+  ngayBatDau: string;
+  ngayHetHan: string;
+  duongDanTep: string;
 };
 
-const EMPTY_EXP = {
-  tenCongTy: "",
-  chucDanh: "",
-  moTaCongViec: "",
-  thoiGianBatDau: "",
-  thoiGianKetThuc: "",
+type WorkExperienceFormState = {
+  tenCongTy: string;
+  chucDanh: string;
+  moTaCongViec: string;
+  thoiGianBatDau: string;
+  thoiGianKetThuc: string;
+};
+
+const isDateRangeInvalid = (from?: string, to?: string) => {
+  if (!from || !to) {
+    return false;
+  }
+  // Inputs come from <input type="date"> => YYYY-MM-DD, safe to compare lexicographically.
+  return from > to;
 };
 
 type UseCandidateProfileActionsParams = {
@@ -47,6 +58,7 @@ type UseCandidateProfileActionsParams = {
   summaryForm: SummaryFormState;
   personalInfoForm: PersonalInfoFormState;
   setProfile: Dispatch<SetStateAction<UserProfileResponse | null>>;
+  profiles: CandidateProfileListItem[];
   setProfiles: Dispatch<SetStateAction<CandidateProfileListItem[]>>;
   setActiveProfileId: Dispatch<SetStateAction<number | null>>;
   setCandidateData: Dispatch<SetStateAction<CandidateProfile | null>>;
@@ -64,6 +76,7 @@ export function useCandidateProfileActions({
   summaryForm,
   personalInfoForm,
   setProfile,
+  profiles,
   setProfiles,
   setActiveProfileId,
   setCandidateData,
@@ -82,10 +95,16 @@ export function useCandidateProfileActions({
   const [savingIndustries, setSavingIndustries] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
   const [savingPersonalInfo, setSavingPersonalInfo] = useState(false);
+  const [savingProfileIndex, setSavingProfileIndex] = useState(false);
+  const [unsyncedProfileId, setUnsyncedProfileId] = useState<number | null>(null);
+  const [creatingProfile, setCreatingProfile] = useState(false);
+  const hasUnsyncedProfileChanges = activeProfileId != null && unsyncedProfileId === activeProfileId;
 
-  const [eduForm, setEduForm] = useState(EMPTY_EDU);
-  const [certForm, setCertForm] = useState(EMPTY_CERT);
-  const [expForm, setExpForm] = useState(EMPTY_EXP);
+  const markProfileIndexDirty = () => {
+    if (activeProfileId != null) {
+      setUnsyncedProfileId(activeProfileId);
+    }
+  };
 
   const syncAvatarToLocalUser = (anhDaiDienUrl: string | null) => {
     const raw = localStorage.getItem("user");
@@ -145,62 +164,96 @@ export function useCandidateProfileActions({
     return authService.uploadToCloudinary(file, signature);
   };
 
-  const handleUploadEducationProof = async (file: File) => {
+  const uploadEducationProof = async (file: File) => {
     try {
       setUploadingEduProof(true);
       const uploadedUrl = await uploadProofToCloudinary(file);
-      setEduForm((prev) => ({ ...prev, duongDanTep: uploadedUrl }));
       toast.success("Đã tải minh chứng học vấn.");
+      return uploadedUrl;
     } catch {
       toast.error("Không thể tải minh chứng học vấn.");
+      return "";
     } finally {
       setUploadingEduProof(false);
     }
   };
 
-  const handleUploadCertificateProof = async (file: File) => {
+  const uploadCertificateProof = async (file: File) => {
     try {
       setUploadingCertProof(true);
       const uploadedUrl = await uploadProofToCloudinary(file);
-      setCertForm((prev) => ({ ...prev, duongDanTep: uploadedUrl }));
       toast.success("Đã tải minh chứng chứng chỉ.");
+      return uploadedUrl;
     } catch {
       toast.error("Không thể tải minh chứng chứng chỉ.");
+      return "";
     } finally {
       setUploadingCertProof(false);
     }
   };
 
-  const handleCreateEducation = async () => {
-    if (!eduForm.tenTruong.trim()) {
+  const normalizeEducationPayload = (payload: EducationFormState): UpsertEducationPayload => ({
+    tenTruong: payload.tenTruong.trim(),
+    chuyenNganh: payload.chuyenNganh.trim() || undefined,
+    bacHoc: payload.bacHoc.trim() || undefined,
+    thoiGianBatDau: payload.thoiGianBatDau || undefined,
+    thoiGianKetThuc: payload.thoiGianKetThuc || undefined,
+    duongDanTep: payload.duongDanTep.trim() || undefined,
+  });
+
+  const createEducation = async (payload: EducationFormState): Promise<CandidateEducationItem | null> => {
+    if (!payload.tenTruong.trim()) {
       toast.error("Tên trường không được để trống.");
-      return;
+      return null;
+    }
+    if (isDateRangeInvalid(payload.thoiGianBatDau, payload.thoiGianKetThuc)) {
+      toast.error("Thời gian học: từ ngày không được lớn hơn đến ngày.");
+      return null;
     }
 
     try {
       setSubmittingEdu(true);
+      const body = normalizeEducationPayload(payload);
       const created = activeProfileId
-        ? await candidateProfileService.createEducationByProfile(activeProfileId, {
-            tenTruong: eduForm.tenTruong.trim(),
-            chuyenNganh: eduForm.chuyenNganh.trim() || undefined,
-            bacHoc: eduForm.bacHoc.trim() || undefined,
-            thoiGianBatDau: eduForm.thoiGianBatDau || undefined,
-            thoiGianKetThuc: eduForm.thoiGianKetThuc || undefined,
-            duongDanTep: eduForm.duongDanTep.trim() || undefined,
-          })
-        : await candidateProfileService.createEducation({
-            tenTruong: eduForm.tenTruong.trim(),
-            chuyenNganh: eduForm.chuyenNganh.trim() || undefined,
-            bacHoc: eduForm.bacHoc.trim() || undefined,
-            thoiGianBatDau: eduForm.thoiGianBatDau || undefined,
-            thoiGianKetThuc: eduForm.thoiGianKetThuc || undefined,
-            duongDanTep: eduForm.duongDanTep.trim() || undefined,
-          });
+        ? await candidateProfileService.createEducationByProfile(activeProfileId, body)
+        : await candidateProfileService.createEducation(body);
       setCandidateData((prev) => (prev ? { ...prev, hocVans: [created, ...prev.hocVans] } : prev));
-      setEduForm(EMPTY_EDU);
+      markProfileIndexDirty();
       toast.success("Đã thêm học vấn.");
+      return created;
     } catch {
       toast.error("Không thể thêm học vấn.");
+      return null;
+    } finally {
+      setSubmittingEdu(false);
+    }
+  };
+
+  const updateEducation = async (
+    educationId: number,
+    payload: EducationFormState,
+  ): Promise<CandidateEducationItem | null> => {
+    if (!payload.tenTruong.trim()) {
+      toast.error("Tên trường không được để trống.");
+      return null;
+    }
+    if (isDateRangeInvalid(payload.thoiGianBatDau, payload.thoiGianKetThuc)) {
+      toast.error("Thời gian học: từ ngày không được lớn hơn đến ngày.");
+      return null;
+    }
+
+    try {
+      setSubmittingEdu(true);
+      const updated = await candidateProfileService.updateEducation(educationId, normalizeEducationPayload(payload));
+      setCandidateData((prev) =>
+        prev ? { ...prev, hocVans: prev.hocVans.map((x) => (x.id === updated.id ? updated : x)) } : prev,
+      );
+      markProfileIndexDirty();
+      toast.success("Đã cập nhật học vấn.");
+      return updated;
+    } catch {
+      toast.error("Không thể cập nhật học vấn.");
+      return null;
     } finally {
       setSubmittingEdu(false);
     }
@@ -214,40 +267,74 @@ export function useCandidateProfileActions({
         await candidateProfileService.deleteEducation(item.id);
       }
       setCandidateData((prev) => (prev ? { ...prev, hocVans: prev.hocVans.filter((x) => x.id !== item.id) } : prev));
+      markProfileIndexDirty();
       toast.success("Đã xoá học vấn.");
     } catch {
       toast.error("Xoá học vấn thất bại.");
     }
   };
 
-  const handleCreateCertificate = async () => {
-    if (!certForm.loaiChungChiId || !certForm.tenChungChi.trim()) {
+  const normalizeCertificatePayload = (payload: CertificateFormState): UpsertCertificatePayload => ({
+    loaiChungChiId: Number(payload.loaiChungChiId),
+    tenChungChi: payload.tenChungChi.trim(),
+    ngayBatDau: payload.ngayBatDau || undefined,
+    ngayHetHan: payload.ngayHetHan || undefined,
+    duongDanTep: payload.duongDanTep.trim() || undefined,
+  });
+
+  const createCertificate = async (payload: CertificateFormState): Promise<CandidateCertificateItem | null> => {
+    if (!payload.loaiChungChiId || !payload.tenChungChi.trim()) {
       toast.error("Vui lòng nhập loại chứng chỉ và tên chứng chỉ.");
-      return;
+      return null;
+    }
+    if (isDateRangeInvalid(payload.ngayBatDau, payload.ngayHetHan)) {
+      toast.error("Thời hạn chứng chỉ: ngày cấp không được lớn hơn ngày hết hạn.");
+      return null;
     }
 
     try {
       setSubmittingCert(true);
+      const body = normalizeCertificatePayload(payload);
       const created = activeProfileId
-        ? await candidateProfileService.createCertificateByProfile(activeProfileId, {
-            loaiChungChiId: Number(certForm.loaiChungChiId),
-            tenChungChi: certForm.tenChungChi.trim(),
-            ngayBatDau: certForm.ngayBatDau || undefined,
-            ngayHetHan: certForm.ngayHetHan || undefined,
-            duongDanTep: certForm.duongDanTep.trim() || undefined,
-          })
-        : await candidateProfileService.createCertificate({
-            loaiChungChiId: Number(certForm.loaiChungChiId),
-            tenChungChi: certForm.tenChungChi.trim(),
-            ngayBatDau: certForm.ngayBatDau || undefined,
-            ngayHetHan: certForm.ngayHetHan || undefined,
-            duongDanTep: certForm.duongDanTep.trim() || undefined,
-          });
+        ? await candidateProfileService.createCertificateByProfile(activeProfileId, body)
+        : await candidateProfileService.createCertificate(body);
       setCandidateData((prev) => (prev ? { ...prev, chungChis: [created, ...prev.chungChis] } : prev));
-      setCertForm(EMPTY_CERT);
+      markProfileIndexDirty();
       toast.success("Đã thêm chứng chỉ.");
+      return created;
     } catch {
       toast.error("Không thể thêm chứng chỉ.");
+      return null;
+    } finally {
+      setSubmittingCert(false);
+    }
+  };
+
+  const updateCertificate = async (
+    certificateId: number,
+    payload: CertificateFormState,
+  ): Promise<CandidateCertificateItem | null> => {
+    if (!payload.loaiChungChiId || !payload.tenChungChi.trim()) {
+      toast.error("Vui lòng nhập loại chứng chỉ và tên chứng chỉ.");
+      return null;
+    }
+    if (isDateRangeInvalid(payload.ngayBatDau, payload.ngayHetHan)) {
+      toast.error("Thời hạn chứng chỉ: ngày cấp không được lớn hơn ngày hết hạn.");
+      return null;
+    }
+
+    try {
+      setSubmittingCert(true);
+      const updated = await candidateProfileService.updateCertificate(certificateId, normalizeCertificatePayload(payload));
+      setCandidateData((prev) =>
+        prev ? { ...prev, chungChis: prev.chungChis.map((x) => (x.id === updated.id ? updated : x)) } : prev,
+      );
+      markProfileIndexDirty();
+      toast.success("Đã cập nhật chứng chỉ.");
+      return updated;
+    } catch {
+      toast.error("Không thể cập nhật chứng chỉ.");
+      return null;
     } finally {
       setSubmittingCert(false);
     }
@@ -261,40 +348,79 @@ export function useCandidateProfileActions({
         await candidateProfileService.deleteCertificate(item.id);
       }
       setCandidateData((prev) => (prev ? { ...prev, chungChis: prev.chungChis.filter((x) => x.id !== item.id) } : prev));
+      markProfileIndexDirty();
       toast.success("Đã xoá chứng chỉ.");
     } catch {
       toast.error("Xoá chứng chỉ thất bại.");
     }
   };
 
-  const handleCreateWorkExperience = async () => {
-    if (!expForm.tenCongTy.trim()) {
+  const normalizeWorkExperiencePayload = (payload: WorkExperienceFormState): UpsertWorkExperiencePayload => ({
+    tenCongTy: payload.tenCongTy.trim(),
+    chucDanh: payload.chucDanh.trim() || undefined,
+    moTaCongViec: payload.moTaCongViec.trim() || undefined,
+    thoiGianBatDau: payload.thoiGianBatDau || undefined,
+    thoiGianKetThuc: payload.thoiGianKetThuc || undefined,
+  });
+
+  const createWorkExperience = async (
+    payload: WorkExperienceFormState,
+  ): Promise<CandidateWorkExperienceItem | null> => {
+    if (!payload.tenCongTy.trim()) {
       toast.error("Tên công ty không được để trống.");
-      return;
+      return null;
+    }
+    if (isDateRangeInvalid(payload.thoiGianBatDau, payload.thoiGianKetThuc)) {
+      toast.error("Thời gian làm việc: từ ngày không được lớn hơn đến ngày.");
+      return null;
     }
 
     try {
       setSubmittingExp(true);
+      const body = normalizeWorkExperiencePayload(payload);
       const created = activeProfileId
-        ? await candidateProfileService.createWorkExperienceByProfile(activeProfileId, {
-            tenCongTy: expForm.tenCongTy.trim(),
-            chucDanh: expForm.chucDanh.trim() || undefined,
-            moTaCongViec: expForm.moTaCongViec.trim() || undefined,
-            thoiGianBatDau: expForm.thoiGianBatDau || undefined,
-            thoiGianKetThuc: expForm.thoiGianKetThuc || undefined,
-          })
-        : await candidateProfileService.createWorkExperience({
-            tenCongTy: expForm.tenCongTy.trim(),
-            chucDanh: expForm.chucDanh.trim() || undefined,
-            moTaCongViec: expForm.moTaCongViec.trim() || undefined,
-            thoiGianBatDau: expForm.thoiGianBatDau || undefined,
-            thoiGianKetThuc: expForm.thoiGianKetThuc || undefined,
-          });
+        ? await candidateProfileService.createWorkExperienceByProfile(activeProfileId, body)
+        : await candidateProfileService.createWorkExperience(body);
       setCandidateData((prev) => (prev ? { ...prev, kinhNghiems: [created, ...prev.kinhNghiems] } : prev));
-      setExpForm(EMPTY_EXP);
+      markProfileIndexDirty();
       toast.success("Đã thêm kinh nghiệm làm việc.");
+      return created;
     } catch {
       toast.error("Không thể thêm kinh nghiệm làm việc.");
+      return null;
+    } finally {
+      setSubmittingExp(false);
+    }
+  };
+
+  const updateWorkExperience = async (
+    experienceId: number,
+    payload: WorkExperienceFormState,
+  ): Promise<CandidateWorkExperienceItem | null> => {
+    if (!payload.tenCongTy.trim()) {
+      toast.error("Tên công ty không được để trống.");
+      return null;
+    }
+    if (isDateRangeInvalid(payload.thoiGianBatDau, payload.thoiGianKetThuc)) {
+      toast.error("Thời gian làm việc: từ ngày không được lớn hơn đến ngày.");
+      return null;
+    }
+
+    try {
+      setSubmittingExp(true);
+      const body = normalizeWorkExperiencePayload(payload);
+      const updated = activeProfileId
+        ? await candidateProfileService.updateWorkExperienceByProfile(activeProfileId, experienceId, body)
+        : await candidateProfileService.updateWorkExperience(experienceId, body);
+      setCandidateData((prev) =>
+        prev ? { ...prev, kinhNghiems: prev.kinhNghiems.map((x) => (x.id === updated.id ? updated : x)) } : prev,
+      );
+      markProfileIndexDirty();
+      toast.success("Đã cập nhật kinh nghiệm làm việc.");
+      return updated;
+    } catch {
+      toast.error("Không thể cập nhật kinh nghiệm làm việc.");
+      return null;
     } finally {
       setSubmittingExp(false);
     }
@@ -310,6 +436,7 @@ export function useCandidateProfileActions({
       setCandidateData((prev) =>
         prev ? { ...prev, kinhNghiems: prev.kinhNghiems.filter((x) => x.id !== item.id) } : prev,
       );
+      markProfileIndexDirty();
       toast.success("Đã xoá kinh nghiệm làm việc.");
     } catch {
       toast.error("Xoá kinh nghiệm làm việc thất bại.");
@@ -320,16 +447,28 @@ export function useCandidateProfileActions({
     setSelectedSkillIds((prev) => (prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId]));
   };
 
-  const handleSaveSkills = async () => {
+  const handleSaveSkills = async (nextSkillIds = selectedSkillIds) => {
     try {
       setSavingSkills(true);
       const updated = activeProfileId
-        ? await candidateProfileService.updateSkillsByProfile(activeProfileId, selectedSkillIds)
-        : await candidateProfileService.updateSkills(selectedSkillIds);
-      setCandidateData((prev) => (prev ? { ...prev, kyNangs: updated } : prev));
+        ? await candidateProfileService.updateSkillsByProfile(activeProfileId, nextSkillIds)
+        : await candidateProfileService.updateSkills(nextSkillIds);
+      setSelectedSkillIds(updated.map((item) => item.id));
+      setCandidateData((prev) => {
+        if (!prev) {
+          return prev;
+        }
+        return {
+          ...prev,
+          kyNangs: updated.map((item) => ({ ...item, duocChon: true })),
+        };
+      });
+      markProfileIndexDirty();
       toast.success("Đã cập nhật kỹ năng.");
+      return true;
     } catch {
       toast.error("Không thể cập nhật kỹ năng.");
+      return false;
     } finally {
       setSavingSkills(false);
     }
@@ -341,16 +480,20 @@ export function useCandidateProfileActions({
     );
   };
 
-  const handleSaveIndustries = async () => {
+  const handleSaveIndustries = async (nextIndustryIds = selectedIndustryIds) => {
     try {
       setSavingIndustries(true);
       const updated = activeProfileId
-        ? await candidateProfileService.updateIndustriesByProfile(activeProfileId, selectedIndustryIds)
-        : await candidateProfileService.updateIndustries(selectedIndustryIds);
+        ? await candidateProfileService.updateIndustriesByProfile(activeProfileId, nextIndustryIds)
+        : await candidateProfileService.updateIndustries(nextIndustryIds);
+      setSelectedIndustryIds(updated.map((item) => item.id));
       setCandidateData((prev) => (prev ? { ...prev, nganhNghes: updated } : prev));
+      markProfileIndexDirty();
       toast.success("Đã cập nhật ngành nghề quan tâm.");
+      return true;
     } catch {
       toast.error("Không thể cập nhật ngành nghề.");
+      return false;
     } finally {
       setSavingIndustries(false);
     }
@@ -366,11 +509,26 @@ export function useCandidateProfileActions({
         prev
           ? {
               ...prev,
+              tenHoSo: updated.tenHoSo,
               gioiThieuBanThan: updated.gioiThieuBanThan,
               mucTieuNgheNghiep: updated.mucTieuNgheNghiep,
             }
           : prev,
       );
+      setProfiles((prev) =>
+        prev.map((item) =>
+          item.id === activeProfileId
+            ? {
+                ...item,
+                tenHoSo: updated.tenHoSo,
+                tieuDe: updated.tenHoSo ?? item.tieuDe,
+                gioiThieuBanThan: updated.gioiThieuBanThan,
+                mucTieuNgheNghiep: updated.mucTieuNgheNghiep,
+              }
+            : item,
+        ),
+      );
+      markProfileIndexDirty();
       toast.success("Đã lưu phần giới thiệu.");
     } catch {
       toast.error("Không thể lưu phần giới thiệu.");
@@ -414,12 +572,100 @@ export function useCandidateProfileActions({
 
   const handleCreateProfile = async () => {
     try {
-      const created = await candidateProfileService.createProfile({});
+      setCreatingProfile(true);
+      const created = await candidateProfileService.createProfile({
+        tenHoSo: `Hồ sơ ${profiles.length + 1}`,
+      });
       setProfiles((prev) => [created, ...prev]);
       setActiveProfileId(created.id);
+      setUnsyncedProfileId(created.id);
       toast.success("Đã tạo hồ sơ mới.");
     } catch {
       toast.error("Không thể tạo hồ sơ mới.");
+    } finally {
+      setCreatingProfile(false);
+    }
+  };
+
+  const handleToggleEducationSelection = async (item: CandidateEducationItem) => {
+    if (!activeProfileId) {
+      return;
+    }
+    const nextValue = !item.duocChon;
+    try {
+      await candidateProfileService.updateEducationSelectionByProfile(activeProfileId, item.id, nextValue);
+      setCandidateData((prev) =>
+        prev
+          ? {
+              ...prev,
+              hocVans: prev.hocVans.map((x) => (x.id === item.id ? { ...x, duocChon: nextValue } : x)),
+            }
+          : prev,
+      );
+      markProfileIndexDirty();
+    } catch {
+      toast.error("Không thể cập nhật hiển thị học vấn.");
+    }
+  };
+
+  const handleToggleCertificateSelection = async (item: CandidateCertificateItem) => {
+    if (!activeProfileId) {
+      return;
+    }
+    const nextValue = !item.duocChon;
+    try {
+      await candidateProfileService.updateCertificateSelectionByProfile(activeProfileId, item.id, nextValue);
+      setCandidateData((prev) =>
+        prev
+          ? {
+              ...prev,
+              chungChis: prev.chungChis.map((x) => (x.id === item.id ? { ...x, duocChon: nextValue } : x)),
+            }
+          : prev,
+      );
+      markProfileIndexDirty();
+    } catch {
+      toast.error("Không thể cập nhật hiển thị chứng chỉ.");
+    }
+  };
+
+  const handleToggleWorkExperienceSelection = async (item: CandidateWorkExperienceItem) => {
+    if (!activeProfileId) {
+      return;
+    }
+    const nextValue = !item.duocChon;
+    try {
+      await candidateProfileService.updateExperienceSelectionByProfile(activeProfileId, item.id, nextValue);
+      setCandidateData((prev) =>
+        prev
+          ? {
+              ...prev,
+              kinhNghiems: prev.kinhNghiems.map((x) => (x.id === item.id ? { ...x, duocChon: nextValue } : x)),
+            }
+          : prev,
+      );
+      markProfileIndexDirty();
+    } catch {
+      toast.error("Không thể cập nhật hiển thị kinh nghiệm.");
+    }
+  };
+
+  const handleSaveProfileIndex = async () => {
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi lưu.");
+      return;
+    }
+
+    try {
+      setSavingProfileIndex(true);
+      const updated = await candidateProfileService.syncProfileIndex(activeProfileId);
+      setCandidateData(updated);
+      setUnsyncedProfileId(null);
+      toast.success("Đã lưu hồ sơ và cập nhật AI Matching.");
+    } catch {
+      toast.error("Không thể cập nhật AI Matching cho hồ sơ.");
+    } finally {
+      setSavingProfileIndex(false);
     }
   };
 
@@ -434,21 +680,21 @@ export function useCandidateProfileActions({
     savingIndustries,
     savingSummary,
     savingPersonalInfo,
-    eduForm,
-    certForm,
-    expForm,
-    setEduForm,
-    setCertForm,
-    setExpForm,
+    savingProfileIndex,
+    hasUnsyncedProfileChanges,
+    creatingProfile,
     setSummaryForm,
     handleSelectAvatar,
-    handleUploadEducationProof,
-    handleUploadCertificateProof,
-    handleCreateEducation,
+    uploadEducationProof,
+    uploadCertificateProof,
+    createEducation,
+    updateEducation,
     handleDeleteEducation,
-    handleCreateCertificate,
+    createCertificate,
+    updateCertificate,
     handleDeleteCertificate,
-    handleCreateWorkExperience,
+    createWorkExperience,
+    updateWorkExperience,
     handleDeleteWorkExperience,
     toggleSkill,
     handleSaveSkills,
@@ -456,6 +702,10 @@ export function useCandidateProfileActions({
     handleSaveIndustries,
     handleSaveSummary,
     handleSavePersonalInfo,
+    handleSaveProfileIndex,
     handleCreateProfile,
+    handleToggleEducationSelection,
+    handleToggleCertificateSelection,
+    handleToggleWorkExperienceSelection,
   };
 }

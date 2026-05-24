@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { CompanyAdminRestrictedNotice } from "../../components/CompanyAdminRestrictedNotice";
 import { isCompanyApproved } from "../../company-admin-status";
 import { JobFormModal } from "./JobFormModal";
+import { JobPreviewModal } from "./JobPreviewModal";
 import { JobsHeader } from "./JobsHeader";
 import { JobsTable } from "./JobsTable";
 import { useCompanyAdminJobsData } from "../hooks/useCompanyAdminJobsData";
@@ -102,6 +103,7 @@ export function CompanyAdminJobsClient() {
           <JobsTable
             jobs={data.jobs}
             isLoadingJobs={data.isLoadingJobs}
+            onView={actions.handleOpenPreviewModal}
             onEdit={actions.handleOpenEditModal}
             onDelete={(job) => void actions.handleDeleteJob(job)}
           />
@@ -126,11 +128,22 @@ export function CompanyAdminJobsClient() {
         onKyNangIdsChange={(nextIds) => actions.setValue("kyNangIds", nextIds, { shouldDirty: true })}
         batBuocCV={actions.batBuocCV}
         mauCvUrlValue={actions.mauCvUrlValue}
+        moTaValue={actions.moTaValue}
+        yeuCauValue={actions.yeuCauValue}
+        phucLoiValue={actions.phucLoiValue}
+        onRichTextChange={(name, value) => actions.setValue(name, value, { shouldDirty: true })}
         isUploadingCvTemplate={actions.isUploadingCvTemplate}
         cvTemplateFileName={actions.cvTemplateFileName}
         onUploadCvTemplate={actions.handleUploadCvTemplate}
         batBuocCVField={actions.batBuocCVField}
         isSubmitting={actions.isSubmitting}
+      />
+
+      <JobPreviewModal
+        open={actions.previewJob != null}
+        job={actions.previewJob}
+        company={data.company}
+        onClose={() => actions.setPreviewJob(null)}
       />
     </div>
   );

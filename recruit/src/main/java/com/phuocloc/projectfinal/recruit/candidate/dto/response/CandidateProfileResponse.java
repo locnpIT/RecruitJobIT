@@ -13,6 +13,7 @@ import lombok.Getter;
 @Builder
 public class CandidateProfileResponse {
     private Long hoSoUngVienId;
+    private String tenHoSo;
     private String gioiThieuBanThan;
     private String mucTieuNgheNghiep;
     private List<HocVanItem> hocVans;
@@ -25,6 +26,7 @@ public class CandidateProfileResponse {
     @Builder
     public static class HocVanItem {
         private Long id;
+        private Boolean duocChon;
         private String tenTruong;
         private String chuyenNganh;
         private String bacHoc;
@@ -38,6 +40,7 @@ public class CandidateProfileResponse {
     @Builder
     public static class KinhNghiemItem {
         private Long id;
+        private Boolean duocChon;
         private String tenCongTy;
         private String chucDanh;
         private String moTaCongViec;
@@ -49,6 +52,7 @@ public class CandidateProfileResponse {
     @Builder
     public static class ChungChiItem {
         private Long id;
+        private Boolean duocChon;
         private Long loaiChungChiId;
         private String loaiChungChiTen;
         private String tenChungChi;
@@ -62,6 +66,7 @@ public class CandidateProfileResponse {
     @Builder
     public static class KyNangItem {
         private Long id;
+        private Boolean duocChon;
         private String ten;
     }
 

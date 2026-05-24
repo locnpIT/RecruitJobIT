@@ -2,6 +2,7 @@ package com.phuocloc.projectfinal.recruit.domain.ai.entity;
 
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
 
 /**
@@ -27,4 +28,7 @@ public class ChiMucNhungHoSoUngVien {
 
     @Column(name = "trangThai")
     private String trangThai;
+
+    @Column(name = "ngayTao")
+    private LocalDateTime ngayTao;
 }

@@ -52,8 +52,13 @@ public class CandidateProfileMapper {
      * Chuyển bản ghi học vấn của một hồ sơ cụ thể sang DTO trả về cho màn profile.
      */
     public CandidateProfileResponse.HocVanItem mapHocVan(HocVanUngVien entity) {
+        return mapHocVan(entity, true);
+    }
+
+    public CandidateProfileResponse.HocVanItem mapHocVan(HocVanUngVien entity, boolean duocChon) {
         return CandidateProfileResponse.HocVanItem.builder()
                 .id(entity.getId() == null ? null : entity.getId().longValue())
+                .duocChon(duocChon)
                 .tenTruong(entity.getTenTruong())
                 .chuyenNganh(entity.getChuyenNganh())
                 .bacHoc(entity.getBacHoc())
@@ -68,8 +73,13 @@ public class CandidateProfileMapper {
      * Chuyển bản ghi kinh nghiệm làm việc sang DTO hiển thị trong profile.
      */
     public CandidateProfileResponse.KinhNghiemItem mapKinhNghiem(KinhNghiemLamViecUngVien entity) {
+        return mapKinhNghiem(entity, true);
+    }
+
+    public CandidateProfileResponse.KinhNghiemItem mapKinhNghiem(KinhNghiemLamViecUngVien entity, boolean duocChon) {
         return CandidateProfileResponse.KinhNghiemItem.builder()
                 .id(entity.getId() == null ? null : entity.getId().longValue())
+                .duocChon(duocChon)
                 .tenCongTy(entity.getTenCongTy())
                 .chucDanh(entity.getChucDanh())
                 .moTaCongViec(entity.getMoTaCongViec())
@@ -83,8 +93,13 @@ public class CandidateProfileMapper {
      * đồng thời flatten thêm id/tên loại chứng chỉ để frontend không phải tự suy luận.
      */
     public CandidateProfileResponse.ChungChiItem mapChungChi(ChungChiUngVien entity) {
+        return mapChungChi(entity, true);
+    }
+
+    public CandidateProfileResponse.ChungChiItem mapChungChi(ChungChiUngVien entity, boolean duocChon) {
         return CandidateProfileResponse.ChungChiItem.builder()
                 .id(entity.getId() == null ? null : entity.getId().longValue())
+                .duocChon(duocChon)
                 .loaiChungChiId(entity.getLoaiChungChi() == null || entity.getLoaiChungChi().getId() == null
                         ? null : entity.getLoaiChungChi().getId().longValue())
                 .loaiChungChiTen(entity.getLoaiChungChi() == null ? null : entity.getLoaiChungChi().getTen())
@@ -100,8 +115,13 @@ public class CandidateProfileMapper {
      * Map kỹ năng đã gán cho hồ sơ ứng viên sang DTO đơn giản cho giao diện tag list.
      */
     public CandidateProfileResponse.KyNangItem mapKyNang(KyNang skill) {
+        return mapKyNang(skill, true);
+    }
+
+    public CandidateProfileResponse.KyNangItem mapKyNang(KyNang skill, boolean duocChon) {
         return CandidateProfileResponse.KyNangItem.builder()
                 .id(skill.getId() == null ? null : skill.getId().longValue())
+                .duocChon(duocChon)
                 .ten(skill.getTen())
                 .build();
     }

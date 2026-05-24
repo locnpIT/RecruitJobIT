@@ -31,6 +31,6 @@ public class JwtProperties {
      * Thời gian sống của access token tính theo giây.
      * Giá trị này được JwtService dùng khi phát hành token lúc đăng nhập.
      */
-    private long accessTokenExpirationSeconds = 1000;
+    private long accessTokenExpirationSeconds = 100000;
     
 }

@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.domain.ungvien.entity;
 
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -19,8 +20,8 @@ public class KinhNghiemLamViecUngVien {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hoSoUngVienId")
-    private HoSoUngVien hoSoUngVien;
+    @JoinColumn(name = "nguoiDungId")
+    private NguoiDung nguoiDung;
 
     @Column(name = "tenCongTy")
     private String tenCongTy;

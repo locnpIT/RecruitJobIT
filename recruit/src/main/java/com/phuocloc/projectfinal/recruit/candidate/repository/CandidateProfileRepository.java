@@ -11,8 +11,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface CandidateProfileRepository extends JpaRepository<HoSoUngVien, Integer> {
 
-    Optional<HoSoUngVien> findByNguoiDung_Id(Integer nguoiDungId);
+    Optional<HoSoUngVien> findFirstByNguoiDung_IdOrderByNgayCapNhatDesc(Integer nguoiDungId);
     List<HoSoUngVien> findAllByNguoiDung_IdOrderByNgayCapNhatDesc(Integer nguoiDungId);
+    List<HoSoUngVien> findByIdInAndNgayXoaIsNull(List<Integer> ids);
     Optional<HoSoUngVien> findByIdAndNguoiDung_Id(Integer id, Integer nguoiDungId);
 
     boolean existsByNguoiDung_Id(Integer nguoiDungId);

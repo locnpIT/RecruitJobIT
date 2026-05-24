@@ -10,6 +10,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface ChiMucNhungDonUngTuyenRepository extends JpaRepository<ChiMucNhungDonUngTuyen, Integer> {
 
-    Optional<ChiMucNhungDonUngTuyen> findByDonUngTuyen_Id(Integer donUngTuyenId);
+    Optional<ChiMucNhungDonUngTuyen> findFirstByDonUngTuyen_IdOrderByIdDesc(Integer donUngTuyenId);
 }
-

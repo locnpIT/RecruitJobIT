@@ -193,6 +193,21 @@ export interface CompanyAdminApplicationSkill {
   ten: string | null;
 }
 
+export interface CompanyCandidateSemanticMatch {
+  hoSoUngVienId: number | null;
+  nguoiDungId: number | null;
+  tenHoSo: string | null;
+  ungVienHoTen: string | null;
+  email: string | null;
+  soDienThoai: string | null;
+  anhDaiDienUrl: string | null;
+  mucTieuNgheNghiep: string | null;
+  gioiThieuBanThan: string | null;
+  diemPhuHop: number | null;
+  tinHieuKhop: string[];
+  canKiemTraThem: string[];
+}
+
 export interface CompanyAdminHrBranch {
   chiNhanhId: number | null;
   chiNhanhTen: string | null;

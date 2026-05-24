@@ -38,7 +38,8 @@ spring:
 app:
   jwt:
     secret-base64: ${APP_JWT_SECRET_BASE64:${SECRET_KEY_JWT:}}
-    access-token-expiration-seconds: ${APP_JWT_ACCESS_TOKEN_EXPIRATION_SECONDS:1000}
+    # 604800 giây = 7 ngày. Có thể override bằng APP_JWT_ACCESS_TOKEN_EXPIRATION_SECONDS trong .env.
+    access-token-expiration-seconds: ${APP_JWT_ACCESS_TOKEN_EXPIRATION_SECONDS:604800}
   cloudinary:
     cloud-name: ${APP_CLOUDINARY_CLOUD_NAME:}
     api-key: ${APP_CLOUDINARY_API_KEY:}
@@ -60,12 +61,19 @@ app:
     checkout-error-url: ${APP_SEPAY_CHECKOUT_ERROR_URL:}
     checkout-cancel-url: ${APP_SEPAY_CHECKOUT_CANCEL_URL:}
     checkout-payment-method: ${APP_SEPAY_CHECKOUT_PAYMENT_METHOD:}
+  embedding:
+    python:
+      # URL microservice embedding Python (FastAPI).
+      base-url: ${APP_EMBEDDING_PYTHON_URL:http://localhost:8001}
+      timeout-millis: ${APP_EMBEDDING_PYTHON_TIMEOUT_MILLIS:15000}
   qdrant:
     enabled: ${APP_QDRANT_ENABLED:false}
     url: ${APP_QDRANT_URL:http://localhost:6333}
     api-key: ${APP_QDRANT_API_KEY:}
     timeout-millis: ${APP_QDRANT_TIMEOUT_MILLIS:5000}
-    vector-size: ${APP_QDRANT_VECTOR_SIZE:256}
+    # MiniLM-L12-v2 cho ra vector 384 chiều.
+    # Lưu ý: collection Qdrant cũ 256d phải xóa/tạo lại trước khi sync.
+    vector-size: ${APP_QDRANT_VECTOR_SIZE:384}
     kho-ho-so-ung-vien: ${APP_QDRANT_KHO_HO_SO_UNG_VIEN:chi_muc_nhung_ho_so_ung_vien}
     kho-don-ung-tuyen: ${APP_QDRANT_KHO_DON_UNG_TUYEN:chi_muc_nhung_don_ung_tuyen}
     kho-tin-tuyen-dung: ${APP_QDRANT_KHO_TIN_TUYEN_DUNG:chi_muc_nhung_tin_tuyen_dung}

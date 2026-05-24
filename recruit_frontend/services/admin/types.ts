@@ -122,6 +122,7 @@ export interface AdminJob {
   id: number;
   tieuDe: string | null;
   congTyTen: string | null;
+  congTyLogoUrl: string | null;
   chiNhanhTen: string | null;
   diaDiem: string | null;
   nganhNgheTen: string | null;

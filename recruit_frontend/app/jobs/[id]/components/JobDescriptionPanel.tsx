@@ -7,6 +7,7 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
+import { RichTextContent } from "@/app/components/shared/RichTextContent";
 import type { PublicJobDetail } from "@/services/public-job.service";
 import { JobSkillsPanel } from "./JobSkillsPanel";
 
@@ -98,14 +99,7 @@ function JobTextSection({ icon: Icon, title, items }: JobTextSectionProps) {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-            {items.map((item) => (
-              <li key={item} className="flex gap-3">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          <RichTextContent html={items.join("\n")} />
         </div>
       </div>
     </section>

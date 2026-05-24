@@ -11,9 +11,9 @@ import com.phuocloc.projectfinal.recruit.auth.dto.response.UserProfileResponse;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
 import com.phuocloc.projectfinal.recruit.auth.repository.RolesRepository;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
-import com.phuocloc.projectfinal.recruit.candidate.repository.CandidateProfileRepository;
 import com.phuocloc.projectfinal.recruit.company.dto.request.CreateEmployerRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CreateEmployerResponse;
+import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeResponse;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentStatus;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyStatus;
@@ -36,7 +36,6 @@ import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.VaiTroCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
-import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.infrastructure.cloudinary.CloudinaryStorageService;
 import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import java.net.URI;
@@ -73,7 +72,6 @@ public class AuthService {
 
     private final UsersRepository usersRepository;
     private final RolesRepository rolesRepository;
-    private final CandidateProfileRepository candidateProfileRepository;
     private final CompanyRepository companyRepository;
     private final CompanyBranchRepository companyBranchRepository;
     private final EmployerProfileRepository employerProfileRepository;
@@ -107,11 +105,6 @@ public class AuthService {
         user.setVaiTroHeThong(candidateRole);
         user = usersRepository.save(user);
 
-        // Mỗi candidate được tạo sẵn một hồ sơ mặc định để frontend có thể thao tác ngay sau khi đăng nhập.
-        HoSoUngVien hoSoUngVien = new HoSoUngVien();
-        hoSoUngVien.setNguoiDung(user);
-        candidateProfileRepository.save(hoSoUngVien);
-
         String accessToken = jwtService.generateAccessToken(user);
         return taoPhanHoiXacThuc(user, accessToken);
     }
@@ -124,7 +117,7 @@ public class AuthService {
         ensureEmailNotExists(normalizedEmail);
 
         VaiTroHeThong candidateRole = requireRole(RoleName.CANDIDATE);
-        String proofUrl = resolveProofUrl(request);
+        List<ResolvedOwnerProofInput> resolvedProofInputs = resolveOwnerProofInputs(request);
 
         NguoiDung owner = new NguoiDung();
         owner.setEmail(normalizedEmail);
@@ -159,19 +152,32 @@ public class AuthService {
         ownerProfile.setTrangThai("ACTIVE");
         employerProfileRepository.save(ownerProfile);
 
-        LoaiTaiLieu loaiTaiLieu = resolveOrCreateLoaiTaiLieu(CompanyProofDocumentType.OWNER_ID_CARD.name());
-
-        TepMinhChungCongTy proofDocument = new TepMinhChungCongTy();
-        proofDocument.setCongTy(congTy);
-        proofDocument.setLoaiTaiLieu(loaiTaiLieu);
-        proofDocument.setDuongDanTep(proofUrl);
-        proofDocument.setTenTep(resolveProofFileName(proofUrl, request.getTepMinhChung()));
-        proofDocument.setTrangThai(CompanyProofDocumentStatus.PENDING.name());
-        proofDocument.setNgayXoa(null);
-        companyProofDocumentRepository.save(proofDocument);
+        List<TepMinhChungCongTy> savedProofDocuments = new java.util.ArrayList<>();
+        for (ResolvedOwnerProofInput resolvedProofInput : resolvedProofInputs) {
+            TepMinhChungCongTy proofDocument = new TepMinhChungCongTy();
+            proofDocument.setCongTy(congTy);
+            proofDocument.setLoaiTaiLieu(resolvedProofInput.loaiTaiLieu());
+            proofDocument.setDuongDanTep(resolvedProofInput.duongDanTep());
+            proofDocument.setTenTep(resolvedProofInput.tenTep());
+            proofDocument.setTrangThai(CompanyProofDocumentStatus.PENDING.name());
+            proofDocument.setNgayXoa(null);
+            savedProofDocuments.add(companyProofDocumentRepository.save(proofDocument));
+        }
 
         String accessToken = jwtService.generateAccessToken(owner);
-        return taoPhanHoiTaoOwner(owner, congTy, chiNhanhs, proofUrl, accessToken);
+        String primaryProofUrl = savedProofDocuments.isEmpty() ? null : savedProofDocuments.getFirst().getDuongDanTep();
+        return taoPhanHoiTaoOwner(owner, congTy, chiNhanhs, primaryProofUrl, accessToken);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CompanyProofTypeResponse> listOwnerProofTypes() {
+        return loaiTaiLieuRepository.findAllByOrderByIdAsc().stream()
+                .map(loaiTaiLieu -> CompanyProofTypeResponse.builder()
+                        .id(loaiTaiLieu.getId() == null ? null : loaiTaiLieu.getId().longValue())
+                        .ten(loaiTaiLieu.getTen())
+                        .moTa(loaiTaiLieu.getMoTa())
+                        .build())
+                .toList();
     }
 
     @Transactional
@@ -369,6 +375,15 @@ public class AuthService {
                 });
     }
 
+    private LoaiTaiLieu resolveLoaiTaiLieuOwnerProof(Long loaiTaiLieuId) {
+        if (loaiTaiLieuId == null) {
+            return resolveOrCreateLoaiTaiLieu(CompanyProofDocumentType.OWNER_ID_CARD.name());
+        }
+        Integer safeId = toIntId(loaiTaiLieuId, "loaiTaiLieuId");
+        return loaiTaiLieuRepository.findById(safeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại tài liệu"));
+    }
+
     private void ensureEmailNotExists(String email) {
         if (usersRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email đã tồn tại");
@@ -402,7 +417,11 @@ public class AuthService {
         return cloudinaryStorageService.uploadProof(proofFile);
     }
 
-    private String resolveProofFileName(String proofUrl, MultipartFile proofFile) {
+    private String resolveProofFileName(String proofUrl, MultipartFile proofFile, String providedFileName) {
+        if (StringUtils.hasText(providedFileName)) {
+            return providedFileName.trim();
+        }
+
         if (proofFile != null && StringUtils.hasText(proofFile.getOriginalFilename())) {
             return proofFile.getOriginalFilename().trim();
         }
@@ -417,6 +436,35 @@ public class AuthService {
         } catch (Exception ex) {
             return "owner-proof";
         }
+    }
+
+    private List<ResolvedOwnerProofInput> resolveOwnerProofInputs(CreateOwnerRequest request) {
+        List<CreateOwnerRequest.ProofDocumentRequest> batchProofs = request.getMinhChungs();
+        if (batchProofs != null && !batchProofs.isEmpty()) {
+            List<ResolvedOwnerProofInput> result = new java.util.ArrayList<>();
+            for (CreateOwnerRequest.ProofDocumentRequest proofItem : batchProofs) {
+                if (proofItem == null || !StringUtils.hasText(proofItem.getDuongDanMinhChung())) {
+                    continue;
+                }
+
+                String proofUrl = proofItem.getDuongDanMinhChung().trim();
+                LoaiTaiLieu loaiTaiLieu = resolveLoaiTaiLieuOwnerProof(proofItem.getLoaiTaiLieuId());
+                String fileName = resolveProofFileName(proofUrl, null, proofItem.getTenTep());
+                result.add(new ResolvedOwnerProofInput(loaiTaiLieu, proofUrl, fileName));
+            }
+
+            if (!result.isEmpty()) {
+                return result;
+            }
+        }
+
+        String singleProofUrl = resolveProofUrl(request);
+        LoaiTaiLieu singleProofType = resolveLoaiTaiLieuOwnerProof(request.getLoaiTaiLieuId());
+        String singleFileName = resolveProofFileName(singleProofUrl, request.getTepMinhChung(), null);
+        return List.of(new ResolvedOwnerProofInput(singleProofType, singleProofUrl, singleFileName));
+    }
+
+    private record ResolvedOwnerProofInput(LoaiTaiLieu loaiTaiLieu, String duongDanTep, String tenTep) {
     }
 
     private List<ChiNhanhCongTy> createBranches(CongTy congTy, List<CreateOwnerRequest.BranchRequest> branchRequests) {

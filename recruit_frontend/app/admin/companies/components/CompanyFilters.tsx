@@ -26,7 +26,7 @@ export function CompanyFilters({ status, onStatusChange, onReload }: CompanyFilt
               type="button"
               onClick={() => onStatusChange(option.value)}
               className={`rounded-md border px-3 py-1.5 text-sm ${
-                active ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 text-slate-700 hover:bg-slate-50"
+                active ? "bg-[#008080] text-white" : "border-slate-300 text-slate-700 hover:bg-slate-50"
               }`}
             >
               {option.label}

@@ -23,6 +23,7 @@ public class AdminJobResponse {
      */
     private String tieuDe;
     private String congTyTen;
+    private String congTyLogoUrl;
     private String chiNhanhTen;
     private String diaDiem;
     private String nganhNgheTen;

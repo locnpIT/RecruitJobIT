@@ -18,6 +18,7 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailRespon
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageSubscriptionResponse;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminReportResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminSettingsResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminUserResponse;
@@ -302,6 +303,16 @@ public class AdminController {
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Reindex dữ liệu jobs lên Elasticsearch thành công",
                 adminService.reindexPublicJobs()
+        ));
+    }
+
+    @PostMapping("/qdrant/reindex/jobs-profiles")
+    // Reindex semantic vectors cho tin tuyển dụng public và hồ sơ ứng viên lên Qdrant.
+    public ResponseEntity<SuccessResponse<AdminQdrantReindexResponse>> reindexQdrantJobsAndProfiles() {
+        requireAdmin();
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Reindex dữ liệu semantic lên Qdrant thành công",
+                adminService.reindexQdrantJobsAndProfiles()
         ));
     }
 

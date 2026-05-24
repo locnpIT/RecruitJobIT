@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import type { CompanyAdminJob } from "@/services/company-admin/types";
@@ -8,11 +8,12 @@ import type { CompanyAdminJob } from "@/services/company-admin/types";
 type JobsTableProps = {
   jobs: CompanyAdminJob[];
   isLoadingJobs: boolean;
+  onView: (job: CompanyAdminJob) => void;
   onEdit: (job: CompanyAdminJob) => void;
   onDelete: (job: CompanyAdminJob) => void;
 };
 
-export function JobsTable({ jobs, isLoadingJobs, onEdit, onDelete }: JobsTableProps) {
+export function JobsTable({ jobs, isLoadingJobs, onView, onEdit, onDelete }: JobsTableProps) {
   if (isLoadingJobs) {
     return (
       <div className="flex items-center justify-center border border-slate-200 p-8 text-slate-500">
@@ -60,7 +61,11 @@ export function JobsTable({ jobs, isLoadingJobs, onEdit, onDelete }: JobsTablePr
               </td>
               <td className="py-3 text-slate-600">{job.soLuongTuyen?.toString() ?? "--"}</td>
               <td className="py-3">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" size="sm" variant="outline" onClick={() => onView(job)} className="gap-1.5">
+                    <Eye className="h-3.5 w-3.5" />
+                    Xem chi tiết
+                  </Button>
                   <Button type="button" size="sm" variant="outline" onClick={() => onEdit(job)}>
                     Cập nhật
                   </Button>

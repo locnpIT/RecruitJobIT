@@ -1,6 +1,8 @@
 package com.phuocloc.projectfinal.recruit.candidate.controller;
 
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
+import com.phuocloc.projectfinal.recruit.ai.dto.response.JobSemanticMatchResponse;
+import com.phuocloc.projectfinal.recruit.ai.service.SemanticMatchingService;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateKyNangUngVienRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateNganhNgheUngVienRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.CreateCandidateProfileRequest;
@@ -8,9 +10,11 @@ import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpdateCandidateSu
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertChungChiRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertHocVanRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.UpsertKinhNghiemLamViecRequest;
+import com.phuocloc.projectfinal.recruit.candidate.dto.request.ToggleProfileItemSelectionRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileListItemResponse;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileMetadataResponse;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateProfileResponse;
+import com.phuocloc.projectfinal.recruit.candidate.dto.response.ProfileItemSelectionResponse;
 import com.phuocloc.projectfinal.recruit.candidate.service.CandidateProfileService;
 import com.phuocloc.projectfinal.recruit.common.response.SuccessResponse;
 import jakarta.validation.Valid;
@@ -42,6 +46,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class CandidateProfileController {
 
     private final CandidateProfileService candidateProfileService;
+    private final SemanticMatchingService semanticMatchingService;
 
     @GetMapping("/all")
     public ResponseEntity<SuccessResponse<List<CandidateProfileListItemResponse>>> listProfiles(
@@ -56,7 +61,7 @@ public class CandidateProfileController {
     @PostMapping("/all")
     public ResponseEntity<SuccessResponse<CandidateProfileListItemResponse>> createProfile(
             @AuthenticationPrincipal AppUserPrinciple principal,
-            @RequestBody CreateCandidateProfileRequest request
+            @RequestBody(required = false) CreateCandidateProfileRequest request
     ) {
         // Tạo thêm hồ sơ mới cho cùng một candidate user.
         requireCandidate(principal);
@@ -76,6 +81,29 @@ public class CandidateProfileController {
         return ResponseEntity.ok(new SuccessResponse<>("Lấy chi tiết hồ sơ ứng viên thành công", data));
     }
 
+    @GetMapping("/{profileId}/job-matches")
+    // Tìm tin tuyển dụng phù hợp với hồ sơ ứng viên bằng Qdrant semantic search.
+    public ResponseEntity<SuccessResponse<List<JobSemanticMatchResponse>>> getJobMatchesByProfile(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "10") Integer limit
+    ) {
+        requireCandidate(principal);
+        var data = semanticMatchingService.timTinPhuHopChoHoSo(principal.getUserId(), profileId, limit);
+        return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách việc làm phù hợp thành công", data));
+    }
+
+    @PostMapping("/{profileId}/sync-index")
+    // Đồng bộ chỉ mục nhúng cho hồ sơ đang chọn. Frontend gọi khi user bấm "Lưu hồ sơ".
+    public ResponseEntity<SuccessResponse<CandidateProfileResponse>> syncProfileIndex(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.syncProfileIndex(principal.getUserId(), profileId);
+        return ResponseEntity.ok(new SuccessResponse<>("Đã đồng bộ hồ sơ vào AI Matching", data));
+    }
+
     @GetMapping
     // Lấy hồ sơ mặc định của candidate.
     // Route này chủ yếu để tương thích ngược với flow cũ trước khi có multi-profile.
@@ -85,6 +113,16 @@ public class CandidateProfileController {
         requireCandidate(principal);
         CandidateProfileResponse data = candidateProfileService.getProfile(principal.getUserId());
         return ResponseEntity.ok(new SuccessResponse<>("Lấy hồ sơ ứng viên thành công", data));
+    }
+
+    @PostMapping("/sync-index")
+    // Đồng bộ chỉ mục nhúng cho hồ sơ mặc định, giữ tương thích với flow cũ.
+    public ResponseEntity<SuccessResponse<CandidateProfileResponse>> syncDefaultProfileIndex(
+            @AuthenticationPrincipal AppUserPrinciple principal
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.syncProfileIndex(principal.getUserId(), null);
+        return ResponseEntity.ok(new SuccessResponse<>("Đã đồng bộ hồ sơ vào AI Matching", data));
     }
 
     @GetMapping("/metadata")
@@ -377,6 +415,42 @@ public class CandidateProfileController {
         requireCandidate(principal);
         var data = candidateProfileService.updateSummary(principal.getUserId(), profileId, request);
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật phần giới thiệu thành công", data));
+    }
+
+    @PutMapping("/{profileId}/educations/{educationId}/selection")
+    public ResponseEntity<SuccessResponse<ProfileItemSelectionResponse>> updateEducationSelection(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId,
+            @PathVariable Long educationId,
+            @Valid @RequestBody ToggleProfileItemSelectionRequest request
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.updateHocVanSelection(principal.getUserId(), profileId, educationId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật hiển thị học vấn thành công", data));
+    }
+
+    @PutMapping("/{profileId}/experiences/{experienceId}/selection")
+    public ResponseEntity<SuccessResponse<ProfileItemSelectionResponse>> updateExperienceSelection(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId,
+            @PathVariable Long experienceId,
+            @Valid @RequestBody ToggleProfileItemSelectionRequest request
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.updateKinhNghiemSelection(principal.getUserId(), profileId, experienceId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật hiển thị kinh nghiệm thành công", data));
+    }
+
+    @PutMapping("/{profileId}/certificates/{certificateId}/selection")
+    public ResponseEntity<SuccessResponse<ProfileItemSelectionResponse>> updateCertificateSelection(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId,
+            @PathVariable Long certificateId,
+            @Valid @RequestBody ToggleProfileItemSelectionRequest request
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.updateChungChiSelection(principal.getUserId(), profileId, certificateId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật hiển thị chứng chỉ thành công", data));
     }
 
     private void requireCandidate(AppUserPrinciple principal) {

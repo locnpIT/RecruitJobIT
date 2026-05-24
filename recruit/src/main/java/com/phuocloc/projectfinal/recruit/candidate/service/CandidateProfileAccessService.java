@@ -26,7 +26,7 @@ public class CandidateProfileAccessService {
     @Transactional(readOnly = true)
     public HoSoUngVien requireProfile(Long userId) {
         // Dùng cho các luồng thao tác trên hồ sơ mặc định của user hiện tại.
-        return candidateProfileRepository.findByNguoiDung_Id(toInt(userId, "userId"))
+        return candidateProfileRepository.findFirstByNguoiDung_IdOrderByNgayCapNhatDesc(toInt(userId, "userId"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy hồ sơ ứng viên"));
     }
 

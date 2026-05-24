@@ -25,6 +25,7 @@ export function useCompanyAdminJobActions({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingJobId, setEditingJobId] = useState<number | null>(null);
+  const [previewJob, setPreviewJob] = useState<CompanyAdminJob | null>(null);
   const [isUploadingCvTemplate, setIsUploadingCvTemplate] = useState(false);
   const [cvTemplateFileName, setCvTemplateFileName] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
@@ -39,6 +40,9 @@ export function useCompanyAdminJobActions({
   // Dùng useWatch để theo dõi field value ổn định hơn với React Compiler.
   const batBuocCV = useWatch({ control, name: "batBuocCV" });
   const mauCvUrlValue = useWatch({ control, name: "mauCvUrl" });
+  const moTaValue = useWatch({ control, name: "moTa" }) ?? "";
+  const yeuCauValue = useWatch({ control, name: "yeuCau" }) ?? "";
+  const phucLoiValue = useWatch({ control, name: "phucLoi" }) ?? "";
   const selectedKyNangIds = useWatch({ control, name: "kyNangIds" }) ?? [];
 
   const chiNhanhField = register("chiNhanhId", { valueAsNumber: true });
@@ -106,6 +110,11 @@ export function useCompanyAdminJobActions({
     });
     setCvTemplateFileName(null);
     setIsCreateModalOpen(true);
+  };
+
+  const handleOpenPreviewModal = (job: CompanyAdminJob) => {
+    setActionError("");
+    setPreviewJob(job);
   };
 
   const handleUploadCvTemplate = async (file: File | null) => {
@@ -204,6 +213,7 @@ export function useCompanyAdminJobActions({
     isSubmitting,
     isCreateModalOpen,
     editingJobId,
+    previewJob,
     isUploadingCvTemplate,
     cvTemplateFileName,
     actionError,
@@ -214,10 +224,15 @@ export function useCompanyAdminJobActions({
     batBuocCVField,
     batBuocCV,
     mauCvUrlValue,
+    moTaValue,
+    yeuCauValue,
+    phucLoiValue,
     selectedKyNangIds,
     setIsCreateModalOpen,
     handleOpenCreateModal,
     handleOpenEditModal,
+    handleOpenPreviewModal,
+    setPreviewJob,
     handleUploadCvTemplate,
     handleDeleteJob,
     handleBranchChangeFromForm,

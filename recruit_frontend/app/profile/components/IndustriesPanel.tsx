@@ -1,66 +1,76 @@
+import { useState } from "react";
 import type { CandidateProfileMetadata } from "@/services/candidate-profile.service";
 import { ProfileActionButton } from "./ProfileActionButton";
-import { Button } from "@/components/ui/Button";
+import { ProfileOptionSelectionModal } from "./modals/ProfileOptionSelectionModal";
 
-// Panel chọn ngành nghề quan tâm của ứng viên.
-// Dữ liệu lưu theo dạng danh sách id, backend xử lý replace-all giống kỹ năng.
+// Panel ngành nghề chỉ hiển thị ngành đã chọn; danh sách đầy đủ nằm trong modal chọn.
 export function IndustriesPanel({
   metadata,
   selectedIndustryIds,
   saving,
-  onToggleIndustry,
   onSave,
 }: {
   metadata: CandidateProfileMetadata | null;
   selectedIndustryIds: number[];
   saving: boolean;
-  onToggleIndustry: (industryId: number) => void;
-  onSave: () => void;
+  onSave: (nextIndustryIds: number[]) => Promise<boolean>;
 }) {
+  const [open, setOpen] = useState(false);
   const selectedCount = selectedIndustryIds.length;
+  const options = metadata?.nganhNghes ?? [];
+  const selectedIndustries = options.filter((industry) => selectedIndustryIds.includes(industry.id));
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900">Ngành nghề quan tâm</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Chọn các lĩnh vực bạn muốn ứng tuyển để hệ thống và nhà tuyển dụng lọc hồ sơ chính xác hơn.
-          </p>
+    <>
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Ngành nghề quan tâm</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Chỉ hiển thị các ngành nghề bạn đang quan tâm trong hồ sơ hiện tại.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-[#008080]">
+              Đã chọn {selectedCount} ngành nghề
+            </span>
+            <ProfileActionButton type="button" onClick={() => setOpen(true)}>
+              Chọn ngành nghề
+            </ProfileActionButton>
+          </div>
         </div>
-        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-          Đã chọn {selectedCount} ngành nghề
-        </span>
-      </div>
 
-      <div className="mt-4 max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3">
-        <div className="flex flex-wrap gap-2">
-          {metadata?.nganhNghes?.map((industry) => {
-            const active = selectedIndustryIds.includes(industry.id);
-            return (
-              <Button variant="unstyled"
+        <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+          <div className="flex flex-wrap gap-2">
+            {selectedIndustries.length === 0 ? (
+              <span className="text-sm text-slate-500">Chưa chọn ngành nghề nào.</span>
+            ) : null}
+            {selectedIndustries.map((industry) => (
+              <span
                 key={industry.id}
-                type="button"
-                onClick={() => onToggleIndustry(industry.id)}
-                className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                  active
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:border-slate-500 hover:text-slate-900"
-                }`}
+                className="rounded-full border border-teal-100 bg-white px-3 py-1.5 text-sm font-medium text-slate-800"
               >
                 {industry.ten}
-              </Button>
-            );
-          })}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-xs text-slate-500">Mẹo: Chọn đúng ngành nghề giúp job matching và gợi ý việc làm chính xác hơn.</p>
-        <ProfileActionButton type="button" onClick={onSave} disabled={saving}>
-          {saving ? "Đang lưu..." : "Lưu ngành nghề"}
-        </ProfileActionButton>
-      </div>
-    </section>
+      {open ? (
+        <ProfileOptionSelectionModal
+          open={open}
+          title="Chọn ngành nghề quan tâm"
+          description="Chọn các lĩnh vực bạn muốn ứng tuyển hoặc muốn hệ thống ưu tiên gợi ý."
+          searchPlaceholder="Tìm ngành nghề..."
+          emptyText="Không tìm thấy ngành nghề phù hợp."
+          options={options}
+          selectedIds={selectedIndustryIds}
+          saving={saving}
+          onClose={() => setOpen(false)}
+          onSave={onSave}
+        />
+      ) : null}
+    </>
   );
 }

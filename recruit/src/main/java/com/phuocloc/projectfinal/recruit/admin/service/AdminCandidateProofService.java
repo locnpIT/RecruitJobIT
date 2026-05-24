@@ -5,7 +5,6 @@ import com.phuocloc.projectfinal.recruit.candidate.repository.ChungChiUngVienRep
 import com.phuocloc.projectfinal.recruit.candidate.repository.HocVanUngVienRepository;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.ChungChiUngVien;
-import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HocVanUngVien;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -94,11 +93,10 @@ public class AdminCandidateProofService {
     }
 
     private AdminCandidateProofResponse mapEducation(HocVanUngVien entity) {
-        HoSoUngVien profile = entity.getHoSoUngVien();
-        NguoiDung user = profile == null ? null : profile.getNguoiDung();
+        NguoiDung user = entity.getNguoiDung();
         return AdminCandidateProofResponse.builder()
                 .id(entity.getId() == null ? null : entity.getId().longValue())
-                .hoSoUngVienId(profile == null || profile.getId() == null ? null : profile.getId().longValue())
+                .hoSoUngVienId(null)
                 .loai(TYPE_EDUCATION)
                 .tieuDe(entity.getTenTruong())
                 .moTa(joinParts(entity.getBacHoc(), entity.getChuyenNganh()))
@@ -110,11 +108,10 @@ public class AdminCandidateProofService {
     }
 
     private AdminCandidateProofResponse mapCertificate(ChungChiUngVien entity) {
-        HoSoUngVien profile = entity.getHoSoUngVien();
-        NguoiDung user = profile == null ? null : profile.getNguoiDung();
+        NguoiDung user = entity.getNguoiDung();
         return AdminCandidateProofResponse.builder()
                 .id(entity.getId() == null ? null : entity.getId().longValue())
-                .hoSoUngVienId(profile == null || profile.getId() == null ? null : profile.getId().longValue())
+                .hoSoUngVienId(null)
                 .loai(TYPE_CERTIFICATE)
                 .tieuDe(entity.getTenChungChi())
                 .moTa(entity.getLoaiChungChi() == null ? null : entity.getLoaiChungChi().getTen())

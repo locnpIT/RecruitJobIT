@@ -1,8 +1,9 @@
 package com.phuocloc.projectfinal.recruit.ai.service;
 
-import com.phuocloc.projectfinal.recruit.candidate.repository.ChungChiUngVienRepository;
-import com.phuocloc.projectfinal.recruit.candidate.repository.HocVanUngVienRepository;
-import com.phuocloc.projectfinal.recruit.candidate.repository.KinhNghiemLamViecUngVienRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoChungChiRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoHocVanRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoKinhNghiemRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.CandidateProfileRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangUngVienRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.NganhNgheUngVienRepository;
 import com.phuocloc.projectfinal.recruit.domain.ai.entity.ChiMucNhungHoSoUngVien;
@@ -11,9 +12,12 @@ import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantProperties;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,14 +36,37 @@ public class CandidateProfileEmbeddingIndexService {
     private static final String TRANG_THAI_LOI = "FAILED";
 
     private final ChiMucNhungHoSoUngVienRepository chiMucRepository;
-    private final KinhNghiemLamViecUngVienRepository kinhNghiemRepository;
-    private final HocVanUngVienRepository hocVanRepository;
-    private final ChungChiUngVienRepository chungChiRepository;
-    private final KyNangUngVienRepository kyNangRepository;
+    private final CandidateProfileRepository candidateProfileRepository;
     private final NganhNgheUngVienRepository nganhNgheRepository;
+    private final HoSoHocVanRepository hoSoHocVanRepository;
+    private final HoSoKinhNghiemRepository hoSoKinhNghiemRepository;
+    private final HoSoChungChiRepository hoSoChungChiRepository;
+    private final KyNangUngVienRepository kyNangUngVienRepository;
     private final TextEmbeddingService vanBanNhungService;
     private final QdrantClientService qdrantClientService;
     private final QdrantProperties qdrantProperties;
+
+    @Transactional
+    public DongBoIndexSummary dongBoTatCaHoSo() {
+        if (!qdrantClientService.isEnabled()) {
+            return new DongBoIndexSummary(false, 0, 0, 0);
+        }
+        List<HoSoUngVien> profiles = candidateProfileRepository.findAll().stream()
+                .filter(profile -> profile.getNgayXoa() == null)
+                .toList();
+        int success = 0;
+        int failed = 0;
+        for (HoSoUngVien profile : profiles) {
+            try {
+                dongBoChiMuc(profile);
+                success++;
+            } catch (RuntimeException ex) {
+                failed++;
+                log.warn("Reindex Qdrant thất bại cho hồ sơ ứng viên {}", profile.getId(), ex);
+            }
+        }
+        return new DongBoIndexSummary(true, profiles.size(), success, failed);
+    }
 
     /**
      * Đồng bộ một hồ sơ ứng viên lên vector store.
@@ -74,19 +101,26 @@ public class CandidateProfileEmbeddingIndexService {
     }
 
     /**
-     * Upsert trạng thái index trong DB để có thể audit và retry khi cần.
+     * Ghi log trạng thái index mới để giữ quan hệ 1-nhiều giữa hồ sơ và lịch sử đồng bộ.
      */
     private void luuTrangThai(HoSoUngVien hoSoUngVien, String maDiem, String trangThai) {
-        ChiMucNhungHoSoUngVien chiMuc = chiMucRepository.findByHoSoUngVien_Id(hoSoUngVien.getId())
-                .orElseGet(ChiMucNhungHoSoUngVien::new);
+        ChiMucNhungHoSoUngVien chiMuc = new ChiMucNhungHoSoUngVien();
         chiMuc.setHoSoUngVien(hoSoUngVien);
         chiMuc.setMaDiem(maDiem);
         chiMuc.setTrangThai(trangThai);
+        chiMuc.setNgayTao(LocalDateTime.now());
         chiMucRepository.save(chiMuc);
     }
 
     private String taoMaDiem(Integer hoSoUngVienId) {
-        return "ho-so-ung-vien-" + hoSoUngVienId;
+        return UUID.nameUUIDFromBytes(("ho-so-ung-vien-" + hoSoUngVienId).getBytes(StandardCharsets.UTF_8)).toString();
+    }
+
+    /**
+     * Tạo vector truy vấn từ hồ sơ ứng viên để search các job phù hợp.
+     */
+    public List<Float> taoVectorTruyVan(HoSoUngVien hoSoUngVien) {
+        return vanBanNhungService.taoVector(ghepNoiDungNhung(hoSoUngVien));
     }
 
     /**
@@ -110,7 +144,7 @@ public class CandidateProfileEmbeddingIndexService {
         append(sb, "Muc tieu nghe nghiep", hoSoUngVien.getMucTieuNgheNghiep());
         append(sb, "Gioi thieu ban than", hoSoUngVien.getGioiThieuBanThan());
 
-        kyNangRepository.findByHoSoUngVien_Id(hoSoUngVien.getId()).forEach(item -> {
+        kyNangUngVienRepository.findByHoSoUngVien_Id(hoSoUngVien.getId()).forEach(item -> {
             if (item.getKyNang() != null) {
                 append(sb, "Ky nang", item.getKyNang().getTen());
             }
@@ -120,19 +154,31 @@ public class CandidateProfileEmbeddingIndexService {
                 append(sb, "Nganh nghe quan tam", item.getNganhNghe().getTen());
             }
         });
-        kinhNghiemRepository.findByHoSoUngVien_IdOrderByThoiGianBatDauDesc(hoSoUngVien.getId()).forEach(item -> {
+        hoSoKinhNghiemRepository.findByHoSoUngVien_IdOrderByKinhNghiem_ThoiGianBatDauDesc(hoSoUngVien.getId()).forEach(link -> {
+            var item = link.getKinhNghiem();
+            if (item == null) {
+                return;
+            }
             append(sb, "Kinh nghiem", item.getChucDanh());
             append(sb, "Cong ty", item.getTenCongTy());
             append(sb, "Mo ta cong viec", item.getMoTaCongViec());
             appendKhoangThoiGian(sb, "Thoi gian kinh nghiem", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
         });
-        hocVanRepository.findByHoSoUngVien_IdOrderByThoiGianBatDauDesc(hoSoUngVien.getId()).forEach(item -> {
+        hoSoHocVanRepository.findByHoSoUngVien_IdOrderByHocVan_ThoiGianBatDauDesc(hoSoUngVien.getId()).forEach(link -> {
+            var item = link.getHocVan();
+            if (item == null) {
+                return;
+            }
             append(sb, "Hoc van", item.getBacHoc());
             append(sb, "Chuyen nganh", item.getChuyenNganh());
             append(sb, "Truong", item.getTenTruong());
             appendKhoangThoiGian(sb, "Thoi gian hoc", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
         });
-        chungChiRepository.findByHoSoUngVien_IdOrderByNgayBatDauDesc(hoSoUngVien.getId()).forEach(item -> {
+        hoSoChungChiRepository.findByHoSoUngVien_IdOrderByChungChi_NgayBatDauDesc(hoSoUngVien.getId()).forEach(link -> {
+            var item = link.getChungChi();
+            if (item == null) {
+                return;
+            }
             append(sb, "Chung chi", item.getTenChungChi());
             if (item.getLoaiChungChi() != null) {
                 append(sb, "Loai chung chi", item.getLoaiChungChi().getTen());
@@ -164,5 +210,8 @@ public class CandidateProfileEmbeddingIndexService {
             return;
         }
         sb.append(label).append(": ").append(value.trim()).append('\n');
+    }
+
+    public record DongBoIndexSummary(boolean enabled, int tongSo, int soDaDongBo, int soThatBai) {
     }
 }

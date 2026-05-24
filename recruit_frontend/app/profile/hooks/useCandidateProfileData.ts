@@ -12,6 +12,7 @@ import {
 import type { LocalUser } from "./types";
 
 export type SummaryFormState = {
+  tenHoSo: string;
   gioiThieuBanThan: string;
   mucTieuNgheNghiep: string;
 };
@@ -26,6 +27,7 @@ export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me
   const [selectedSkillIds, setSelectedSkillIds] = useState<number[]>([]);
   const [selectedIndustryIds, setSelectedIndustryIds] = useState<number[]>([]);
   const [summaryForm, setSummaryForm] = useState<SummaryFormState>({
+    tenHoSo: "",
     gioiThieuBanThan: "",
     mucTieuNgheNghiep: "",
   });
@@ -53,6 +55,7 @@ export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me
         setSelectedSkillIds(cp?.kyNangs?.map((item) => item.id) ?? []);
         setSelectedIndustryIds(cp?.nganhNghes?.map((item) => item.id) ?? []);
         setSummaryForm({
+          tenHoSo: cp?.tenHoSo ?? "",
           gioiThieuBanThan: cp?.gioiThieuBanThan ?? "",
           mucTieuNgheNghiep: cp?.mucTieuNgheNghiep ?? "",
         });
@@ -69,6 +72,14 @@ export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me
   useEffect(() => {
     const loadActiveProfile = async () => {
       if (!activeProfileId) {
+        setCandidateData(null);
+        setSelectedSkillIds([]);
+        setSelectedIndustryIds([]);
+        setSummaryForm({
+          tenHoSo: "",
+          gioiThieuBanThan: "",
+          mucTieuNgheNghiep: "",
+        });
         return;
       }
 
@@ -78,6 +89,7 @@ export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me
         setSelectedSkillIds(cp.kyNangs.map((item) => item.id));
         setSelectedIndustryIds(cp.nganhNghes.map((item) => item.id));
         setSummaryForm({
+          tenHoSo: cp.tenHoSo ?? "",
           gioiThieuBanThan: cp.gioiThieuBanThan ?? "",
           mucTieuNgheNghiep: cp.mucTieuNgheNghiep ?? "",
         });

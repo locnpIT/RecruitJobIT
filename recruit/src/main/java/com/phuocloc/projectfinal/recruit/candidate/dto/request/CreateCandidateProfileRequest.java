@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CreateCandidateProfileRequest {
+    private String tenHoSo;
     private String mucTieuNgheNghiep;
     private String gioiThieuBanThan;
 }

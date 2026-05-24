@@ -7,19 +7,24 @@ export const branchSchema = z.object({
   tenXaPhuong: z.string().min(1, "Phường/xã không được để trống"),
 });
 
-export const ownerRegisterSchema = z.object({
-  ho: z.string().min(1, "Họ không được để trống"),
-  ten: z.string().min(1, "Tên không được để trống"),
-  email: z.string().email("Email không hợp lệ"),
-  soDienThoai: z.string().min(10, "Số điện thoại không hợp lệ"),
-  matKhau: z.string().min(6, "Mật khẩu phải ít nhất 6 ký tự"),
-  tenCongTy: z.string().min(1, "Tên công ty không được để trống"),
-  maSoThue: z.string().min(1, "Mã số thuế không được để trống"),
-  website: z.string().max(255).optional(),
-  moTaCongTy: z.string().max(5000).optional(),
-  chiNhanhs: z.array(branchSchema).min(1, "Cần ít nhất một chi nhánh"),
-  tepMinhChung: z.any().refine((files) => files?.length > 0, "Vui lòng tải lên file minh chứng"),
-});
+export const ownerRegisterSchema = z
+  .object({
+    ho: z.string().min(1, "Họ không được để trống"),
+    ten: z.string().min(1, "Tên không được để trống"),
+    email: z.string().email("Email không hợp lệ"),
+    soDienThoai: z.string().min(10, "Số điện thoại không hợp lệ"),
+    matKhau: z.string().min(6, "Mật khẩu phải ít nhất 6 ký tự"),
+    xacNhanMatKhau: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
+    tenCongTy: z.string().min(1, "Tên công ty không được để trống"),
+    maSoThue: z.string().min(1, "Mã số thuế không được để trống"),
+    website: z.string().max(255).optional(),
+    moTaCongTy: z.string().max(5000).optional(),
+    chiNhanhs: z.array(branchSchema).min(1, "Cần ít nhất một chi nhánh"),
+  })
+  .refine((data) => data.matKhau === data.xacNhanMatKhau, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["xacNhanMatKhau"],
+  });
 
 export type OwnerFormValues = z.infer<typeof ownerRegisterSchema>;
 

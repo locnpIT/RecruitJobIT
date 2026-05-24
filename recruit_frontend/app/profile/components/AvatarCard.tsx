@@ -35,7 +35,7 @@ export function AvatarCard({
           <input ref={fileInputRef} type="file" accept="image/*" onChange={onSelectAvatar} className="hidden" />
           <ProfileActionButton
             type="button"
-            variant="secondary"
+            variant="primary"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="px-3 py-1.5 text-xs"

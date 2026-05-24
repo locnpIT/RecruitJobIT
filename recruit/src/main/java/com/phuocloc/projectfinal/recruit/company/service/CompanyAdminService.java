@@ -23,8 +23,8 @@ import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeRe
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentStatus;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
-import com.phuocloc.projectfinal.recruit.candidate.repository.ChungChiUngVienRepository;
-import com.phuocloc.projectfinal.recruit.candidate.repository.HocVanUngVienRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoChungChiRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoHocVanRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangUngVienRepository;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
@@ -115,10 +115,10 @@ public class CompanyAdminService {
     private final TinTuyenDungRepository tinTuyenDungRepository;
     private final DonUngTuyenRepository donUngTuyenRepository;
     private final KyNangTinTuyenDungRepository kyNangTinTuyenDungRepository;
-    private final HocVanUngVienRepository hocVanUngVienRepository;
-    private final ChungChiUngVienRepository chungChiUngVienRepository;
-    private final KyNangRepository kyNangRepository;
+    private final HoSoHocVanRepository hoSoHocVanRepository;
+    private final HoSoChungChiRepository hoSoChungChiRepository;
     private final KyNangUngVienRepository kyNangUngVienRepository;
+    private final KyNangRepository kyNangRepository;
     private final NganhNgheRepository nganhNgheRepository;
     private final LoaiHinhLamViecRepository loaiHinhLamViecRepository;
     private final CapDoKinhNghiemRepository capDoKinhNghiemRepository;
@@ -883,7 +883,9 @@ public class CompanyAdminService {
     }
 
     private List<CompanyAdminApplicationResponse.HocVanItem> mapEducationItems(Integer profileId) {
-        return hocVanUngVienRepository.findByHoSoUngVien_IdOrderByThoiGianBatDauDesc(profileId).stream()
+        return hoSoHocVanRepository.findByHoSoUngVien_IdOrderByHocVan_ThoiGianBatDauDesc(profileId).stream()
+                .map(link -> link.getHocVan())
+                .filter(Objects::nonNull)
                 .map(item -> CompanyAdminApplicationResponse.HocVanItem.builder()
                         .id(item.getId() == null ? null : item.getId().longValue())
                         .tenTruong(item.getTenTruong())
@@ -898,7 +900,9 @@ public class CompanyAdminService {
     }
 
     private List<CompanyAdminApplicationResponse.ChungChiItem> mapCertificateItems(Integer profileId) {
-        return chungChiUngVienRepository.findByHoSoUngVien_IdOrderByNgayBatDauDesc(profileId).stream()
+        return hoSoChungChiRepository.findByHoSoUngVien_IdOrderByChungChi_NgayBatDauDesc(profileId).stream()
+                .map(link -> link.getChungChi())
+                .filter(Objects::nonNull)
                 .map(item -> CompanyAdminApplicationResponse.ChungChiItem.builder()
                         .id(item.getId() == null ? null : item.getId().longValue())
                         .loaiChungChiId(item.getLoaiChungChi() == null || item.getLoaiChungChi().getId() == null

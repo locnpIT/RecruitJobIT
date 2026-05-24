@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.domain.ungvien.entity;
 
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -20,10 +21,9 @@ public class ChungChiUngVien {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // Hồ sơ ứng viên sở hữu chứng chỉ này.
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hoSoUngVienId")
-    private HoSoUngVien hoSoUngVien;
+    @JoinColumn(name = "nguoiDungId")
+    private NguoiDung nguoiDung;
 
     // Loại chứng chỉ để phục vụ phân loại và hiển thị trên UI.
     @ManyToOne(fetch = FetchType.LAZY)

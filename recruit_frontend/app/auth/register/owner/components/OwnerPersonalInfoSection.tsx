@@ -49,6 +49,14 @@ export function OwnerPersonalInfoSection({ register, errors }: OwnerPersonalInfo
         <Input {...register("matKhau")} type="password" placeholder="••••••••" />
         {errors.matKhau ? <p className="mt-1 text-xs text-red-500">{errors.matKhau.message}</p> : null}
       </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-semibold text-slate-900">Xác nhận mật khẩu</label>
+        <Input {...register("xacNhanMatKhau")} type="password" placeholder="••••••••" />
+        {errors.xacNhanMatKhau ? (
+          <p className="mt-1 text-xs text-red-500">{errors.xacNhanMatKhau.message}</p>
+        ) : null}
+      </div>
     </section>
   );
 }

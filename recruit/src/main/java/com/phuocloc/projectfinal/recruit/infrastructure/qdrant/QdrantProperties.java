@@ -24,7 +24,7 @@ public class QdrantProperties {
     // Timeout cho mỗi request gọi Qdrant.
     private int timeoutMillis = 5000;
     // Kích thước vector phải đồng nhất giữa mọi collection.
-    private int vectorSize = 256;
+    private int vectorSize = 384;
     // Tên collection lưu embedding hồ sơ ứng viên.
     private String khoHoSoUngVien = "chi_muc_nhung_ho_so_ung_vien";
     // Tên collection lưu embedding đơn ứng tuyển.

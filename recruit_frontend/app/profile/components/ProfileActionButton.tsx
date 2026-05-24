@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 
-type Variant = "primary" | "secondary" | "danger";
+type Variant = "primary" | "secondary" | "muted" | "danger";
 
 export function ProfileActionButton({
   variant = "primary",
@@ -18,7 +18,9 @@ export function ProfileActionButton({
       ? "bg-[#008080] text-white hover:bg-[#006d6d]"
       : variant === "danger"
         ? "border border-red-300 bg-white text-red-700 hover:bg-red-50"
-        : "bg-slate-900 text-white hover:bg-slate-800";
+        : variant === "muted"
+          ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+          : "bg-slate-900 text-white hover:bg-slate-800";
 
   return (
     <Button variant="unstyled" {...props} className={`${base} ${palette} ${className}`.trim()}>

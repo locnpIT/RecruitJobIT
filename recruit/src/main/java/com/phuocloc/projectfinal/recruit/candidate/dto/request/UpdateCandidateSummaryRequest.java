@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UpdateCandidateSummaryRequest {
+    private String tenHoSo;
     private String gioiThieuBanThan;
     private String mucTieuNgheNghiep;
 }

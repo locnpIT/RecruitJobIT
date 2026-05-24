@@ -18,13 +18,17 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailRespon
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageSubscriptionResponse;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminReportResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminSettingsResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminUserResponse;
+import com.phuocloc.projectfinal.recruit.ai.service.CandidateProfileEmbeddingIndexService;
+import com.phuocloc.projectfinal.recruit.ai.service.JobEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyRepository;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchProperties;
+import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantProperties;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobElasticsearchIndexService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +59,9 @@ public class AdminService {
     private final ElasticsearchClientService elasticsearchClientService;
     private final ElasticsearchProperties elasticsearchProperties;
     private final PublicJobElasticsearchIndexService publicJobElasticsearchIndexService;
+    private final QdrantProperties qdrantProperties;
+    private final JobEmbeddingIndexService jobEmbeddingIndexService;
+    private final CandidateProfileEmbeddingIndexService candidateProfileEmbeddingIndexService;
 
     @Transactional(readOnly = true)
     public AdminDashboardStatsResponse getStats() {
@@ -309,6 +316,23 @@ public class AdminService {
                 .tongTinPublic(summary.getTongTinPublic())
                 .soDaDongBo(summary.getSoDaDongBo())
                 .soThatBai(summary.getSoThatBai())
+                .build();
+    }
+
+    @Transactional
+    public AdminQdrantReindexResponse reindexQdrantJobsAndProfiles() {
+        JobEmbeddingIndexService.DongBoIndexSummary jobs = jobEmbeddingIndexService.dongBoToanBoTinPublic();
+        CandidateProfileEmbeddingIndexService.DongBoIndexSummary profiles = candidateProfileEmbeddingIndexService.dongBoTatCaHoSo();
+        return AdminQdrantReindexResponse.builder()
+                .enabled(jobs.enabled() || profiles.enabled())
+                .jobCollection(qdrantProperties.getKhoTinTuyenDung())
+                .candidateProfileCollection(qdrantProperties.getKhoHoSoUngVien())
+                .tongTinTuyenDung(jobs.tongSo())
+                .soTinTuyenDungDaDongBo(jobs.soDaDongBo())
+                .soTinTuyenDungThatBai(jobs.soThatBai())
+                .tongHoSoUngVien(profiles.tongSo())
+                .soHoSoUngVienDaDongBo(profiles.soDaDongBo())
+                .soHoSoUngVienThatBai(profiles.soThatBai())
                 .build();
     }
 }

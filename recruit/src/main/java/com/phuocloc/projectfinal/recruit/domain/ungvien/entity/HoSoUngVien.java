@@ -37,6 +37,9 @@ public class HoSoUngVien {
     @JoinColumn(name = "nguoiDungId")
     private NguoiDung nguoiDung;
 
+    @Column(name = "tenHoSo")
+    private String tenHoSo;
+
     @Column(name = "mucTieuNgheNghiep", columnDefinition = "TEXT")
     private String mucTieuNgheNghiep;
 

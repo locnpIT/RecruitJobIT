@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,4 +39,7 @@ public class ChiMucNhungTinTuyenDung {
 
     @Column(name = "trangThai")
     private String trangThai;
+
+    @Column(name = "ngayTao")
+    private LocalDateTime ngayTao;
 }

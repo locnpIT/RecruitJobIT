@@ -12,6 +12,7 @@ import lombok.Getter;
 @Builder
 public class CandidateProfileListItemResponse {
     private Long id;
+    private String tenHoSo;
     private String tieuDe;
     private String mucTieuNgheNghiep;
     private String gioiThieuBanThan;

@@ -5,6 +5,7 @@ import { requirePathParam } from "./_shared/path-param";
 // hỗ trợ multi-profile + CRUD học vấn/chứng chỉ/kỹ năng/tóm tắt hồ sơ.
 export interface CandidateEducationItem {
   id: number;
+  duocChon: boolean;
   tenTruong: string;
   chuyenNganh: string | null;
   bacHoc: string | null;
@@ -16,6 +17,7 @@ export interface CandidateEducationItem {
 
 export interface CandidateWorkExperienceItem {
   id: number;
+  duocChon: boolean;
   tenCongTy: string;
   chucDanh: string | null;
   moTaCongViec: string | null;
@@ -25,6 +27,7 @@ export interface CandidateWorkExperienceItem {
 
 export interface CandidateCertificateItem {
   id: number;
+  duocChon: boolean;
   loaiChungChiId: number | null;
   loaiChungChiTen: string | null;
   tenChungChi: string;
@@ -36,6 +39,7 @@ export interface CandidateCertificateItem {
 
 export interface CandidateSkillItem {
   id: number;
+  duocChon: boolean;
   ten: string;
 }
 
@@ -46,6 +50,7 @@ export interface CandidateIndustryItem {
 
 export interface CandidateProfile {
   hoSoUngVienId: number;
+  tenHoSo: string | null;
   gioiThieuBanThan: string | null;
   mucTieuNgheNghiep: string | null;
   hocVans: CandidateEducationItem[];
@@ -68,6 +73,7 @@ export interface CandidateProfileMetadata {
 
 export interface CandidateProfileListItem {
   id: number;
+  tenHoSo: string | null;
   tieuDe: string;
   mucTieuNgheNghiep: string | null;
   gioiThieuBanThan: string | null;
@@ -99,6 +105,13 @@ export interface UpsertWorkExperiencePayload {
   thoiGianKetThuc?: string;
 }
 
+export interface ProfileItemSelectionResponse {
+  profileId: number;
+  itemId: number;
+  loai: string;
+  duocChon: boolean;
+}
+
 export const candidateProfileService = {
   getProfile: async (): Promise<CandidateProfile> => {
     const response = await apiClient.get("/candidate/profile");
@@ -111,6 +124,7 @@ export const candidateProfileService = {
   },
 
   createProfile: async (payload?: {
+    tenHoSo?: string;
     gioiThieuBanThan?: string;
     mucTieuNgheNghiep?: string;
   }): Promise<CandidateProfileListItem> => {
@@ -121,6 +135,13 @@ export const candidateProfileService = {
   getProfileById: async (profileId: number): Promise<CandidateProfile> => {
     const safeProfileId = requirePathParam(profileId, "profileId");
     const response = await apiClient.get(`/candidate/profile/${safeProfileId}`);
+    return response.data.data as CandidateProfile;
+  },
+
+  syncProfileIndex: async (profileId?: number | null): Promise<CandidateProfile> => {
+    const response = profileId
+      ? await apiClient.post(`/candidate/profile/${requirePathParam(profileId, "profileId")}/sync-index`)
+      : await apiClient.post("/candidate/profile/sync-index");
     return response.data.data as CandidateProfile;
   },
 
@@ -253,6 +274,7 @@ export const candidateProfileService = {
   },
 
   updateSummary: async (payload: {
+    tenHoSo?: string;
     gioiThieuBanThan?: string;
     mucTieuNgheNghiep?: string;
   }): Promise<CandidateProfile> => {
@@ -261,6 +283,7 @@ export const candidateProfileService = {
   },
 
   updateSummaryByProfile: async (profileId: number, payload: {
+    tenHoSo?: string;
     gioiThieuBanThan?: string;
     mucTieuNgheNghiep?: string;
   }): Promise<CandidateProfile> => {
@@ -268,4 +291,47 @@ export const candidateProfileService = {
     const response = await apiClient.patch(`/candidate/profile/${safeProfileId}/summary`, payload);
     return response.data.data as CandidateProfile;
   },
+
+  updateEducationSelectionByProfile: async (
+    profileId: number,
+    educationId: number,
+    duocChon: boolean,
+  ): Promise<ProfileItemSelectionResponse> => {
+    const safeProfileId = requirePathParam(profileId, "profileId");
+    const safeEducationId = requirePathParam(educationId, "educationId");
+    const response = await apiClient.put(
+      `/candidate/profile/${safeProfileId}/educations/${safeEducationId}/selection`,
+      { duocChon },
+    );
+    return response.data.data as ProfileItemSelectionResponse;
+  },
+
+  updateExperienceSelectionByProfile: async (
+    profileId: number,
+    experienceId: number,
+    duocChon: boolean,
+  ): Promise<ProfileItemSelectionResponse> => {
+    const safeProfileId = requirePathParam(profileId, "profileId");
+    const safeExperienceId = requirePathParam(experienceId, "experienceId");
+    const response = await apiClient.put(
+      `/candidate/profile/${safeProfileId}/experiences/${safeExperienceId}/selection`,
+      { duocChon },
+    );
+    return response.data.data as ProfileItemSelectionResponse;
+  },
+
+  updateCertificateSelectionByProfile: async (
+    profileId: number,
+    certificateId: number,
+    duocChon: boolean,
+  ): Promise<ProfileItemSelectionResponse> => {
+    const safeProfileId = requirePathParam(profileId, "profileId");
+    const safeCertificateId = requirePathParam(certificateId, "certificateId");
+    const response = await apiClient.put(
+      `/candidate/profile/${safeProfileId}/certificates/${safeCertificateId}/selection`,
+      { duocChon },
+    );
+    return response.data.data as ProfileItemSelectionResponse;
+  },
+
 };

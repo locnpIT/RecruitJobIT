@@ -23,7 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
  * Service quản lý thông báo trong hệ thống.
  *
  * <p>Thông báo được lưu theo từng người dùng, hỗ trợ list, đếm chưa đọc,
- * đánh dấu đã đọc và xóa mềm. Deep-link được nhúng trong cột noiDung dạng JSON string.</p>
+ * đánh dấu đã đọc và xóa mềm. Nội dung và đường dẫn được tách thành 2 cột riêng.</p>
  */
 public class NotificationService {
 
@@ -109,18 +109,18 @@ public class NotificationService {
         ThongBao entity = new ThongBao();
         entity.setNguoiDung(user);
         entity.setTieuDe(trimToFallback(title, "Thông báo hệ thống"));
-        entity.setNoiDung(NotificationPayloadCodec.encode(text, link));
+        entity.setNoiDung(trimToFallback(text, ""));
+        entity.setDuongDan(trimToNull(link));
         entity.setDaDoc(false);
         thongBaoRepository.save(entity);
     }
 
     private NotificationItemResponse mapItem(ThongBao entity) {
-        NotificationPayloadCodec.DecodedPayload payload = NotificationPayloadCodec.decode(entity.getNoiDung());
         return NotificationItemResponse.builder()
                 .id(entity.getId() == null ? null : entity.getId().longValue())
                 .tieuDe(entity.getTieuDe())
-                .noiDung(payload.getText())
-                .duongDan(payload.getLink())
+                .noiDung(entity.getNoiDung())
+                .duongDan(trimToNull(entity.getDuongDan()))
                 .daDoc(Boolean.TRUE.equals(entity.getDaDoc()))
                 .ngayTao(entity.getNgayTao())
                 .build();
@@ -144,5 +144,13 @@ public class NotificationService {
         }
         String normalized = value.trim();
         return normalized.isEmpty() ? fallback : normalized;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

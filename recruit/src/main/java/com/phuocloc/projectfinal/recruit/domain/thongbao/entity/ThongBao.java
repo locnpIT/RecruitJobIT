@@ -43,6 +43,9 @@ public class ThongBao {
     @Column(name = "noiDung", columnDefinition = "TEXT")
     private String noiDung;
 
+    @Column(name = "duongDan", columnDefinition = "TEXT")
+    private String duongDan;
+
     @Column(name = "daDoc")
     private Boolean daDoc;
 }

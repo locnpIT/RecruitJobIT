@@ -79,7 +79,17 @@ export interface RegisterOwnerPayload extends RegisterCandidatePayload {
     tenXaPhuong: string;
     laTruSoChinh: boolean;
   }>;
-  duongDanMinhChung: string;
+  minhChungs: Array<{
+    loaiTaiLieuId: number;
+    duongDanMinhChung: string;
+    tenTep?: string;
+  }>;
+}
+
+export interface OwnerProofTypeOption {
+  id: number | null;
+  ten: string | null;
+  moTa: string | null;
 }
 
 export const authService = {
@@ -133,5 +143,10 @@ export const authService = {
   registerOwner: async (data: RegisterOwnerPayload) => {
     const response = await apiClient.post("/auth/register-owner", data);
     return response.data.data;
+  },
+
+  getOwnerProofTypes: async (): Promise<OwnerProofTypeOption[]> => {
+    const response = await apiClient.get("/auth/proof-types");
+    return response.data.data as OwnerProofTypeOption[];
   },
 };

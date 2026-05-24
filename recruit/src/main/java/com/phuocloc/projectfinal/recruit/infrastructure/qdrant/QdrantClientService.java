@@ -1,6 +1,8 @@
 package com.phuocloc.projectfinal.recruit.infrastructure.qdrant;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URI;
@@ -12,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
@@ -72,6 +76,52 @@ public class QdrantClientService {
         ensureCollection(collection);
         Map<String, Object> body = Map.of("points", List.of(pointId));
         sendRequest("POST", "/collections/" + encoded(collection) + "/points/delete?wait=true", body, true);
+    }
+
+    /**
+     * Search vector trong một collection và trả về payload để service nghiệp vụ map về entity.
+     */
+    public List<QdrantSearchResult> searchPoints(String collection, List<Float> vector, int limit) {
+        if (!isEnabled()) {
+            return List.of();
+        }
+        ensureCollection(collection);
+        Map<String, Object> body = Map.of(
+                "vector", vector,
+                "limit", Math.max(limit, 1),
+                "with_payload", true,
+                "with_vector", false
+        );
+        HttpResponse<String> response = sendRequest(
+                "POST",
+                "/collections/" + encoded(collection) + "/points/search",
+                body,
+                true
+        );
+        return parseSearchResults(response.body());
+    }
+
+    /**
+     * Lấy lại vector của một point đã upsert trong Qdrant.
+     * Dùng cho lazy cache: lần đầu tạo embedding, các lần sau lấy vector từ collection thay vì gọi model lại.
+     */
+    public Optional<List<Float>> getPointVector(String collection, String pointId) {
+        if (!isEnabled() || !StringUtils.hasText(pointId)) {
+            return Optional.empty();
+        }
+        ensureCollection(collection);
+        Map<String, Object> body = Map.of(
+                "ids", List.of(pointId),
+                "with_payload", false,
+                "with_vector", true
+        );
+        HttpResponse<String> response = sendRequest(
+                "POST",
+                "/collections/" + encoded(collection) + "/points",
+                body,
+                true
+        );
+        return parsePointVector(response.body());
     }
 
     /**
@@ -201,6 +251,50 @@ public class QdrantClientService {
             return objectMapper.writeValueAsString(value);
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("Không serialize được request body gửi Qdrant", ex);
+        }
+    }
+
+    private List<QdrantSearchResult> parseSearchResults(String body) {
+        try {
+            JsonNode resultNode = objectMapper.readTree(body).path("result");
+            if (!resultNode.isArray()) {
+                return List.of();
+            }
+            List<QdrantSearchResult> results = new ArrayList<>(resultNode.size());
+            for (JsonNode item : resultNode) {
+                Map<String, Object> payload = objectMapper.convertValue(
+                        item.path("payload"),
+                        new TypeReference<Map<String, Object>>() {}
+                );
+                results.add(new QdrantSearchResult(
+                        item.path("id").asText(),
+                        item.path("score").asDouble(),
+                        payload == null ? Map.of() : payload
+                ));
+            }
+            return results;
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Không parse được response search từ Qdrant", ex);
+        }
+    }
+
+    private Optional<List<Float>> parsePointVector(String body) {
+        try {
+            JsonNode resultNode = objectMapper.readTree(body).path("result");
+            if (!resultNode.isArray() || resultNode.isEmpty()) {
+                return Optional.empty();
+            }
+            JsonNode vectorNode = resultNode.get(0).path("vector");
+            if (!vectorNode.isArray()) {
+                return Optional.empty();
+            }
+            List<Float> vector = new ArrayList<>(vectorNode.size());
+            for (JsonNode item : vectorNode) {
+                vector.add((float) item.asDouble());
+            }
+            return vector.isEmpty() ? Optional.empty() : Optional.of(vector);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Không parse được vector point từ Qdrant", ex);
         }
     }
 }

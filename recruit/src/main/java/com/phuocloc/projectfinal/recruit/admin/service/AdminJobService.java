@@ -184,6 +184,9 @@ public class AdminJobService {
         String companyName = job.getChiNhanh() != null && job.getChiNhanh().getCongTy() != null
                 ? job.getChiNhanh().getCongTy().getTen()
                 : null;
+        String companyLogoUrl = job.getChiNhanh() != null && job.getChiNhanh().getCongTy() != null
+                ? job.getChiNhanh().getCongTy().getLogoUrl()
+                : null;
         String branchName = job.getChiNhanh() == null ? null : job.getChiNhanh().getTen();
         String xaPhuong = job.getChiNhanh() == null || job.getChiNhanh().getXaPhuong() == null
                 ? null
@@ -201,6 +204,7 @@ public class AdminJobService {
                 .id(job.getId() == null ? null : job.getId().longValue())
                 .tieuDe(job.getTieuDe())
                 .congTyTen(companyName)
+                .congTyLogoUrl(companyLogoUrl)
                 .chiNhanhTen(branchName)
                 .diaDiem(diaDiem)
                 .nganhNgheTen(job.getNganhNghe() == null ? null : job.getNganhNghe().getTen())
