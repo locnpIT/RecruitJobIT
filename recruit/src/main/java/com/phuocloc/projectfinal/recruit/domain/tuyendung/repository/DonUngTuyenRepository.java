@@ -13,6 +13,8 @@ public interface DonUngTuyenRepository extends JpaRepository<DonUngTuyen, Intege
 
     List<DonUngTuyen> findByTinTuyenDung_ChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer chiNhanhId);
 
+    List<DonUngTuyen> findByTinTuyenDung_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer tinTuyenDungId);
+
     Optional<DonUngTuyen> findByIdAndNgayXoaIsNull(Integer id);
 
     boolean existsByTinTuyenDung_IdAndHoSoUngVien_NguoiDung_IdAndNgayXoaIsNull(Integer tinTuyenDungId, Integer nguoiDungId);

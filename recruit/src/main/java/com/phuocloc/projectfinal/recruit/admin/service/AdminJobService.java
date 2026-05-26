@@ -79,8 +79,8 @@ public class AdminJobService {
                 "/company-admin/jobs"
         );
         TinTuyenDung saved = tinTuyenDungRepository.save(job);
-        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(saved);
-        publicJobElasticsearchIndexService.dongBoHoacXoa(saved);
+        chiMucNhungTinTuyenDungService.syncOrDeactivateIndex(saved);
+        publicJobElasticsearchIndexService.syncOrDelete(saved);
         return mapJob(saved);
     }
 
@@ -100,8 +100,8 @@ public class AdminJobService {
                 "/company-admin/jobs"
         );
         TinTuyenDung saved = tinTuyenDungRepository.save(job);
-        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(saved);
-        publicJobElasticsearchIndexService.dongBoHoacXoa(saved);
+        chiMucNhungTinTuyenDungService.syncOrDeactivateIndex(saved);
+        publicJobElasticsearchIndexService.syncOrDelete(saved);
         return mapJob(saved);
     }
 
@@ -116,8 +116,8 @@ public class AdminJobService {
                 "/company-admin/jobs"
         );
         TinTuyenDung saved = tinTuyenDungRepository.save(job);
-        chiMucNhungTinTuyenDungService.dongBoHoacTamDungChiMuc(saved);
-        publicJobElasticsearchIndexService.dongBoHoacXoa(saved);
+        chiMucNhungTinTuyenDungService.syncOrDeactivateIndex(saved);
+        publicJobElasticsearchIndexService.syncOrDelete(saved);
         return mapJob(saved);
     }
 

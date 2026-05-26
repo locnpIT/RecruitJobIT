@@ -45,7 +45,7 @@ export function CompanyAdminApplicationsClient() {
 
       <ApplicationFilters
         branches={data.branches}
-        applications={data.applications}
+        jobs={data.jobs}
         selectedBranchId={data.selectedBranchId}
         filters={data.filters}
         onBranchChange={data.setSelectedBranchId}
@@ -68,6 +68,7 @@ export function CompanyAdminApplicationsClient() {
         loading={data.isLoadingApplications}
         activeFilterJobId={data.filters.jobId}
         openingChatApplicationId={actions.openingChatApplicationId}
+        openingChatTargetKey={actions.openingChatTargetKey}
         onOpenChat={actions.handleOpenChat}
         onOpenDetail={actions.handleOpenDetail}
       />
@@ -77,11 +78,27 @@ export function CompanyAdminApplicationsClient() {
         application={actions.selectedApplication}
         loading={actions.isLoadingDetail}
         savingStatus={actions.isSavingStatus}
-        openingChat={actions.openingChatApplicationId === actions.selectedApplication?.id}
+        openingChat={actions.openingChatTargetKey === resolveChatTargetKey(actions.selectedApplication)}
         onClose={() => actions.setDetailOpen(false)}
         onStatusChange={actions.handleStatusChange}
-        onOpenChat={() => actions.handleOpenChat(actions.selectedApplication?.id ?? null)}
+        onOpenChat={() =>
+          actions.handleOpenChat({
+            applicationId: actions.selectedApplication?.id ?? null,
+            jobId: actions.selectedApplication?.tinTuyenDungId ?? null,
+            profileId: actions.selectedApplication?.hoSoUngVienId ?? null,
+          })
+        }
       />
     </div>
   );
+}
+
+function resolveChatTargetKey(application: { id: number | null; tinTuyenDungId: number | null; hoSoUngVienId: number | null } | null) {
+  if (!application) {
+    return null;
+  }
+  if (application.id) {
+    return `application-${application.id}`;
+  }
+  return `profile-${application.tinTuyenDungId ?? "unknown"}-${application.hoSoUngVienId ?? "unknown"}`;
 }

@@ -205,12 +205,16 @@ export interface CompanyAdminApplicationSkill {
 
 export interface CompanyCandidateSemanticMatch {
   hoSoUngVienId: number | null;
+  donUngTuyenId?: number | null;
   nguoiDungId: number | null;
   tenHoSo: string | null;
   ungVienHoTen: string | null;
   email: string | null;
   soDienThoai: string | null;
   anhDaiDienUrl: string | null;
+  trangThaiDonUngTuyen?: string | null;
+  cvUrl?: string | null;
+  tieuDeTinTuyenDung?: string | null;
   mucTieuNgheNghiep: string | null;
   gioiThieuBanThan: string | null;
   diemPhuHop: number | null;

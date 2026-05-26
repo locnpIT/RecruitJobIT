@@ -84,6 +84,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final AuthUserProfileService userProfileService;
     private final CloudinaryStorageService cloudinaryStorageService;
     private final HrCredentialMailService hrCredentialMailService;
 
@@ -106,7 +107,7 @@ public class AuthService {
         user = usersRepository.save(user);
 
         String accessToken = jwtService.generateAccessToken(user);
-        return taoPhanHoiXacThuc(user, accessToken);
+        return buildAuthResponse(user, accessToken);
     }
 
     @Transactional
@@ -166,7 +167,7 @@ public class AuthService {
 
         String accessToken = jwtService.generateAccessToken(owner);
         String primaryProofUrl = savedProofDocuments.isEmpty() ? null : savedProofDocuments.getFirst().getDuongDanTep();
-        return taoPhanHoiTaoOwner(owner, congTy, chiNhanhs, primaryProofUrl, accessToken);
+        return buildCreateOwnerResponse(owner, congTy, chiNhanhs, primaryProofUrl, accessToken);
     }
 
     @Transactional(readOnly = true)
@@ -227,7 +228,7 @@ public class AuthService {
                 temporaryPassword
         );
 
-        return taoPhanHoiTaoNhaTuyenDung(hrUser, ownerCompany, branch, hrProfile);
+        return buildCreateEmployerResponse(hrUser, ownerCompany, branch, hrProfile);
     }
 
     @Transactional
@@ -250,60 +251,22 @@ public class AuthService {
         }
 
         String accessToken = jwtService.generateAccessToken(user);
-        return taoPhanHoiXacThuc(user, accessToken);
+        return buildAuthResponse(user, accessToken);
     }
 
     @Transactional(readOnly = true)
     public UserProfileResponse getCurrentUserProfile(Long userId) {
-        NguoiDung user = usersRepository.findById(toIntId(userId, "userId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
-        return mapUserProfile(user);
+        return userProfileService.getCurrentUserProfile(userId);
     }
 
     @Transactional
     public UserProfileResponse updateAvatar(Long userId, UpdateAvatarRequest request) {
-        if (request == null || !StringUtils.hasText(request.getAnhDaiDienUrl())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "anhDaiDienUrl không hợp lệ");
-        }
-
-        NguoiDung user = usersRepository.findById(toIntId(userId, "userId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
-        user.setAnhDaiDienUrl(request.getAnhDaiDienUrl().trim());
-        user = usersRepository.save(user);
-        return mapUserProfile(user);
+        return userProfileService.updateAvatar(userId, request);
     }
 
     @Transactional
     public UserProfileResponse updateCurrentUserProfile(Long userId, UpdateUserProfileRequest request) {
-        if (request == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payload cập nhật không hợp lệ");
-        }
-
-        NguoiDung user = usersRepository.findById(toIntId(userId, "userId"))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
-
-        // Chuẩn hóa dữ liệu chuỗi theo nguyên tắc trimToNull để tránh lưu chuỗi rỗng.
-        if (request.getSoDienThoai() != null) {
-            user.setSoDienThoai(trimToNull(request.getSoDienThoai()));
-        }
-        if (request.getGioiTinh() != null) {
-            user.setGioiTinh(trimToNull(request.getGioiTinh()));
-        }
-        if (request.getDiaChiChiTiet() != null) {
-            user.setDiaChiChiTiet(trimToNull(request.getDiaChiChiTiet()));
-        }
-        if (request.getNgaySinh() != null) {
-            user.setNgaySinh(request.getNgaySinh());
-        }
-        // Cho phép clear xã/phường bằng cách gửi xaPhuongId = null từ client.
-        if (request.getXaPhuongId() == null) {
-            user.setXaPhuong(null);
-        } else {
-            user.setXaPhuong(resolveXaPhuong(request.getXaPhuongId()));
-        }
-
-        user = usersRepository.save(user);
-        return mapUserProfile(user);
+        return userProfileService.updateCurrentUserProfile(userId, request);
     }
 
     private ThanhVienCongTy requireOwnerProfile(Long ownerUserId) {
@@ -542,7 +505,7 @@ public class AuthService {
         return id.intValue();
     }
 
-    private AuthResponse taoPhanHoiXacThuc(NguoiDung nguoiDung, String accessToken) {
+    private AuthResponse buildAuthResponse(NguoiDung nguoiDung, String accessToken) {
         AuthResponse.ThongTinNguoiDung thongTinNguoiDung = AuthResponse.ThongTinNguoiDung.builder()
                 .id(nguoiDung.getId() == null ? null : nguoiDung.getId().longValue())
                 .email(nguoiDung.getEmail())
@@ -565,35 +528,7 @@ public class AuthService {
         return response;
     }
 
-    private UserProfileResponse mapUserProfile(NguoiDung user) {
-        return UserProfileResponse.builder()
-                .id(user.getId() == null ? null : user.getId().longValue())
-                .email(user.getEmail())
-                .ten(user.getTen())
-                .ho(user.getHo())
-                .soDienThoai(user.getSoDienThoai())
-                .ngaySinh(user.getNgaySinh())
-                .gioiTinh(user.getGioiTinh())
-                .diaChiChiTiet(user.getDiaChiChiTiet())
-                .xaPhuongId(user.getXaPhuong() == null || user.getXaPhuong().getId() == null
-                        ? null
-                        : user.getXaPhuong().getId().longValue())
-                .xaPhuongTen(user.getXaPhuong() == null ? null : user.getXaPhuong().getTen())
-                .tinhThanhId(user.getXaPhuong() == null
-                        || user.getXaPhuong().getTinhThanh() == null
-                        || user.getXaPhuong().getTinhThanh().getId() == null
-                        ? null
-                        : user.getXaPhuong().getTinhThanh().getId().longValue())
-                .tinhThanhTen(user.getXaPhuong() == null || user.getXaPhuong().getTinhThanh() == null
-                        ? null
-                        : user.getXaPhuong().getTinhThanh().getTen())
-                .vaiTro(user.getVaiTroHeThong() == null ? null : user.getVaiTroHeThong().getTen())
-                .dangHoatDong(user.getDangHoatDong())
-                .anhDaiDienUrl(user.getAnhDaiDienUrl())
-                .build();
-    }
-
-    private CreateOwnerResponse taoPhanHoiTaoOwner(
+    private CreateOwnerResponse buildCreateOwnerResponse(
             NguoiDung owner,
             CongTy congTy,
             List<ChiNhanhCongTy> chiNhanhs,
@@ -646,7 +581,7 @@ public class AuthService {
                 .build();
     }
 
-    private CreateEmployerResponse taoPhanHoiTaoNhaTuyenDung(
+    private CreateEmployerResponse buildCreateEmployerResponse(
             NguoiDung hrUser,
             CongTy ownerCompany,
             ChiNhanhCongTy branch,

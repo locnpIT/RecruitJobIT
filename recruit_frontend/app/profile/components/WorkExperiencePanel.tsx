@@ -2,14 +2,7 @@ import { useState } from "react";
 import type { CandidateWorkExperienceItem } from "@/services/candidate-profile.service";
 import { ProfileActionButton } from "./ProfileActionButton";
 import { WorkExperienceModal } from "./modals/WorkExperienceModal";
-
-type WorkExperienceFormState = {
-  tenCongTy: string;
-  chucDanh: string;
-  moTaCongViec: string;
-  thoiGianBatDau: string;
-  thoiGianKetThuc: string;
-};
+import type { WorkExperienceFormState } from "./modals/profileFormTypes";
 
 export function WorkExperiencePanel({
   submitting,
@@ -89,6 +82,7 @@ export function WorkExperiencePanel({
 
       {open ? (
         <WorkExperienceModal
+          key={editingItem ? `edit-${editingItem.id}` : "create"}
           open={open}
           items={items}
           submitting={submitting}

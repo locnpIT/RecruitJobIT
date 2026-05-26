@@ -82,16 +82,30 @@ public class QdrantClientService {
      * Search vector trong một collection và trả về payload để service nghiệp vụ map về entity.
      */
     public List<QdrantSearchResult> searchPoints(String collection, List<Float> vector, int limit) {
+        return searchPoints(collection, vector, limit, Map.of());
+    }
+
+    /**
+     * Search vector kèm filter payload dạng equals để giới hạn phạm vi semantic search.
+     */
+    public List<QdrantSearchResult> searchPoints(
+            String collection,
+            List<Float> vector,
+            int limit,
+            Map<String, Object> payloadEquals
+    ) {
         if (!isEnabled()) {
             return List.of();
         }
         ensureCollection(collection);
-        Map<String, Object> body = Map.of(
-                "vector", vector,
-                "limit", Math.max(limit, 1),
-                "with_payload", true,
-                "with_vector", false
-        );
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("vector", vector);
+        body.put("limit", Math.max(limit, 1));
+        body.put("with_payload", true);
+        body.put("with_vector", false);
+        if (payloadEquals != null && !payloadEquals.isEmpty()) {
+            body.put("filter", buildPayloadEqualsFilter(payloadEquals));
+        }
         HttpResponse<String> response = sendRequest(
                 "POST",
                 "/collections/" + encoded(collection) + "/points/search",
@@ -99,6 +113,17 @@ public class QdrantClientService {
                 true
         );
         return parseSearchResults(response.body());
+    }
+
+    private Map<String, Object> buildPayloadEqualsFilter(Map<String, Object> payloadEquals) {
+        List<Map<String, Object>> must = payloadEquals.entrySet().stream()
+                .filter(entry -> StringUtils.hasText(entry.getKey()) && entry.getValue() != null)
+                .map(entry -> Map.of(
+                        "key", entry.getKey(),
+                        "match", Map.of("value", entry.getValue())
+                ))
+                .toList();
+        return Map.of("must", must);
     }
 
     /**
@@ -122,6 +147,28 @@ public class QdrantClientService {
                 true
         );
         return parsePointVector(response.body());
+    }
+
+    /**
+     * Lấy payload của một point để kiểm tra metadata index mà không cần tải vector.
+     */
+    public Optional<Map<String, Object>> getPointPayload(String collection, String pointId) {
+        if (!isEnabled() || !StringUtils.hasText(pointId)) {
+            return Optional.empty();
+        }
+        ensureCollection(collection);
+        Map<String, Object> body = Map.of(
+                "ids", List.of(pointId),
+                "with_payload", true,
+                "with_vector", false
+        );
+        HttpResponse<String> response = sendRequest(
+                "POST",
+                "/collections/" + encoded(collection) + "/points",
+                body,
+                true
+        );
+        return parsePointPayload(response.body());
     }
 
     /**
@@ -295,6 +342,22 @@ public class QdrantClientService {
             return vector.isEmpty() ? Optional.empty() : Optional.of(vector);
         } catch (JsonProcessingException ex) {
             throw new IllegalStateException("Không parse được vector point từ Qdrant", ex);
+        }
+    }
+
+    private Optional<Map<String, Object>> parsePointPayload(String body) {
+        try {
+            JsonNode resultNode = objectMapper.readTree(body).path("result");
+            if (!resultNode.isArray() || resultNode.isEmpty()) {
+                return Optional.empty();
+            }
+            Map<String, Object> payload = objectMapper.convertValue(
+                    resultNode.get(0).path("payload"),
+                    new TypeReference<Map<String, Object>>() {}
+            );
+            return payload == null || payload.isEmpty() ? Optional.empty() : Optional.of(payload);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Không parse được payload point từ Qdrant", ex);
         }
     }
 }

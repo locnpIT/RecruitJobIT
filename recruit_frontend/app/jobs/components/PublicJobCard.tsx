@@ -86,8 +86,8 @@ export function PublicJobCard({
             href={`/jobs/${job.id}`}
             className={
               isFeatured
-                ? "rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-                : "inline-flex h-10 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
+                ? "inline-flex h-10 items-center justify-center rounded-md bg-[#008080] px-4 text-sm font-semibold text-white hover:bg-[#006d6d]"
+                : "inline-flex h-10 items-center justify-center rounded-md bg-[#008080] px-4 text-sm font-semibold text-white hover:bg-[#006d6d]"
             }
           >
             Xem chi tiết

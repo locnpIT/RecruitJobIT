@@ -64,7 +64,7 @@ public class PublicJobElasticsearchSearchService {
         body.put("from", safePage * safeSize);
         body.put("size", safeSize);
         body.put("track_total_hits", true);
-        body.put("query", taoQuery(tuKhoa, diaDiem, nganhNgheId, loaiHinhLamViecId, capDoKinhNghiemId));
+        body.put("query", buildQuery(tuKhoa, diaDiem, nganhNgheId, loaiHinhLamViecId, capDoKinhNghiemId));
         body.put("sort", List.of(
                 Map.of("_score", "desc"),
                 Map.of("ngayTaoEpoch", "desc")
@@ -72,7 +72,7 @@ public class PublicJobElasticsearchSearchService {
         return elasticsearchClientService.searchDocuments(elasticsearchProperties.getJobIndex(), body);
     }
 
-    private Map<String, Object> taoQuery(
+    private Map<String, Object> buildQuery(
             String tuKhoa,
             String diaDiem,
             Integer nganhNgheId,

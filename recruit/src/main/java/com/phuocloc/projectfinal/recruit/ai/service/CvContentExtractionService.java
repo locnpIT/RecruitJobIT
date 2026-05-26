@@ -38,28 +38,28 @@ public class CvContentExtractionService {
      * <p>Ưu tiên parse PDF; nếu không phải PDF thì thử đọc như plain-text UTF-8.
      * Nếu có lỗi mạng/format, trả về {@code null} để caller fallback sang dữ liệu profile khác.</p>
      */
-    public String trichXuat(String cvUrl) {
+    public String extract(String cvUrl) {
         if (!StringUtils.hasText(cvUrl)) {
             return null;
         }
         String normalizedUrl = cvUrl.trim();
         try {
-            byte[] fileBytes = taiTep(normalizedUrl);
+            byte[] fileBytes = downloadFile(normalizedUrl);
             if (fileBytes.length == 0) {
                 return null;
             }
 
-            if (laPdf(normalizedUrl, fileBytes)) {
-                return gioiHanDoDai(chuanHoaVanBan(trichXuatTuPdf(fileBytes)));
+            if (isPdf(normalizedUrl, fileBytes)) {
+                return truncate(normalizeText(extractFromPdf(fileBytes)));
             }
-            return gioiHanDoDai(chuanHoaVanBan(new String(fileBytes, StandardCharsets.UTF_8)));
+            return truncate(normalizeText(new String(fileBytes, StandardCharsets.UTF_8)));
         } catch (Exception ex) {
             log.warn("Không trích xuất được nội dung CV từ URL {}", normalizedUrl, ex);
             return null;
         }
     }
 
-    private byte[] taiTep(String cvUrl) throws IOException, InterruptedException {
+    private byte[] downloadFile(String cvUrl) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(cvUrl))
                 .timeout(Duration.ofSeconds(HTTP_TIMEOUT_SECONDS))
@@ -72,7 +72,7 @@ public class CvContentExtractionService {
         return Objects.requireNonNullElse(response.body(), new byte[0]);
     }
 
-    private boolean laPdf(String cvUrl, byte[] fileBytes) {
+    private boolean isPdf(String cvUrl, byte[] fileBytes) {
         String lowerUrl = cvUrl.toLowerCase(Locale.ROOT);
         if (lowerUrl.contains(PDF_EXTENSION)) {
             return true;
@@ -85,14 +85,14 @@ public class CvContentExtractionService {
                 && fileBytes[3] == 0x46;
     }
 
-    private String trichXuatTuPdf(byte[] fileBytes) throws IOException {
+    private String extractFromPdf(byte[] fileBytes) throws IOException {
         try (PDDocument document = Loader.loadPDF(fileBytes)) {
             PDFTextStripper stripper = new PDFTextStripper();
             return stripper.getText(document);
         }
     }
 
-    private String chuanHoaVanBan(String raw) {
+    private String normalizeText(String raw) {
         if (!StringUtils.hasText(raw)) {
             return null;
         }
@@ -104,7 +104,7 @@ public class CvContentExtractionService {
                 .trim();
     }
 
-    private String gioiHanDoDai(String value) {
+    private String truncate(String value) {
         if (!StringUtils.hasText(value)) {
             return null;
         }

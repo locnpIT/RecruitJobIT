@@ -284,7 +284,7 @@ public class AdminService {
                     .build();
         }
         try {
-            ElasticsearchClientService.ElasticsearchClusterInfo info = elasticsearchClientService.layThongTinCluster();
+            ElasticsearchClientService.ElasticsearchClusterInfo info = elasticsearchClientService.getClusterInfo();
             return AdminElasticsearchHealthResponse.builder()
                     .enabled(true)
                     .reachable(true)
@@ -309,7 +309,7 @@ public class AdminService {
     @Transactional(readOnly = true)
     public AdminElasticsearchReindexResponse reindexPublicJobs() {
         PublicJobElasticsearchIndexService.DongBoIndexSummary summary =
-                publicJobElasticsearchIndexService.dongBoToanBoTinPublic();
+                publicJobElasticsearchIndexService.reindexAllPublicJobs();
         return AdminElasticsearchReindexResponse.builder()
                 .enabled(summary.isEnabled())
                 .jobIndex(elasticsearchProperties.getJobIndex())
@@ -321,8 +321,8 @@ public class AdminService {
 
     @Transactional
     public AdminQdrantReindexResponse reindexQdrantJobsAndProfiles() {
-        JobEmbeddingIndexService.DongBoIndexSummary jobs = jobEmbeddingIndexService.dongBoToanBoTinPublic();
-        CandidateProfileEmbeddingIndexService.DongBoIndexSummary profiles = candidateProfileEmbeddingIndexService.dongBoTatCaHoSo();
+        JobEmbeddingIndexService.DongBoIndexSummary jobs = jobEmbeddingIndexService.reindexAllPublicJobs();
+        CandidateProfileEmbeddingIndexService.DongBoIndexSummary profiles = candidateProfileEmbeddingIndexService.reindexAllProfiles();
         return AdminQdrantReindexResponse.builder()
                 .enabled(jobs.enabled() || profiles.enabled())
                 .jobCollection(qdrantProperties.getKhoTinTuyenDung())

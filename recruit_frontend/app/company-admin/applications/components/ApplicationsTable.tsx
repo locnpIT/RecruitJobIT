@@ -2,11 +2,17 @@ import { Download, Eye, Loader2 } from "lucide-react";
 import type { CompanyAdminApplication } from "@/services/company-admin/types";
 import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
 import { Button } from "@/components/ui/Button";
+import type { ApplicationCandidateMatch } from "./matching/types";
+import { MatchScoreBadge } from "./matching/MatchScoreBadge";
 
 type ApplicationsTableProps = {
   applications: CompanyAdminApplication[];
   loading: boolean;
+  semanticMatches?: ApplicationCandidateMatch[];
+  selectedMatchKey?: string | null;
+  showSemanticScore?: boolean;
   openingChatApplicationId: number | null;
+  onSelectSemanticMatch?: (matchKey: string) => void;
   onOpenChat: (applicationId: number | null) => void;
   onOpenDetail: (applicationId: number | null) => void;
 };
@@ -15,10 +21,20 @@ type ApplicationsTableProps = {
 export function ApplicationsTable({
   applications,
   loading,
+  semanticMatches = [],
+  selectedMatchKey,
+  showSemanticScore = false,
   openingChatApplicationId,
+  onSelectSemanticMatch,
   onOpenChat,
   onOpenDetail,
 }: ApplicationsTableProps) {
+  const matchByApplicationId = new Map(
+    semanticMatches
+      .filter((match) => match.applicationId != null)
+      .map((match) => [match.applicationId, match])
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white p-8 text-slate-500">
@@ -45,59 +61,96 @@ export function ApplicationsTable({
             <th className="py-3 font-medium">Tin tuyển dụng</th>
             <th className="py-3 font-medium">CV</th>
             <th className="py-3 font-medium">Trạng thái</th>
+            {showSemanticScore ? <th className="py-3 font-medium">AI Matching</th> : null}
             <th className="py-3 font-medium">Thời gian</th>
             <th className="py-3 pr-4 text-right font-medium">Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {applications.map((application) => (
-            <tr key={application.id ?? `${application.tinTuyenDungId}-${application.nguoiDungId}`} className="border-b border-slate-200 last:border-0">
-              <td className="py-3 pl-4">
-                <p className="font-medium text-slate-900">{application.ungVienHoTen ?? "--"}</p>
-                <p className="text-xs text-slate-500">{application.ungVienEmail ?? "--"}</p>
-              </td>
-              <td className="max-w-xs py-3 text-slate-600">{application.tieuDeTinTuyenDung ?? "--"}</td>
-              <td className="py-3 text-slate-600">
-                {application.cvUrl ? (
-                  <a href={application.cvUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-slate-800 hover:underline">
-                    <Download className="h-4 w-4" />
-                    Tải CV
-                  </a>
-                ) : (
-                  <span className="text-slate-400">Không có</span>
-                )}
-              </td>
-              <td className="py-3"><ApplicationStatusBadge status={application.trangThai} /></td>
-              <td className="py-3 text-slate-600">{formatDateTime(application.ngayTao)}</td>
-              <td className="py-3 pr-4 text-right">
-                <div className="inline-flex items-center gap-2">
-                  <Button variant="unstyled"
+          {applications.map((application) => {
+            const semanticMatch = application.id == null ? null : matchByApplicationId.get(application.id);
+            const selected = semanticMatch?.matchKey === selectedMatchKey;
+
+            return (
+              <tr
+                key={application.id ?? `${application.tinTuyenDungId}-${application.nguoiDungId}`}
+                className={`border-b border-slate-200 last:border-0 ${selected ? "bg-teal-50/60" : "bg-white"}`}
+              >
+                <td className="py-3 pl-4">
+                  <button
                     type="button"
-                    disabled={openingChatApplicationId === application.id}
-                    onClick={() => onOpenChat(application.id)}
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                    onClick={() => {
+                      if (semanticMatch) {
+                        onSelectSemanticMatch?.(semanticMatch.matchKey);
+                      }
+                    }}
+                    className="text-left"
                   >
-                    {openingChatApplicationId === application.id ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Đang mở chat...
-                      </>
+                    <p className="font-medium text-slate-900">{application.ungVienHoTen ?? "--"}</p>
+                    <p className="text-xs text-slate-500">{application.ungVienEmail ?? "--"}</p>
+                  </button>
+                </td>
+                <td className="max-w-xs py-3 text-slate-600">{application.tieuDeTinTuyenDung ?? "--"}</td>
+                <td className="py-3 text-slate-600">
+                  {application.cvUrl ? (
+                    <a href={application.cvUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-slate-800 hover:underline">
+                      <Download className="h-4 w-4" />
+                      Tải CV
+                    </a>
+                  ) : (
+                    <span className="text-slate-400">Không có</span>
+                  )}
+                </td>
+                <td className="py-3"><ApplicationStatusBadge status={application.trangThai} /></td>
+                {showSemanticScore ? (
+                  <td className="py-3">
+                    {semanticMatch ? (
+                      <button
+                        type="button"
+                        onClick={() => onSelectSemanticMatch?.(semanticMatch.matchKey)}
+                        className="space-y-1 text-left"
+                      >
+                        <MatchScoreBadge score={semanticMatch.score} />
+                        <p className="max-w-[220px] truncate text-xs text-slate-500">
+                          {semanticMatch.matchedSignals[0] ?? semanticMatch.reason}
+                        </p>
+                      </button>
                     ) : (
-                      "Gửi tin nhắn"
+                      <span className="text-xs text-slate-400">Chưa có điểm</span>
                     )}
-                  </Button>
-                  <Button variant="unstyled"
-                    type="button"
-                    onClick={() => onOpenDetail(application.id)}
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                  >
-                    <Eye className="h-4 w-4" />
-                    Xem hồ sơ
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
+                  </td>
+                ) : null}
+                <td className="py-3 text-slate-600">{formatDateTime(application.ngayTao)}</td>
+                <td className="py-3 pr-4 text-right">
+                  <div className="inline-flex items-center gap-2">
+                    <Button variant="unstyled"
+                      type="button"
+                      disabled={openingChatApplicationId === application.id}
+                      onClick={() => onOpenChat(application.id)}
+                      className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                      {openingChatApplicationId === application.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Đang mở chat...
+                        </>
+                      ) : (
+                        "Gửi tin nhắn"
+                      )}
+                    </Button>
+                    <Button variant="unstyled"
+                      type="button"
+                      onClick={() => onOpenDetail(application.id)}
+                      className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Xem hồ sơ
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

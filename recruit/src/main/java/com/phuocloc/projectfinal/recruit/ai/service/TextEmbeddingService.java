@@ -8,6 +8,6 @@ import java.util.List;
  */
 public interface TextEmbeddingService {
 
-    List<Float> taoVector(String noiDung);
+    List<Float> generateVector(String noiDung);
 }
 

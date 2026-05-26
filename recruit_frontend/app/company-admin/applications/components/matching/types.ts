@@ -8,9 +8,11 @@ export type ApplicationMatchingJobOption = {
 export type ApplicationCandidateMatch = {
   matchKey: string;
   applicationId: number | null;
+  jobId: number | null;
   profileId: number | null;
   candidateName: string;
   candidateEmail: string;
+  candidateAvatarUrl: string | null;
   profileTitle: string;
   jobTitle: string;
   status: string | null;

@@ -3,15 +3,7 @@ import type { CandidateEducationItem } from "@/services/candidate-profile.servic
 import { ProofStatusPill } from "./ProofStatusPill";
 import { ProfileActionButton } from "./ProfileActionButton";
 import { EducationModal } from "./modals/EducationModal";
-
-type EducationFormState = {
-  tenTruong: string;
-  chuyenNganh: string;
-  bacHoc: string;
-  thoiGianBatDau: string;
-  thoiGianKetThuc: string;
-  duongDanTep: string;
-};
+import type { EducationFormState } from "./modals/profileFormTypes";
 
 export function EducationPanel({
   submitting,
@@ -100,6 +92,7 @@ export function EducationPanel({
 
       {open ? (
         <EducationModal
+          key={editingItem ? `edit-${editingItem.id}` : "create"}
           open={open}
           items={items}
           submitting={submitting}

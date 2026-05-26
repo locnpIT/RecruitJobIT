@@ -2,6 +2,7 @@ import apiClient from "@/lib/api-client";
 import { requirePathParam } from "@/services/_shared/path-param";
 import type {
   CompanyAdminJob,
+  CompanyAdminApplication,
   CompanyCandidateSemanticMatch,
   CompanyJobMetadata,
   CreateCompanyJobPayload,
@@ -44,5 +45,20 @@ export const companyAdminJobsService = {
       params: { limit },
     });
     return response.data.data as CompanyCandidateSemanticMatch[];
+  },
+
+  getApplicationMatches: async (jobId: number, limit = 10): Promise<CompanyCandidateSemanticMatch[]> => {
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const response = await apiClient.get(`/company-admin/jobs/${safeJobId}/application-matches`, {
+      params: { limit },
+    });
+    return response.data.data as CompanyCandidateSemanticMatch[];
+  },
+
+  getCandidateProfileForJob: async (jobId: number, profileId: number): Promise<CompanyAdminApplication> => {
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const safeProfileId = requirePathParam(profileId, "profileId");
+    const response = await apiClient.get(`/company-admin/jobs/${safeJobId}/candidate-profiles/${safeProfileId}`);
+    return response.data.data as CompanyAdminApplication;
   },
 };

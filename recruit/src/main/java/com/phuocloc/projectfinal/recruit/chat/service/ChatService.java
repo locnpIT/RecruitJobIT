@@ -1,6 +1,7 @@
 package com.phuocloc.projectfinal.recruit.chat.service;
 
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.CandidateProfileRepository;
 import com.phuocloc.projectfinal.recruit.chat.dto.request.CreateChatMessageRequest;
 import com.phuocloc.projectfinal.recruit.chat.dto.response.ChatConversationResponse;
 import com.phuocloc.projectfinal.recruit.chat.dto.response.ChatMessageResponse;
@@ -19,6 +20,7 @@ import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.DonUngTuyenRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
+import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobService;
 import java.util.Comparator;
 import java.util.List;
@@ -56,8 +58,10 @@ public class ChatService {
     private final TinNhanRepository tinNhanRepository;
     private final DonUngTuyenRepository donUngTuyenRepository;
     private final TinTuyenDungRepository tinTuyenDungRepository;
+    private final CandidateProfileRepository candidateProfileRepository;
     private final ThanhVienCongTyRepository thanhVienCongTyRepository;
     private final ChatRealtimePublisher chatRealtimePublisher;
+    private final ChatResponseMapper responseMapper;
 
     @Transactional
     public ChatConversationResponse openConversationByPublicJob(Long userId, Long jobId) {
@@ -81,7 +85,7 @@ public class ChatService {
                 .findByUngVien_IdAndNhaTuyenDung_Id(viewerId, recruiterId)
                 .orElseGet(() -> cuocTroChuyenRepository.save(new CuocTroChuyen(null, null, viewer, recruiter)));
 
-        return mapConversation(conversation, viewerId);
+        return responseMapper.mapConversation(conversation, viewerId);
     }
 
     @Transactional
@@ -115,7 +119,43 @@ public class ChatService {
                 .findByUngVien_IdAndNhaTuyenDung_Id(candidateId, viewerId)
                 .orElseGet(() -> cuocTroChuyenRepository.save(new CuocTroChuyen(null, null, candidate, recruiter)));
 
-        return mapConversation(conversation, viewerId);
+        return responseMapper.mapConversation(conversation, viewerId);
+    }
+
+    @Transactional
+    public ChatConversationResponse openConversationByCandidateProfileForRecruiter(Long userId, Long jobId, Long profileId) {
+        Integer viewerId = toIntId(userId, "userId");
+        Integer safeJobId = toIntId(jobId, "jobId");
+        Integer safeProfileId = toIntId(profileId, "profileId");
+
+        TinTuyenDung job = tinTuyenDungRepository.findById(safeJobId)
+                .filter(item -> item.getNgayXoa() == null)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng"));
+        if (job.getChiNhanh() == null || job.getChiNhanh().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tin tuyển dụng chưa gắn chi nhánh hợp lệ");
+        }
+
+        // Chỉ owner/hr/master-branch của chi nhánh quản lý tin mới được chủ động mở chat với ứng viên.
+        companyAdminAccessService.requireMembership(viewerId, job.getChiNhanh().getId(), COMPANY_CHAT_ROLES);
+
+        HoSoUngVien profile = candidateProfileRepository.findById(safeProfileId)
+                .filter(item -> item.getNgayXoa() == null)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy hồ sơ ứng viên"));
+        Integer candidateId = profile.getNguoiDung() == null ? null : profile.getNguoiDung().getId();
+        if (candidateId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hồ sơ ứng viên chưa có người dùng hợp lệ");
+        }
+        if (Objects.equals(viewerId, candidateId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bạn không thể tự chat với chính mình");
+        }
+
+        NguoiDung candidate = requireUser(candidateId);
+        NguoiDung recruiter = requireUser(viewerId);
+        CuocTroChuyen conversation = cuocTroChuyenRepository
+                .findByUngVien_IdAndNhaTuyenDung_Id(candidateId, viewerId)
+                .orElseGet(() -> cuocTroChuyenRepository.save(new CuocTroChuyen(null, null, candidate, recruiter)));
+
+        return responseMapper.mapConversation(conversation, viewerId);
     }
 
     @Transactional(readOnly = true)
@@ -123,7 +163,7 @@ public class ChatService {
         // Trả inbox đã map sẵn preview message + unread count.
         Integer viewerId = toIntId(userId, "userId");
         return cuocTroChuyenRepository.findAllByParticipantId(viewerId).stream()
-                .map(conversation -> mapConversation(conversation, viewerId))
+                .map(conversation -> responseMapper.mapConversation(conversation, viewerId))
                 .sorted(Comparator.comparing(
                         ChatConversationResponse::getTinNhanGanNhatLuc,
                         Comparator.nullsLast(Comparator.reverseOrder())
@@ -162,7 +202,7 @@ public class ChatService {
         }
 
         return messages.stream()
-                .map(message -> mapMessage(message, viewerId))
+                .map(message -> responseMapper.mapMessage(message, viewerId))
                 .toList();
     }
 
@@ -180,13 +220,13 @@ public class ChatService {
         message.setDaDoc(false);
         TinNhan saved = tinNhanRepository.save(message);
 
-        ChatMessageResponse senderView = mapMessage(saved, viewerId);
+        ChatMessageResponse senderView = responseMapper.mapMessage(saved, viewerId);
         // Quan trọng: mỗi phía cần nhận payload "cuaToi" theo chính họ.
         // Nếu broadcast cùng một object cho cả 2 user thì phía nhận sẽ hiển thị bubble sai hướng
         // (tin từ đối phương nhưng vẫn nằm bên phải cho tới khi reload).
         for (Long participantUserId : resolveParticipantIds(conversation)) {
             Integer participantViewerId = Math.toIntExact(participantUserId);
-            ChatMessageResponse participantView = mapMessage(saved, participantViewerId);
+            ChatMessageResponse participantView = responseMapper.mapMessage(saved, participantViewerId);
             chatRealtimePublisher.publishToUsers(
                     Set.of(participantUserId),
                     ChatRealtimeEventResponse.builder()
@@ -197,90 +237,6 @@ public class ChatService {
             );
         }
         return senderView;
-    }
-
-    private ChatConversationResponse mapConversation(CuocTroChuyen conversation, Integer viewerId) {
-        // pageRequest(0,1) để lấy message cuối làm snippet inbox.
-        List<TinNhan> lastMessageCandidates = tinNhanRepository.findLastMessageCandidatesByConversationId(
-                conversation.getId(),
-                PageRequest.of(0, 1)
-        );
-        TinNhan lastMessage = lastMessageCandidates.isEmpty() ? null : lastMessageCandidates.getFirst();
-        long unreadCount = tinNhanRepository.countUnreadByConversationIdAndViewerId(conversation.getId(), viewerId);
-        Integer recruiterId = conversation.getNhaTuyenDung() == null ? null : conversation.getNhaTuyenDung().getId();
-
-        return ChatConversationResponse.builder()
-                .id(toLong(conversation.getId()))
-                .ungVienId(conversation.getUngVien() == null ? null : toLong(conversation.getUngVien().getId()))
-                .ungVienHienThiTen(resolveDisplayName(conversation.getUngVien()))
-                .ungVienAnhDaiDienUrl(conversation.getUngVien() == null ? null : conversation.getUngVien().getAnhDaiDienUrl())
-                .nhaTuyenDungId(recruiterId == null ? null : toLong(recruiterId))
-                .nhaTuyenDungHienThiTen(resolveDisplayName(conversation.getNhaTuyenDung()))
-                .nhaTuyenDungCongTyTen(resolveRecruiterCompanyName(recruiterId))
-                .nhaTuyenDungAnhDaiDienUrl(conversation.getNhaTuyenDung() == null ? null : conversation.getNhaTuyenDung().getAnhDaiDienUrl())
-                .tinNhanGanNhat(lastMessage == null ? null : lastMessage.getNoiDung())
-                .tinNhanGanNhatLuc(lastMessage == null ? null : lastMessage.getNgayTao())
-                .soTinChuaDoc(unreadCount)
-                .ngayTao(conversation.getNgayTao())
-                .build();
-    }
-
-    private String resolveRecruiterCompanyName(Integer recruiterId) {
-        if (recruiterId == null) {
-            return null;
-        }
-
-        List<ThanhVienCongTy> memberships = thanhVienCongTyRepository.findActiveMembershipsByUserId(recruiterId);
-
-        // Ưu tiên membership đang ACTIVE để hiển thị đúng công ty hiện tại của HR trong danh sách chat.
-        String activeCompanyName = memberships.stream()
-                .filter(membership -> "ACTIVE".equalsIgnoreCase(membership.getTrangThai()))
-                .map(this::extractCompanyName)
-                .filter(StringUtils::hasText)
-                .findFirst()
-                .orElse(null);
-
-        if (StringUtils.hasText(activeCompanyName)) {
-            return activeCompanyName;
-        }
-
-        // Fallback an toàn: nếu thiếu trạng thái ACTIVE, lấy công ty đầu tiên có dữ liệu.
-        String companyNameFromMembership = memberships.stream()
-                .map(this::extractCompanyName)
-                .filter(StringUtils::hasText)
-                .findFirst()
-                .orElse(null);
-        if (StringUtils.hasText(companyNameFromMembership)) {
-            return companyNameFromMembership;
-        }
-
-        // Fallback cuối: có một số account HR chưa có membership chuẩn nhưng vẫn là "nguoiDang" của job.
-        // Trường hợp này lấy công ty từ tin tuyển dụng mới nhất của recruiter để UI vẫn phân biệt được.
-        return tinTuyenDungRepository.findCompanyNamesByRecruiterId(recruiterId, PageRequest.of(0, 1)).stream()
-                .filter(StringUtils::hasText)
-                .findFirst()
-                .orElse(null);
-    }
-
-    private String extractCompanyName(ThanhVienCongTy membership) {
-        if (membership == null || membership.getChiNhanh() == null || membership.getChiNhanh().getCongTy() == null) {
-            return null;
-        }
-        return membership.getChiNhanh().getCongTy().getTen();
-    }
-
-    private ChatMessageResponse mapMessage(TinNhan message, Integer viewerId) {
-        Integer senderId = message.getNguoiGui() == null ? null : message.getNguoiGui().getId();
-        return ChatMessageResponse.builder()
-                .id(toLong(message.getId()))
-                .cuocTroChuyenId(message.getCuocTroChuyen() == null ? null : toLong(message.getCuocTroChuyen().getId()))
-                .nguoiGuiId(senderId == null ? null : senderId.longValue())
-                .nguoiGuiHienThiTen(resolveDisplayName(message.getNguoiGui()))
-                .noiDung(message.getNoiDung())
-                .daDoc(Boolean.TRUE.equals(message.getDaDoc()))
-                .cuaToi(senderId != null && senderId.equals(viewerId))
-                .ngayTao(message.getNgayTao())
-                .build();
     }
 
     private CuocTroChuyen requireConversationParticipant(Integer viewerId, Long cuocTroChuyenId) {
@@ -325,18 +281,6 @@ public class ChatService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không được để trống");
         }
         return Math.toIntExact(value);
-    }
-
-    private Long toLong(Integer value) {
-        return value == null ? null : value.longValue();
-    }
-
-    private String resolveDisplayName(NguoiDung user) {
-        if (user == null) {
-            return "Người dùng";
-        }
-        String fullName = ((user.getHo() == null ? "" : user.getHo().trim()) + " " + (user.getTen() == null ? "" : user.getTen().trim())).trim();
-        return StringUtils.hasText(fullName) ? fullName : (user.getEmail() == null ? "Người dùng" : user.getEmail());
     }
 
     private String normalizeMessageContent(String content) {

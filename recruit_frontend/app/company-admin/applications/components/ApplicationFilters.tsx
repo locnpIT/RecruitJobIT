@@ -1,4 +1,4 @@
-import type { CompanyAdminApplication, CompanyAdminBranch } from "@/services/company-admin/types";
+import type { CompanyAdminBranch, CompanyAdminJob } from "@/services/company-admin/types";
 
 export type ApplicationFiltersValue = {
   status: string;
@@ -9,7 +9,7 @@ export type ApplicationFiltersValue = {
 
 type ApplicationFiltersProps = {
   branches: CompanyAdminBranch[];
-  applications: CompanyAdminApplication[];
+  jobs: CompanyAdminJob[];
   selectedBranchId: number | null;
   filters: ApplicationFiltersValue;
   onBranchChange: (branchId: number) => void;
@@ -28,7 +28,7 @@ const STATUS_OPTIONS = [
 // Filter chạy trên dữ liệu đã lấy theo chi nhánh để không phải tạo thêm API/query phức tạp.
 export function ApplicationFilters({
   branches,
-  applications,
+  jobs,
   selectedBranchId,
   filters,
   onBranchChange,
@@ -36,9 +36,9 @@ export function ApplicationFilters({
 }: ApplicationFiltersProps) {
   const jobOptions = Array.from(
     new Map(
-      applications
-        .filter((item) => item.tinTuyenDungId)
-        .map((item) => [item.tinTuyenDungId, item.tieuDeTinTuyenDung ?? `Tin #${item.tinTuyenDungId}`])
+      jobs
+        .filter((item) => item.id)
+        .map((item) => [item.id, item.tieuDe ?? `Tin #${item.id}`])
     ).entries()
   );
 

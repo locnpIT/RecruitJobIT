@@ -4,16 +4,10 @@ import { useMemo, useState } from "react";
 import type { CandidateCertificateItem, CandidateProfileMetadata } from "@/services/candidate-profile.service";
 import { ProfileModal } from "./ProfileModal";
 import { ProfileModalTabs, type ProfileModalTab } from "./ProfileModalTabs";
+import { ProofUploadBox } from "./ProofUploadBox";
+import type { CertificateFormState } from "./profileFormTypes";
 import { ProofStatusPill } from "../ProofStatusPill";
 import { ProfileActionButton } from "../ProfileActionButton";
-
-type CertificateFormState = {
-  loaiChungChiId: string;
-  tenChungChi: string;
-  ngayBatDau: string;
-  ngayHetHan: string;
-  duongDanTep: string;
-};
 
 const EMPTY_FORM: CertificateFormState = {
   loaiChungChiId: "",
@@ -54,6 +48,7 @@ export function CertificateModal({
 }) {
   const [tab, setTab] = useState<ProfileModalTab>("create");
   const [query, setQuery] = useState("");
+  const [proofError, setProofError] = useState("");
   const initialForm = useMemo<CertificateFormState>(() => {
     if (!editingItem) {
       return EMPTY_FORM;
@@ -83,6 +78,15 @@ export function CertificateModal({
   const description = editingItem
     ? "Cập nhật chứng chỉ. Thay đổi sẽ ảnh hưởng đến các hồ sơ đang chọn chứng chỉ này."
     : "Tạo mới hoặc chọn chứng chỉ có sẵn để hiển thị trong hồ sơ hiện tại.";
+
+  const validateProof = () => {
+    if (!form.duongDanTep) {
+      setProofError("Vui lòng upload minh chứng");
+      return false;
+    }
+    setProofError("");
+    return true;
+  };
 
   return (
     <ProfileModal open={open} title={title} description={description} onClose={onClose}>
@@ -200,49 +204,14 @@ export function CertificateModal({
             </div>
           </div>
 
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="inline-flex cursor-pointer items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">
-                <svg viewBox="0 0 20 20" fill="none" className="mr-1.5 h-4 w-4" aria-hidden="true">
-                  <path
-                    d="M10 13V4m0 0 3 3m-3-3L7 7"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M4 13.5v1A1.5 1.5 0 0 0 5.5 16h9a1.5 1.5 0 0 0 1.5-1.5v-1"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                {uploadingProof ? "Đang tải minh chứng..." : "Tải minh chứng"}
-                <input
-                  type="file"
-                  className="hidden"
-                  disabled={uploadingProof}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) {
-                      return;
-                    }
-                    void (async () => {
-                      const uploaded = await onUploadProof(file);
-                      setForm((prev) => ({ ...prev, duongDanTep: uploaded }));
-                    })();
-                    e.currentTarget.value = "";
-                  }}
-                />
-              </label>
-              {form.duongDanTep ? (
-                <a href={form.duongDanTep} target="_blank" rel="noreferrer" className="text-xs text-slate-700 underline">
-                  Xem minh chứng
-                </a>
-              ) : null}
-            </div>
-          </div>
+          <ProofUploadBox
+            value={form.duongDanTep}
+            error={proofError}
+            uploading={uploadingProof}
+            onUpload={onUploadProof}
+            onChange={(uploaded) => setForm((prev) => ({ ...prev, duongDanTep: uploaded }))}
+            onClearError={() => setProofError("")}
+          />
 
           <div className="flex flex-wrap items-center justify-end gap-2">
             <ProfileActionButton type="button" variant="muted" onClick={onClose} disabled={submitting}>
@@ -253,6 +222,9 @@ export function CertificateModal({
               disabled={submitting}
               onClick={() => {
                 void (async () => {
+                  if (!validateProof()) {
+                    return;
+                  }
                   const result = editingItem
                     ? await onUpdate(editingItem.id, form)
                     : await onCreate(form);

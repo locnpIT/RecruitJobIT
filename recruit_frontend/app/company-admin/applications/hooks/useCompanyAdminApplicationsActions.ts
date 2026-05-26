@@ -5,11 +5,18 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { chatService } from "@/services/chat.service";
 import { companyAdminApplicationsService } from "@/services/company-admin/applications.service";
+import { companyAdminJobsService } from "@/services/company-admin/jobs.service";
 import type { CompanyAdminApplication } from "@/services/company-admin/types";
 
 type UseCompanyAdminApplicationsActionsOptions = {
   setApplications: Dispatch<SetStateAction<CompanyAdminApplication[]>>;
   setError: Dispatch<SetStateAction<string>>;
+};
+
+export type CandidateActionTarget = {
+  applicationId?: number | null;
+  jobId?: number | null;
+  profileId?: number | null;
 };
 
 // Dùng cho màn company-admin/applications: mở detail, đổi trạng thái và mở chat với ứng viên.
@@ -20,9 +27,11 @@ export function useCompanyAdminApplicationsActions({ setApplications, setError }
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [openingChatApplicationId, setOpeningChatApplicationId] = useState<number | null>(null);
+  const [openingChatTargetKey, setOpeningChatTargetKey] = useState<string | null>(null);
 
-  const handleOpenDetail = async (applicationId: number | null) => {
-    if (!applicationId) {
+  const handleOpenDetail = async (target: CandidateActionTarget | number | null) => {
+    const safeTarget = normalizeTarget(target);
+    if (!safeTarget.applicationId && (!safeTarget.jobId || !safeTarget.profileId)) {
       return;
     }
 
@@ -31,10 +40,12 @@ export function useCompanyAdminApplicationsActions({ setApplications, setError }
     setSelectedApplication(null);
 
     try {
-      const detail = await companyAdminApplicationsService.getApplicationDetail(applicationId);
+      const detail = safeTarget.applicationId
+        ? await companyAdminApplicationsService.getApplicationDetail(safeTarget.applicationId)
+        : await companyAdminJobsService.getCandidateProfileForJob(safeTarget.jobId!, safeTarget.profileId!);
       setSelectedApplication(detail);
     } catch (error) {
-      setError(getApiErrorMessage(error, "Không tải được chi tiết đơn ứng tuyển."));
+      setError(getApiErrorMessage(error, "Không tải được chi tiết hồ sơ ứng viên."));
     } finally {
       setIsLoadingDetail(false);
     }
@@ -59,19 +70,25 @@ export function useCompanyAdminApplicationsActions({ setApplications, setError }
     }
   };
 
-  const handleOpenChat = async (applicationId: number | null) => {
-    if (!applicationId) {
+  const handleOpenChat = async (target: CandidateActionTarget | number | null) => {
+    const safeTarget = normalizeTarget(target);
+    if (!safeTarget.applicationId && (!safeTarget.jobId || !safeTarget.profileId)) {
       return;
     }
 
-    setOpeningChatApplicationId(applicationId);
+    const targetKey = buildChatTargetKey(safeTarget);
+    setOpeningChatApplicationId(safeTarget.applicationId ?? null);
+    setOpeningChatTargetKey(targetKey);
     try {
-      const conversation = await chatService.openByApplication(applicationId);
+      const conversation = safeTarget.applicationId
+        ? await chatService.openByApplication(safeTarget.applicationId)
+        : await chatService.openByCandidateProfile(safeTarget.jobId!, safeTarget.profileId!);
       router.push(`/company-admin/messages?cuocTroChuyenId=${conversation.id}`);
     } catch (error) {
       setError(getApiErrorMessage(error, "Không thể mở cuộc trò chuyện với ứng viên."));
     } finally {
       setOpeningChatApplicationId(null);
+      setOpeningChatTargetKey(null);
     }
   };
 
@@ -81,9 +98,24 @@ export function useCompanyAdminApplicationsActions({ setApplications, setError }
     isLoadingDetail,
     isSavingStatus,
     openingChatApplicationId,
+    openingChatTargetKey,
     setDetailOpen,
     handleOpenDetail,
     handleStatusChange,
     handleOpenChat,
   };
+}
+
+function normalizeTarget(target: CandidateActionTarget | number | null): CandidateActionTarget {
+  if (typeof target === "number") {
+    return { applicationId: target };
+  }
+  return target ?? {};
+}
+
+function buildChatTargetKey(target: CandidateActionTarget) {
+  if (target.applicationId) {
+    return `application-${target.applicationId}`;
+  }
+  return `profile-${target.jobId ?? "unknown"}-${target.profileId ?? "unknown"}`;
 }

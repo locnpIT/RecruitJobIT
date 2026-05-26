@@ -56,6 +56,13 @@ export const chatService = {
     return response.data.data as ChatConversation;
   },
 
+  openByCandidateProfile: async (jobId: number | string, profileId: number | string): Promise<ChatConversation> => {
+    const safeJobId = requirePathParam(jobId, "jobId");
+    const safeProfileId = requirePathParam(profileId, "profileId");
+    const response = await apiClient.post(`/chats/jobs/${safeJobId}/candidate-profiles/${safeProfileId}/open`);
+    return response.data.data as ChatConversation;
+  },
+
   listConversations: async (): Promise<ChatConversation[]> => {
     const response = await apiClient.get("/chats/conversations");
     return response.data.data as ChatConversation[];

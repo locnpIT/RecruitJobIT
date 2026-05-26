@@ -112,6 +112,23 @@ export interface ProfileItemSelectionResponse {
   duocChon: boolean;
 }
 
+export interface CandidateRecommendedJob {
+  tinTuyenDungId: number;
+  tieuDe: string;
+  trangThai: string | null;
+  congTyTen: string | null;
+  congTyLogoUrl: string | null;
+  chiNhanhTen: string | null;
+  diaDiem: string | null;
+  nganhNghe: string | null;
+  loaiHinhLamViec: string | null;
+  capDoKinhNghiem: string | null;
+  denHanLuc: string | null;
+  diemPhuHop: number | null;
+  tinHieuKhop: string[];
+  canKiemTraThem: string[];
+}
+
 export const candidateProfileService = {
   getProfile: async (): Promise<CandidateProfile> => {
     const response = await apiClient.get("/candidate/profile");
@@ -121,6 +138,13 @@ export const candidateProfileService = {
   listProfiles: async (): Promise<CandidateProfileListItem[]> => {
     const response = await apiClient.get("/candidate/profile/all");
     return response.data.data as CandidateProfileListItem[];
+  },
+
+  listRecommendedJobs: async (limit = 6): Promise<CandidateRecommendedJob[]> => {
+    const response = await apiClient.get("/candidate/profile/recommended-jobs", {
+      params: { limit },
+    });
+    return response.data.data as CandidateRecommendedJob[];
   },
 
   createProfile: async (payload?: {

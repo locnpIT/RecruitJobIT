@@ -16,12 +16,16 @@ import lombok.NoArgsConstructor;
 public class CandidateSemanticMatchResponse {
 
     private Long hoSoUngVienId;
+    private Long donUngTuyenId;
     private Long nguoiDungId;
     private String tenHoSo;
     private String ungVienHoTen;
     private String email;
     private String soDienThoai;
     private String anhDaiDienUrl;
+    private String trangThaiDonUngTuyen;
+    private String cvUrl;
+    private String tieuDeTinTuyenDung;
     private String mucTieuNgheNghiep;
     private String gioiThieuBanThan;
     private Double diemPhuHop;

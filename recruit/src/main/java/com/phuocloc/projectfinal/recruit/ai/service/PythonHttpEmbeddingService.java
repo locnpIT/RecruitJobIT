@@ -34,7 +34,7 @@ public class PythonHttpEmbeddingService implements TextEmbeddingService {
     private volatile HttpClient httpClient;
 
     @Override
-    public List<Float> taoVector(String noiDung) {
+    public List<Float> generateVector(String noiDung) {
         String baseUrl = normalizeBaseUrl(embeddingProperties.getPython().getBaseUrl());
         String body = toJsonBody(noiDung);
         if (log.isDebugEnabled()) {

@@ -33,6 +33,9 @@ public class ApplicationEmbeddingIndexService {
 
     private static final String TRANG_THAI_DA_CHI_MUC = "INDEXED";
     private static final String TRANG_THAI_LOI = "FAILED";
+    private static final String PHIEN_BAN_NHUNG = "application-v2";
+    private static final String NGUON_NHUNG_CV = "CV_PDF";
+    private static final String NGUON_NHUNG_HO_SO = "PROFILE";
 
     private final ChiMucNhungDonUngTuyenRepository chiMucRepository;
     private final NganhNgheUngVienRepository nganhNgheRepository;
@@ -48,31 +51,50 @@ public class ApplicationEmbeddingIndexService {
     /**
      * Đồng bộ embedding cho một đơn ứng tuyển cụ thể.
      *
-     * <p>Đơn ứng tuyển chứa ngữ cảnh lần apply (CV, profile tại thời điểm nộp đơn, job target),
-     * nên được index riêng thay vì chỉ dùng embedding hồ sơ tổng quát.</p>
+     * <p>Nếu tin bắt buộc CV, embedding của đơn lấy từ CV PDF. Nếu không, embedding lấy từ hồ sơ ứng viên.</p>
      */
     @Transactional
-    public void dongBoChiMuc(DonUngTuyen donUngTuyen) {
+    public void syncIndex(DonUngTuyen donUngTuyen) {
         if (donUngTuyen == null || donUngTuyen.getId() == null || !qdrantClientService.isEnabled()) {
             return;
         }
-        String pointId = taoMaDiem(donUngTuyen.getId());
+        String pointId = buildPointId(donUngTuyen.getId());
         try {
-            String noiDung = ghepNoiDungNhung(donUngTuyen);
-            List<Float> vector = vanBanNhungService.taoVector(noiDung);
-            Map<String, Object> payload = taoPayload(donUngTuyen);
+            String noiDung = buildEmbeddingContent(donUngTuyen);
+            List<Float> vector = vanBanNhungService.generateVector(noiDung);
+            Map<String, Object> payload = buildPayload(donUngTuyen);
             qdrantClientService.upsertPoint(qdrantProperties.getKhoDonUngTuyen(), pointId, vector, payload);
-            luuTrangThai(donUngTuyen, pointId, TRANG_THAI_DA_CHI_MUC);
+            saveIndexStatus(donUngTuyen, pointId, TRANG_THAI_DA_CHI_MUC);
         } catch (Exception ex) {
-            luuTrangThai(donUngTuyen, pointId, TRANG_THAI_LOI);
+            saveIndexStatus(donUngTuyen, pointId, TRANG_THAI_LOI);
             log.warn("Không đồng bộ được chỉ mục nhúng cho đơn ứng tuyển {}", donUngTuyen.getId(), ex);
         }
     }
 
     /**
+     * Đảm bảo đơn ứng tuyển đã có point trong Qdrant trước khi chạy semantic ranking.
+     */
+    @Transactional
+    public void ensureIndexedForMatching(DonUngTuyen donUngTuyen) {
+        if (donUngTuyen == null || donUngTuyen.getId() == null || !qdrantClientService.isEnabled()) {
+            return;
+        }
+        var latestIndex = chiMucRepository.findFirstByDonUngTuyen_IdOrderByIdDesc(donUngTuyen.getId());
+        if (latestIndex.isPresent()
+                && TRANG_THAI_DA_CHI_MUC.equalsIgnoreCase(latestIndex.get().getTrangThai())
+                && StringUtils.hasText(latestIndex.get().getMaDiem())
+                && qdrantClientService.getPointPayload(qdrantProperties.getKhoDonUngTuyen(), latestIndex.get().getMaDiem())
+                        .filter(payload -> isCurrentEmbeddingPayload(payload, resolveEmbeddingSource(donUngTuyen)))
+                        .isPresent()) {
+            return;
+        }
+        syncIndex(donUngTuyen);
+    }
+
+    /**
      * Ghi log trạng thái index mới để giữ quan hệ 1-nhiều giữa đơn ứng tuyển và lịch sử đồng bộ.
      */
-    private void luuTrangThai(DonUngTuyen donUngTuyen, String maDiem, String trangThai) {
+    private void saveIndexStatus(DonUngTuyen donUngTuyen, String maDiem, String trangThai) {
         ChiMucNhungDonUngTuyen chiMuc = new ChiMucNhungDonUngTuyen();
         chiMuc.setDonUngTuyen(donUngTuyen);
         chiMuc.setMaDiem(maDiem);
@@ -81,51 +103,59 @@ public class ApplicationEmbeddingIndexService {
         chiMucRepository.save(chiMuc);
     }
 
-    private String taoMaDiem(Integer donUngTuyenId) {
+    private String buildPointId(Integer donUngTuyenId) {
         return UUID.nameUUIDFromBytes(("don-ung-tuyen-" + donUngTuyenId).getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     /**
      * Payload kèm theo point trong Qdrant để phục vụ filter theo job/profile/application.
      */
-    private Map<String, Object> taoPayload(DonUngTuyen donUngTuyen) {
+    private Map<String, Object> buildPayload(DonUngTuyen donUngTuyen) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("donUngTuyenId", donUngTuyen.getId());
         payload.put("hoSoUngVienId", donUngTuyen.getHoSoUngVien() == null ? null : donUngTuyen.getHoSoUngVien().getId());
         payload.put("tinTuyenDungId", donUngTuyen.getTinTuyenDung() == null ? null : donUngTuyen.getTinTuyenDung().getId());
         payload.put("trangThai", donUngTuyen.getTrangThai());
         payload.put("cvUrl", donUngTuyen.getCvUrl());
+        payload.put("nguonNhung", resolveEmbeddingSource(donUngTuyen));
+        payload.put("phienBanNhung", PHIEN_BAN_NHUNG);
         payload.put("ngayTao", donUngTuyen.getNgayTao() == null ? null : donUngTuyen.getNgayTao().toString());
         return payload;
     }
 
+    private boolean isCurrentEmbeddingPayload(Map<String, Object> payload, String expectedSource) {
+        if (payload == null) {
+            return false;
+        }
+        return PHIEN_BAN_NHUNG.equals(String.valueOf(payload.get("phienBanNhung")))
+                && expectedSource.equals(String.valueOf(payload.get("nguonNhung")));
+    }
+
+    private String resolveEmbeddingSource(DonUngTuyen donUngTuyen) {
+        boolean batBuocCv = donUngTuyen.getTinTuyenDung() != null && Boolean.TRUE.equals(donUngTuyen.getTinTuyenDung().getBatBuocCV());
+        return batBuocCv && StringUtils.hasText(donUngTuyen.getCvUrl()) ? NGUON_NHUNG_CV : NGUON_NHUNG_HO_SO;
+    }
+
     /**
      * Hợp nhất text từ:
-     * - nội dung CV thật (nếu ứng viên có upload cvUrl)
-     * - tin tuyển dụng mục tiêu
-     * - hồ sơ ứng viên
+     * - nếu tin bắt buộc CV và ứng viên có upload CV, chỉ dùng nội dung PDF của CV
+     * - ngược lại, hồ sơ ứng viên là nguồn chính
      *
      * Kết quả này là nguồn đầu vào duy nhất cho embedding của DonUngTuyen.
      */
-    private String ghepNoiDungNhung(DonUngTuyen donUngTuyen) {
+    private String buildEmbeddingContent(DonUngTuyen donUngTuyen) {
         StringBuilder sb = new StringBuilder(1024);
 
-        String noiDungCv = trichXuatNoiDungCvService.trichXuat(donUngTuyen.getCvUrl());
-        if (StringUtils.hasText(noiDungCv)) {
-            // Ưu tiên text CV vì đây là dữ liệu ứng viên nộp cho chính lần apply này.
-            append(sb, "Noi dung CV upload", noiDungCv);
-        } else {
-            // Vẫn lưu cvUrl vào text để trace/debug khi cần, dù không parse được nội dung.
-            append(sb, "Cv URL", donUngTuyen.getCvUrl());
-        }
+        String cvUrl = donUngTuyen.getCvUrl();
 
-        if (donUngTuyen.getTinTuyenDung() != null) {
-            append(sb, "Tieu de tin", donUngTuyen.getTinTuyenDung().getTieuDe());
-            append(sb, "Mo ta tin", donUngTuyen.getTinTuyenDung().getMoTa());
-            append(sb, "Yeu cau tin", donUngTuyen.getTinTuyenDung().getYeuCau());
-            if (donUngTuyen.getTinTuyenDung().getNganhNghe() != null) {
-                append(sb, "Nganh nghe tin", donUngTuyen.getTinTuyenDung().getNganhNghe().getTen());
+        if (NGUON_NHUNG_CV.equals(resolveEmbeddingSource(donUngTuyen))) {
+            String noiDungCv = trichXuatNoiDungCvService.extract(cvUrl);
+            if (StringUtils.hasText(noiDungCv)) {
+                append(sb, "Noi dung CV upload", noiDungCv);
+                return sb.toString();
             }
+            append(sb, "Cv URL", cvUrl);
+            return sb.toString();
         }
 
         if (donUngTuyen.getHoSoUngVien() != null) {
@@ -152,7 +182,7 @@ public class ApplicationEmbeddingIndexService {
                     append(sb, "Kinh nghiem", item.getChucDanh());
                     append(sb, "Cong ty", item.getTenCongTy());
                     append(sb, "Mo ta cong viec", item.getMoTaCongViec());
-                    appendKhoangThoiGian(sb, "Thoi gian kinh nghiem", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
+                    appendTimeRange(sb, "Thoi gian kinh nghiem", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
                 });
                 hoSoHocVanRepository.findByHoSoUngVien_IdOrderByHocVan_ThoiGianBatDauDesc(hoSoId).forEach(link -> {
                     var item = link.getHocVan();
@@ -162,7 +192,7 @@ public class ApplicationEmbeddingIndexService {
                     append(sb, "Hoc van", item.getBacHoc());
                     append(sb, "Chuyen nganh", item.getChuyenNganh());
                     append(sb, "Truong", item.getTenTruong());
-                    appendKhoangThoiGian(sb, "Thoi gian hoc", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
+                    appendTimeRange(sb, "Thoi gian hoc", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
                 });
                 hoSoChungChiRepository.findByHoSoUngVien_IdOrderByChungChi_NgayBatDauDesc(hoSoId).forEach(link -> {
                     var item = link.getChungChi();
@@ -176,13 +206,14 @@ public class ApplicationEmbeddingIndexService {
                 });
             }
         }
+
         return sb.toString();
     }
 
     /**
      * Chuẩn hóa chuỗi thời gian để tăng tín hiệu về seniority theo timeline.
      */
-    private void appendKhoangThoiGian(StringBuilder sb, String label, LocalDate from, LocalDate to) {
+    private void appendTimeRange(StringBuilder sb, String label, LocalDate from, LocalDate to) {
         if (from == null && to == null) {
             return;
         }

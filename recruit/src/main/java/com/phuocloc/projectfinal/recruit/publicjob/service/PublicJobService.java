@@ -106,7 +106,7 @@ public class PublicJobService {
         }
 
         // Fallback local khi Elasticsearch chưa bật: vẫn giữ API hoạt động ổn định cho môi trường dev.
-        var all = timKiemBangJpa(tuKhoa, diaDiem, nganhNgheId, loaiHinhLamViecId, capDoKinhNghiemId);
+        var all = searchWithJpa(tuKhoa, diaDiem, nganhNgheId, loaiHinhLamViecId, capDoKinhNghiemId);
         int from = safePage * safeSize;
         if (from >= all.size()) {
             return PublicJobSearchResponse.builder()
@@ -279,7 +279,7 @@ public class PublicJobService {
         }
     }
 
-    private List<TinTuyenDung> timKiemBangJpa(
+    private List<TinTuyenDung> searchWithJpa(
             String tuKhoa,
             String diaDiem,
             Integer nganhNgheId,

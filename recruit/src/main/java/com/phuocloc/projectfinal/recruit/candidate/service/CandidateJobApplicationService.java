@@ -65,7 +65,7 @@ public class CandidateJobApplicationService {
         application.setCvUrl(cvUrl);
         DonUngTuyen saved = donUngTuyenRepository.save(application);
         // Sau khi tạo đơn thành công, đồng bộ chỉ mục nhúng để phục vụ semantic matching.
-        chiMucNhungDonUngTuyenService.dongBoChiMuc(saved);
+        chiMucNhungDonUngTuyenService.syncIndex(saved);
         return mapApplication(saved);
     }
 

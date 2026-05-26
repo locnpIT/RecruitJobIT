@@ -47,7 +47,7 @@ public class ElasticsearchClientService {
     /**
      * Lấy thông tin cơ bản của Elasticsearch cluster để phục vụ health check vận hành.
      */
-    public ElasticsearchClusterInfo layThongTinCluster() {
+    public ElasticsearchClusterInfo getClusterInfo() {
         if (!isEnabled()) {
             return ElasticsearchClusterInfo.builder()
                     .clusterName(null)

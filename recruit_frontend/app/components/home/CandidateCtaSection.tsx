@@ -61,7 +61,7 @@ export function CandidateCtaSection() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/auth/register/candidate"
-                className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-[#008080] px-6 text-sm font-semibold text-white transition hover:bg-[#006d6d]"
               >
                 Tạo hồ sơ ngay
                 <ArrowRight className="h-4 w-4" />

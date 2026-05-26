@@ -39,8 +39,8 @@ public class PublicJobElasticsearchIndexService {
      */
     @EventListener(ApplicationReadyEvent.class)
     @Transactional(readOnly = true)
-    public void dongBoToanBoTinPublicKhiKhoiDong() {
-        DongBoIndexSummary summary = dongBoToanBoTinPublic();
+    public void reindexAllOnStartup() {
+        DongBoIndexSummary summary = reindexAllPublicJobs();
         if (summary.isEnabled()) {
             log.info("Elasticsearch startup reindex: tongTinPublic={}, daDongBo={}, thatBai={}",
                     summary.getTongTinPublic(),
@@ -54,7 +54,7 @@ public class PublicJobElasticsearchIndexService {
      * Method này dùng cho cả startup hook và admin-trigger reindex thủ công.
      */
     @Transactional(readOnly = true)
-    public DongBoIndexSummary dongBoToanBoTinPublic() {
+    public DongBoIndexSummary reindexAllPublicJobs() {
         if (!elasticsearchClientService.isEnabled()) {
             return new DongBoIndexSummary(false, 0, 0, 0);
         }
@@ -63,7 +63,7 @@ public class PublicJobElasticsearchIndexService {
         int soThatBai = 0;
         for (TinTuyenDung job : publicJobs) {
             try {
-                dongBoHoacXoa(job);
+                syncOrDelete(job);
                 soDaDongBo++;
             } catch (Exception ex) {
                 soThatBai++;
@@ -77,30 +77,30 @@ public class PublicJobElasticsearchIndexService {
      * Đồng bộ point khi job đủ điều kiện public; nếu không đủ thì xóa khỏi index.
      */
     @Transactional(readOnly = true)
-    public void dongBoHoacXoa(TinTuyenDung job) {
+    public void syncOrDelete(TinTuyenDung job) {
         if (job == null || job.getId() == null || !elasticsearchClientService.isEnabled()) {
             return;
         }
-        String documentId = taoDocumentId(job.getId());
-        if (!laTinPublicHoatDong(job)) {
+        String documentId = buildDocumentId(job.getId());
+        if (!isPublicJobActive(job)) {
             elasticsearchClientService.deleteDocument(elasticsearchProperties.getJobIndex(), documentId);
             return;
         }
         elasticsearchClientService.upsertDocument(
                 elasticsearchProperties.getJobIndex(),
                 documentId,
-                taoDocument(job)
+                buildDocument(job)
         );
     }
 
-    private String taoDocumentId(Integer jobId) {
+    private String buildDocumentId(Integer jobId) {
         return "job-" + jobId;
     }
 
     /**
      * Rule active cho search public phải khớp với rule hiển thị public của hệ thống.
      */
-    private boolean laTinPublicHoatDong(TinTuyenDung job) {
+    private boolean isPublicJobActive(TinTuyenDung job) {
         if (job.getNgayXoa() != null) {
             return false;
         }
@@ -122,9 +122,9 @@ public class PublicJobElasticsearchIndexService {
     /**
      * Chuẩn hóa document field để query keyword/filter/sort trên Elasticsearch.
      */
-    private Map<String, Object> taoDocument(TinTuyenDung job) {
+    private Map<String, Object> buildDocument(TinTuyenDung job) {
         Map<String, Object> document = new LinkedHashMap<>();
-        document.put("jobId", taoDocumentId(job.getId()));
+        document.put("jobId", buildDocumentId(job.getId()));
         document.put("tieuDe", trimToEmpty(job.getTieuDe()));
         document.put("moTa", trimToEmpty(job.getMoTa()));
         document.put("yeuCau", trimToEmpty(job.getYeuCau()));
@@ -133,7 +133,7 @@ public class PublicJobElasticsearchIndexService {
                 ? ""
                 : trimToEmpty(job.getChiNhanh().getCongTy().getTen()));
         document.put("nganhNgheTen", job.getNganhNghe() == null ? "" : trimToEmpty(job.getNganhNghe().getTen()));
-        document.put("kyNangs", ghepKyNang(job.getId()));
+        document.put("kyNangs", joinSkills(job.getId()));
         document.put("diaDiem", resolveDiaDiem(job));
         document.put("tinhThanhTen", resolveTinhThanh(job));
         document.put("xaPhuongTen", resolveXaPhuong(job));
@@ -153,7 +153,7 @@ public class PublicJobElasticsearchIndexService {
         return document;
     }
 
-    private String ghepKyNang(Integer jobId) {
+    private String joinSkills(Integer jobId) {
         if (jobId == null) {
             return "";
         }

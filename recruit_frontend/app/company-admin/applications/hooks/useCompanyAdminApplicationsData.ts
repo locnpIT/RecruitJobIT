@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { companyAdminApplicationsService } from "@/services/company-admin/applications.service";
+import { companyAdminJobsService } from "@/services/company-admin/jobs.service";
 import { companyAdminSettingsService } from "@/services/company-admin/settings.service";
-import type { CompanyAdminApplication, CompanyAdminBranch } from "@/services/company-admin/types";
+import type { CompanyAdminApplication, CompanyAdminBranch, CompanyAdminJob } from "@/services/company-admin/types";
 import { isCompanyApproved } from "../../company-admin-status";
 import type { ApplicationFiltersValue } from "../components/ApplicationFilters";
 
@@ -19,6 +20,7 @@ export const DEFAULT_APPLICATION_FILTERS: ApplicationFiltersValue = {
 export function useCompanyAdminApplicationsData() {
   const [branches, setBranches] = useState<CompanyAdminBranch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
+  const [jobs, setJobs] = useState<CompanyAdminJob[]>([]);
   const [applications, setApplications] = useState<CompanyAdminApplication[]>([]);
   const [filters, setFilters] = useState<ApplicationFiltersValue>(DEFAULT_APPLICATION_FILTERS);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,6 +111,37 @@ export function useCompanyAdminApplicationsData() {
     };
   }, [selectedBranchId]);
 
+  useEffect(() => {
+    if (!selectedBranchId) {
+      return;
+    }
+
+    let active = true;
+
+    Promise.resolve()
+      .then(() => {
+        if (!active) {
+          return null;
+        }
+        return companyAdminJobsService.getJobs(selectedBranchId);
+      })
+      .then((response) => {
+        if (!active || !response) {
+          return;
+        }
+        setJobs(response);
+      })
+      .catch((loadError) => {
+        if (active) {
+          setError(getApiErrorMessage(loadError, "Không tải được danh sách tin tuyển dụng của chi nhánh."));
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedBranchId]);
+
   const selectedBranch = useMemo(
     () => branches.find((item) => item.chiNhanhId === selectedBranchId) ?? null,
     [branches, selectedBranchId]
@@ -131,6 +164,7 @@ export function useCompanyAdminApplicationsData() {
     selectedBranchId,
     setSelectedBranchId,
     applications,
+    jobs,
     setApplications,
     filters,
     setFilters,

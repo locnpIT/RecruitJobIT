@@ -185,8 +185,32 @@ public class CompanySubAdminController {
             @PathVariable Long jobId,
             @RequestParam(required = false, defaultValue = "10") Integer limit
     ) {
-        var data = semanticMatchingService.timUngVienPhuHopChoTin(principal, jobId, limit);
+        var data = semanticMatchingService.findMatchingCandidatesForJob(principal, jobId, limit);
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách ứng viên phù hợp thành công", data));
+    }
+
+    @GetMapping("/jobs/{jobId}/application-matches")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    // HR xếp hạng semantic các đơn đã nộp cho đúng tin tuyển dụng đang chọn.
+    public ResponseEntity<SuccessResponse<java.util.List<CandidateSemanticMatchResponse>>> getApplicationMatchesForJob(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long jobId,
+            @RequestParam(required = false, defaultValue = "10") Integer limit
+    ) {
+        var data = semanticMatchingService.findSubmittedApplicationMatchesForJob(principal, jobId, limit);
+        return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách đơn ứng tuyển phù hợp thành công", data));
+    }
+
+    @GetMapping("/jobs/{jobId}/candidate-profiles/{profileId}")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    // HR mở hồ sơ từ kết quả AI theo tin ngay cả khi ứng viên chưa nộp đơn.
+    public ResponseEntity<SuccessResponse<CompanyAdminApplicationResponse>> getCandidateProfileForJob(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long jobId,
+            @PathVariable Long profileId
+    ) {
+        var data = companyAdminService.getCandidateProfileForJob(principal, jobId, profileId);
+        return ResponseEntity.ok(new SuccessResponse<>("Lấy hồ sơ ứng viên phù hợp thành công", data));
     }
 
     @PatchMapping("/jobs/{jobId}")

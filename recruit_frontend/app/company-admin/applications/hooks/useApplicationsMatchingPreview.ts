@@ -18,30 +18,23 @@ type ApiErrorLike = {
 // Dùng cho màn company-admin/applications: danh sách đơn thường và AI matching.
 // Tab "AI theo tin" chỉ dùng Qdrant để dễ kiểm chứng semantic search.
 export function useApplicationsMatchingPreview(applications: CompanyAdminApplication[], activeFilterJobId?: string) {
-  const jobs = useMemo(() => {
-    const uniqueJobs = new Map<number, string>();
-    applications.forEach((application) => {
-      if (application.tinTuyenDungId) {
-        uniqueJobs.set(
-          application.tinTuyenDungId,
-          application.tieuDeTinTuyenDung ?? `Tin #${application.tinTuyenDungId}`
-        );
-      }
-    });
-    return Array.from(uniqueJobs.entries()).map(([id, title]) => ({ id, title }));
-  }, [applications]);
-
   const [mode, setMode] = useState<ApplicationMatchingMode>("applications");
-  const [selectedJobId, setSelectedJobId] = useState(0);
   const [minimumScore, setMinimumScore] = useState(20);
   const [selectedMatchKey, setSelectedMatchKey] = useState<string | null>(null);
   const [semanticMatches, setSemanticMatches] = useState<ApplicationCandidateMatch[]>([]);
   const [semanticLoading, setSemanticLoading] = useState(false);
   const [semanticError, setSemanticError] = useState("");
+  const [applicationMatches, setApplicationMatches] = useState<ApplicationCandidateMatch[]>([]);
+  const [applicationSemanticLoading, setApplicationSemanticLoading] = useState(false);
+  const [applicationSemanticError, setApplicationSemanticError] = useState("");
 
-  const filterJobId = activeFilterJobId ? Number(activeFilterJobId) : 0;
-  const preferredJobId = filterJobId || selectedJobId;
-  const effectiveJobId = jobs.some((job) => job.id === preferredJobId) ? preferredJobId : jobs[0]?.id ?? 0;
+  const effectiveJobId = activeFilterJobId ? Number(activeFilterJobId) : 0;
+  const selectedJobTitle = useMemo(
+    () =>
+      applications.find((application) => application.tinTuyenDungId === effectiveJobId)?.tieuDeTinTuyenDung ??
+      (effectiveJobId ? `Tin #${effectiveJobId}` : "Tin tuyển dụng đang lọc"),
+    [applications, effectiveJobId]
+  );
 
   useEffect(() => {
     if (mode !== "job-to-candidates" || !effectiveJobId) {
@@ -92,26 +85,85 @@ export function useApplicationsMatchingPreview(applications: CompanyAdminApplica
     };
   }, [applications, effectiveJobId, minimumScore, mode]);
 
+  useEffect(() => {
+    if (mode !== "applications" || !effectiveJobId) {
+      Promise.resolve().then(() => {
+        setApplicationMatches([]);
+        setApplicationSemanticLoading(false);
+        setApplicationSemanticError("");
+      });
+      return;
+    }
+
+    let active = true;
+    const submittedApplicationCount = applications.filter((application) => application.tinTuyenDungId === effectiveJobId).length;
+    const limit = Math.max(submittedApplicationCount, 10);
+
+    Promise.resolve()
+      .then(() => {
+        if (!active) {
+          return [];
+        }
+        setApplicationSemanticLoading(true);
+        setApplicationSemanticError("");
+        return companyAdminJobsService.getApplicationMatches(effectiveJobId, limit);
+      })
+      .then((data) => {
+        if (!active) {
+          return;
+        }
+        setApplicationMatches(
+          data
+            .map((match) => mapSemanticCandidateMatch(match, applications, effectiveJobId))
+            .filter((match) => match.applicationId != null)
+        );
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+        setApplicationMatches([]);
+        setApplicationSemanticError(resolveSemanticErrorMessage(error));
+      })
+      .finally(() => {
+        if (active) {
+          setApplicationSemanticLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [applications, effectiveJobId, mode]);
+
   const candidateMatches = semanticMatches;
 
   const selectedCandidateMatch = useMemo(
     () => candidateMatches.find((match) => match.matchKey === selectedMatchKey) ?? candidateMatches[0] ?? null,
     [candidateMatches, selectedMatchKey]
   );
+  const selectedApplicationMatch = useMemo(
+    () => applicationMatches.find((match) => match.matchKey === selectedMatchKey) ?? applicationMatches[0] ?? null,
+    [applicationMatches, selectedMatchKey]
+  );
 
   return {
     mode,
     setMode,
-    jobs,
     selectedJobId: effectiveJobId,
-    setSelectedJobId,
+    selectedJobTitle,
     minimumScore,
     setMinimumScore,
     candidateMatches,
+    applicationMatches,
+    selectedApplicationMatch,
+    applicationSemanticLoading,
+    applicationSemanticError,
     semanticLoading,
     semanticError,
     selectedCandidateMatch,
     selectCandidateMatch: setSelectedMatchKey,
+    selectApplicationMatch: setSelectedMatchKey,
   };
 }
 
@@ -140,9 +192,11 @@ function mapSemanticCandidateMatch(
       ? `application-${applicationId}`
       : `profile-${profileId ?? match.nguoiDungId ?? match.ungVienHoTen ?? "unknown"}`,
     applicationId,
+    jobId,
     profileId,
     candidateName: match.ungVienHoTen ?? "--",
     candidateEmail: match.email ?? "--",
+    candidateAvatarUrl: match.anhDaiDienUrl ?? application?.ungVienAnhDaiDienUrl ?? null,
     profileTitle: match.tenHoSo ?? resolveProfileTitle(application) ?? "Hồ sơ ứng viên",
     jobTitle: application?.tieuDeTinTuyenDung ?? "Kết quả Qdrant",
     status: application?.trangThai ?? null,
@@ -168,6 +222,9 @@ function findApplicationForSemanticMatch(
   return applications.find((application) => {
     if (application.tinTuyenDungId !== jobId) {
       return false;
+    }
+    if (match.donUngTuyenId && application.id === match.donUngTuyenId) {
+      return true;
     }
     if (match.hoSoUngVienId && application.hoSoUngVienId === match.hoSoUngVienId) {
       return true;

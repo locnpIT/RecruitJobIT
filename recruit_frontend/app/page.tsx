@@ -3,6 +3,7 @@ import { FeaturedJobsSection } from "./components/home/FeaturedJobsSection";
 import { HeroSection } from "./components/home/HeroSection";
 import { HomeHeader } from "./components/home/HomeHeader";
 import { HomeFooter } from "./components/home/HomeFooter";
+import { RecommendedJobsSection } from "./components/home/RecommendedJobsSection";
 import { TopCompaniesSection } from "./components/home/TopCompaniesSection";
 
 // Trang chủ public (localhost:3000):
@@ -15,6 +16,7 @@ export default function HomePage() {
         <HeroSection />
         <TopCompaniesSection />
         <FeaturedJobsSection />
+        <RecommendedJobsSection />
         <CandidateCtaSection />
       </main>
       <HomeFooter />

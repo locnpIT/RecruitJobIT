@@ -1,5 +1,6 @@
 import { Eye, MessageSquare, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import type { CandidateActionTarget } from "../../hooks/useCompanyAdminApplicationsActions";
 import { ApplicationStatusBadge } from "../ApplicationStatusBadge";
 import type { ApplicationCandidateMatch } from "./types";
 import { MatchScoreBadge } from "./MatchScoreBadge";
@@ -8,16 +9,16 @@ import { SignalChips } from "./SignalChips";
 type ApplicationCandidateMatchesTableProps = {
   matches: ApplicationCandidateMatch[];
   selectedMatchKey?: string | null;
-  openingChatApplicationId: number | null;
+  openingChatTargetKey: string | null;
   onSelectMatch: (matchKey: string) => void;
-  onOpenChat: (applicationId: number | null) => void;
-  onOpenDetail: (applicationId: number | null) => void;
+  onOpenChat: (target: CandidateActionTarget) => void;
+  onOpenDetail: (target: CandidateActionTarget) => void;
 };
 
 export function ApplicationCandidateMatchesTable({
   matches,
   selectedMatchKey,
-  openingChatApplicationId,
+  openingChatTargetKey,
   onSelectMatch,
   onOpenChat,
   onOpenDetail,
@@ -45,8 +46,17 @@ export function ApplicationCandidateMatchesTable({
         <tbody>
           {matches.map((match) => {
             const selected = selectedMatchKey === match.matchKey;
-            const hasApplication = match.applicationId != null;
-            const chatLoading = hasApplication && openingChatApplicationId === match.applicationId;
+            const canOpenProfile = match.applicationId != null || match.profileId != null;
+            const canOpenChat = match.applicationId != null || (match.jobId != null && match.profileId != null);
+            const actionTarget = {
+              applicationId: match.applicationId,
+              jobId: match.jobId,
+              profileId: match.profileId,
+            };
+            const chatTargetKey = match.applicationId
+              ? `application-${match.applicationId}`
+              : `profile-${match.jobId ?? "unknown"}-${match.profileId ?? "unknown"}`;
+            const chatLoading = canOpenChat && openingChatTargetKey === chatTargetKey;
 
             return (
               <tr key={match.matchKey} className={`border-b border-slate-200 last:border-0 ${selected ? "bg-teal-50/60" : "bg-white"}`}>
@@ -54,7 +64,12 @@ export function ApplicationCandidateMatchesTable({
                   <button type="button" onClick={() => onSelectMatch(match.matchKey)} className="text-left">
                     <div className="flex items-center gap-3">
                       <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-600">
-                        <UserRound className="h-5 w-5" />
+                        {match.candidateAvatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={match.candidateAvatarUrl} alt={match.candidateName} className="h-full w-full rounded-full object-cover" />
+                        ) : (
+                          <UserRound className="h-5 w-5" />
+                        )}
                       </span>
                       <span>
                         <span className="block font-semibold text-slate-950">{match.candidateName}</span>
@@ -78,9 +93,9 @@ export function ApplicationCandidateMatchesTable({
                       type="button"
                       variant="outline"
                       size="sm"
-                      disabled={!hasApplication}
-                      title={hasApplication ? undefined : "Chưa có đơn ứng tuyển tương ứng để mở hồ sơ trong màn này."}
-                      onClick={() => onOpenDetail(match.applicationId)}
+                      disabled={!canOpenProfile}
+                      title={canOpenProfile ? undefined : "Kết quả này chưa có hồ sơ ứng viên hợp lệ."}
+                      onClick={() => onOpenDetail(actionTarget)}
                     >
                       <Eye className="mr-1.5 h-3.5 w-3.5" />
                       Hồ sơ
@@ -89,9 +104,9 @@ export function ApplicationCandidateMatchesTable({
                       type="button"
                       variant="secondary"
                       size="sm"
-                      disabled={!hasApplication || chatLoading}
-                      title={hasApplication ? undefined : "Chưa có đơn ứng tuyển tương ứng để mở chat."}
-                      onClick={() => onOpenChat(match.applicationId)}
+                      disabled={!canOpenChat || chatLoading}
+                      title={canOpenChat ? undefined : "Kết quả này chưa đủ dữ liệu để mở chat."}
+                      onClick={() => onOpenChat(actionTarget)}
                     >
                       <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
                       {chatLoading ? "Đang mở..." : "Nhắn"}

@@ -4,15 +4,8 @@ import { useMemo, useState } from "react";
 import type { CandidateWorkExperienceItem } from "@/services/candidate-profile.service";
 import { ProfileModal } from "./ProfileModal";
 import { ProfileModalTabs, type ProfileModalTab } from "./ProfileModalTabs";
+import type { WorkExperienceFormState } from "./profileFormTypes";
 import { ProfileActionButton } from "../ProfileActionButton";
-
-type WorkExperienceFormState = {
-  tenCongTy: string;
-  chucDanh: string;
-  moTaCongViec: string;
-  thoiGianBatDau: string;
-  thoiGianKetThuc: string;
-};
 
 const EMPTY_FORM: WorkExperienceFormState = {
   tenCongTy: "",

@@ -3,14 +3,7 @@ import type { CandidateCertificateItem, CandidateProfileMetadata } from "@/servi
 import { ProfileActionButton } from "./ProfileActionButton";
 import { ProofStatusPill } from "./ProofStatusPill";
 import { CertificateModal } from "./modals/CertificateModal";
-
-type CertificateFormState = {
-  loaiChungChiId: string;
-  tenChungChi: string;
-  ngayBatDau: string;
-  ngayHetHan: string;
-  duongDanTep: string;
-};
+import type { CertificateFormState } from "./modals/profileFormTypes";
 
 export function CertificatePanel({
   metadata,
@@ -101,6 +94,7 @@ export function CertificatePanel({
 
       {open ? (
         <CertificateModal
+          key={editingItem ? `edit-${editingItem.id}` : "create"}
           open={open}
           items={items}
           metadata={metadata}

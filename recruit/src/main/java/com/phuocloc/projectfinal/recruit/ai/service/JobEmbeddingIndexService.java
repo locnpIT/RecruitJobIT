@@ -39,7 +39,7 @@ public class JobEmbeddingIndexService {
     private final QdrantProperties qdrantProperties;
 
     @Transactional
-    public DongBoIndexSummary dongBoToanBoTinPublic() {
+    public DongBoIndexSummary reindexAllPublicJobs() {
         if (!qdrantClientService.isEnabled()) {
             return new DongBoIndexSummary(false, 0, 0, 0);
         }
@@ -48,7 +48,7 @@ public class JobEmbeddingIndexService {
         int failed = 0;
         for (TinTuyenDung job : jobs) {
             try {
-                dongBoHoacTamDungChiMuc(job);
+                syncOrDeactivateIndex(job);
                 success++;
             } catch (RuntimeException ex) {
                 failed++;
@@ -65,35 +65,35 @@ public class JobEmbeddingIndexService {
      * Các tin còn lại sẽ bị rút khỏi vector store để tránh xuất hiện trong kết quả semantic.</p>
      */
     @Transactional
-    public void dongBoHoacTamDungChiMuc(TinTuyenDung tinTuyenDung) {
+    public void syncOrDeactivateIndex(TinTuyenDung tinTuyenDung) {
         if (tinTuyenDung == null || tinTuyenDung.getId() == null || !qdrantClientService.isEnabled()) {
             return;
         }
-        String pointId = taoMaDiem(tinTuyenDung.getId());
+        String pointId = buildPointId(tinTuyenDung.getId());
 
         // Chỉ index tin đang hoạt động public; còn lại xóa khỏi vector store để kết quả semantic sạch.
-        if (!laTinHoatDongDeTimKiem(tinTuyenDung)) {
+        if (!isActiveForSearch(tinTuyenDung)) {
             try {
                 qdrantClientService.deletePoint(qdrantProperties.getKhoTinTuyenDung(), pointId);
             } catch (Exception ex) {
                 log.debug("Không xóa được point {} khỏi Qdrant (có thể chưa tồn tại)", pointId, ex);
             }
-            luuTrangThai(tinTuyenDung, pointId, TRANG_THAI_TAM_DUNG);
+            saveIndexStatus(tinTuyenDung, pointId, TRANG_THAI_TAM_DUNG);
             return;
         }
 
         try {
-            String noiDung = ghepNoiDungNhung(tinTuyenDung);
-            List<Float> vector = vanBanNhungService.taoVector(noiDung);
+            String noiDung = buildEmbeddingContent(tinTuyenDung);
+            List<Float> vector = vanBanNhungService.generateVector(noiDung);
             qdrantClientService.upsertPoint(
                     qdrantProperties.getKhoTinTuyenDung(),
                     pointId,
                     vector,
-                    taoPayload(tinTuyenDung)
+                    buildPayload(tinTuyenDung)
             );
-            luuTrangThai(tinTuyenDung, pointId, TRANG_THAI_DA_CHI_MUC);
+            saveIndexStatus(tinTuyenDung, pointId, TRANG_THAI_DA_CHI_MUC);
         } catch (Exception ex) {
-            luuTrangThai(tinTuyenDung, pointId, TRANG_THAI_LOI);
+            saveIndexStatus(tinTuyenDung, pointId, TRANG_THAI_LOI);
             log.warn("Không đồng bộ được chỉ mục nhúng cho tin tuyển dụng {}", tinTuyenDung.getId(), ex);
         }
     }
@@ -101,14 +101,14 @@ public class JobEmbeddingIndexService {
     /**
      * Rule active của semantic search job.
      */
-    private boolean laTinHoatDongDeTimKiem(TinTuyenDung tinTuyenDung) {
+    private boolean isActiveForSearch(TinTuyenDung tinTuyenDung) {
         return tinTuyenDung.getNgayXoa() == null && "APPROVED".equalsIgnoreCase(tinTuyenDung.getTrangThai());
     }
 
     /**
      * Ghi log trạng thái index mới để giữ quan hệ 1-nhiều giữa tin tuyển dụng và lịch sử đồng bộ.
      */
-    private void luuTrangThai(TinTuyenDung tinTuyenDung, String maDiem, String trangThai) {
+    private void saveIndexStatus(TinTuyenDung tinTuyenDung, String maDiem, String trangThai) {
         ChiMucNhungTinTuyenDung chiMuc = new ChiMucNhungTinTuyenDung();
         chiMuc.setTinTuyenDung(tinTuyenDung);
         chiMuc.setMaDiem(maDiem);
@@ -117,7 +117,7 @@ public class JobEmbeddingIndexService {
         chiMucRepository.save(chiMuc);
     }
 
-    private String taoMaDiem(Integer tinTuyenDungId) {
+    private String buildPointId(Integer tinTuyenDungId) {
         return UUID.nameUUIDFromBytes(("tin-tuyen-dung-" + tinTuyenDungId).getBytes(StandardCharsets.UTF_8)).toString();
     }
 
@@ -125,8 +125,8 @@ public class JobEmbeddingIndexService {
      * Tạo vector truy vấn cho một job bất kỳ, kể cả job chưa APPROVED.
      * Dùng cho matching nội bộ HR, không phụ thuộc trạng thái public index.
      */
-    public List<Float> taoVectorTruyVan(TinTuyenDung tinTuyenDung) {
-        return vanBanNhungService.taoVector(ghepNoiDungNhung(tinTuyenDung));
+    public List<Float> generateQueryVector(TinTuyenDung tinTuyenDung) {
+        return vanBanNhungService.generateVector(buildEmbeddingContent(tinTuyenDung));
     }
 
     /**
@@ -137,12 +137,12 @@ public class JobEmbeddingIndexService {
      * upsert vào collection tin tuyển dụng và lưu thêm một dòng lịch sử sync trong DB.</p>
      */
     @Transactional
-    public List<Float> layHoacTaoVectorChiMucChoMatching(TinTuyenDung tinTuyenDung) {
+    public List<Float> getOrCreateIndexVectorForMatching(TinTuyenDung tinTuyenDung) {
         if (tinTuyenDung == null || tinTuyenDung.getId() == null) {
             throw new IllegalArgumentException("Thiếu tin tuyển dụng để tạo vector matching");
         }
         if (!qdrantClientService.isEnabled()) {
-            return taoVectorTruyVan(tinTuyenDung);
+            return generateQueryVector(tinTuyenDung);
         }
 
         var latestIndex = chiMucRepository.findFirstByTinTuyenDung_IdOrderByIdDesc(tinTuyenDung.getId());
@@ -158,19 +158,19 @@ public class JobEmbeddingIndexService {
             }
         }
 
-        String pointId = taoMaDiem(tinTuyenDung.getId());
+        String pointId = buildPointId(tinTuyenDung.getId());
         try {
-            List<Float> vector = taoVectorTruyVan(tinTuyenDung);
+            List<Float> vector = generateQueryVector(tinTuyenDung);
             qdrantClientService.upsertPoint(
                     qdrantProperties.getKhoTinTuyenDung(),
                     pointId,
                     vector,
-                    taoPayload(tinTuyenDung)
+                    buildPayload(tinTuyenDung)
             );
-            luuTrangThai(tinTuyenDung, pointId, TRANG_THAI_DA_CHI_MUC);
+            saveIndexStatus(tinTuyenDung, pointId, TRANG_THAI_DA_CHI_MUC);
             return vector;
         } catch (Exception ex) {
-            luuTrangThai(tinTuyenDung, pointId, TRANG_THAI_LOI);
+            saveIndexStatus(tinTuyenDung, pointId, TRANG_THAI_LOI);
             throw ex;
         }
     }
@@ -178,7 +178,7 @@ public class JobEmbeddingIndexService {
     /**
      * Payload phụ trợ của point để dùng khi filter/debug trên Qdrant.
      */
-    private Map<String, Object> taoPayload(TinTuyenDung tinTuyenDung) {
+    private Map<String, Object> buildPayload(TinTuyenDung tinTuyenDung) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("tinTuyenDungId", tinTuyenDung.getId());
         payload.put("trangThai", tinTuyenDung.getTrangThai());
@@ -194,7 +194,7 @@ public class JobEmbeddingIndexService {
      * Gom toàn bộ thông tin job thành text ngữ nghĩa:
      * mô tả/yêu cầu/phúc lợi, metadata nghề nghiệp, địa điểm, kỹ năng.
      */
-    private String ghepNoiDungNhung(TinTuyenDung tinTuyenDung) {
+    private String buildEmbeddingContent(TinTuyenDung tinTuyenDung) {
         StringBuilder sb = new StringBuilder(1024);
         append(sb, "Tieu de", tinTuyenDung.getTieuDe());
         append(sb, "Mo ta", tinTuyenDung.getMoTa());

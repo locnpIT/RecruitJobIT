@@ -69,6 +69,22 @@ public class CandidateProfileController {
         return ResponseEntity.ok(new SuccessResponse<>("Tạo hồ sơ ứng viên thành công", data));
     }
 
+    @GetMapping("/recommended-jobs")
+    // Homepage gọi endpoint này cho mục "Việc làm phù hợp với tôi".
+    // Nếu candidate chưa có hồ sơ thì trả [] để frontend không render section theo đúng rule QA.
+    public ResponseEntity<SuccessResponse<List<JobSemanticMatchResponse>>> getRecommendedJobs(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "6") Integer limit
+    ) {
+        requireCandidate(principal);
+        Long profileId = candidateProfileService.findLatestProfileIdOrNull(principal.getUserId());
+        if (profileId == null) {
+            return ResponseEntity.ok(new SuccessResponse<>("Ứng viên chưa có hồ sơ để gợi ý việc làm", List.of()));
+        }
+        var data = semanticMatchingService.findMatchingJobsForProfile(principal.getUserId(), profileId, limit);
+        return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách việc làm phù hợp thành công", data));
+    }
+
     @GetMapping("/{profileId}")
     // Lấy chi tiết một hồ sơ ứng viên cụ thể theo profileId.
     // Frontend gọi route này khi user chuyển giữa các hồ sơ trong selector profile.
@@ -89,7 +105,7 @@ public class CandidateProfileController {
             @org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "10") Integer limit
     ) {
         requireCandidate(principal);
-        var data = semanticMatchingService.timTinPhuHopChoHoSo(principal.getUserId(), profileId, limit);
+        var data = semanticMatchingService.findMatchingJobsForProfile(principal.getUserId(), profileId, limit);
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách việc làm phù hợp thành công", data));
     }
 

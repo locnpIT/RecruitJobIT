@@ -58,6 +58,20 @@ public class ChatController {
         ));
     }
 
+    @PostMapping("/jobs/{jobId}/candidate-profiles/{profileId}/open")
+    // HR/Owner chủ động mở room với ứng viên từ kết quả AI Matching theo tin.
+    public ResponseEntity<SuccessResponse<ChatConversationResponse>> openByCandidateProfile(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long jobId,
+            @PathVariable Long profileId
+    ) {
+        requireAuthenticated(principal);
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Mở cuộc trò chuyện thành công",
+                chatService.openConversationByCandidateProfileForRecruiter(principal.getUserId(), jobId, profileId)
+        ));
+    }
+
     @GetMapping("/conversations")
     // Lấy inbox hiện tại của user đăng nhập.
     public ResponseEntity<SuccessResponse<List<ChatConversationResponse>>> listConversations(

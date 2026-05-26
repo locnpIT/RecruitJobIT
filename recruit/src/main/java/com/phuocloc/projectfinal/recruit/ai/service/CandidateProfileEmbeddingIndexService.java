@@ -47,7 +47,7 @@ public class CandidateProfileEmbeddingIndexService {
     private final QdrantProperties qdrantProperties;
 
     @Transactional
-    public DongBoIndexSummary dongBoTatCaHoSo() {
+    public DongBoIndexSummary reindexAllProfiles() {
         if (!qdrantClientService.isEnabled()) {
             return new DongBoIndexSummary(false, 0, 0, 0);
         }
@@ -58,7 +58,7 @@ public class CandidateProfileEmbeddingIndexService {
         int failed = 0;
         for (HoSoUngVien profile : profiles) {
             try {
-                dongBoChiMuc(profile);
+                syncIndex(profile);
                 success++;
             } catch (RuntimeException ex) {
                 failed++;
@@ -78,24 +78,24 @@ public class CandidateProfileEmbeddingIndexService {
      * 4) Lưu trạng thái index trong bảng ChiMucNhungHoSoUngVien.</p>
      */
     @Transactional
-    public void dongBoChiMuc(HoSoUngVien hoSoUngVien) {
+    public void syncIndex(HoSoUngVien hoSoUngVien) {
         if (hoSoUngVien == null || hoSoUngVien.getId() == null || !qdrantClientService.isEnabled()) {
             return;
         }
-        String pointId = taoMaDiem(hoSoUngVien.getId());
+        String pointId = buildPointId(hoSoUngVien.getId());
 
         try {
-            String noiDung = ghepNoiDungNhung(hoSoUngVien);
-            List<Float> vector = vanBanNhungService.taoVector(noiDung);
+            String noiDung = buildEmbeddingContent(hoSoUngVien);
+            List<Float> vector = vanBanNhungService.generateVector(noiDung);
             qdrantClientService.upsertPoint(
                     qdrantProperties.getKhoHoSoUngVien(),
                     pointId,
                     vector,
-                    taoPayload(hoSoUngVien)
+                    buildPayload(hoSoUngVien)
             );
-            luuTrangThai(hoSoUngVien, pointId, TRANG_THAI_DA_CHI_MUC);
+            saveIndexStatus(hoSoUngVien, pointId, TRANG_THAI_DA_CHI_MUC);
         } catch (Exception ex) {
-            luuTrangThai(hoSoUngVien, pointId, TRANG_THAI_LOI);
+            saveIndexStatus(hoSoUngVien, pointId, TRANG_THAI_LOI);
             log.warn("Không đồng bộ được chỉ mục nhúng cho hồ sơ ứng viên {}", hoSoUngVien.getId(), ex);
         }
     }
@@ -103,7 +103,7 @@ public class CandidateProfileEmbeddingIndexService {
     /**
      * Ghi log trạng thái index mới để giữ quan hệ 1-nhiều giữa hồ sơ và lịch sử đồng bộ.
      */
-    private void luuTrangThai(HoSoUngVien hoSoUngVien, String maDiem, String trangThai) {
+    private void saveIndexStatus(HoSoUngVien hoSoUngVien, String maDiem, String trangThai) {
         ChiMucNhungHoSoUngVien chiMuc = new ChiMucNhungHoSoUngVien();
         chiMuc.setHoSoUngVien(hoSoUngVien);
         chiMuc.setMaDiem(maDiem);
@@ -112,21 +112,66 @@ public class CandidateProfileEmbeddingIndexService {
         chiMucRepository.save(chiMuc);
     }
 
-    private String taoMaDiem(Integer hoSoUngVienId) {
+    private String buildPointId(Integer hoSoUngVienId) {
         return UUID.nameUUIDFromBytes(("ho-so-ung-vien-" + hoSoUngVienId).getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     /**
      * Tạo vector truy vấn từ hồ sơ ứng viên để search các job phù hợp.
      */
-    public List<Float> taoVectorTruyVan(HoSoUngVien hoSoUngVien) {
-        return vanBanNhungService.taoVector(ghepNoiDungNhung(hoSoUngVien));
+    public List<Float> generateQueryVector(HoSoUngVien hoSoUngVien) {
+        return vanBanNhungService.generateVector(buildEmbeddingContent(hoSoUngVien));
+    }
+
+    /**
+     * Lazy-load vector hồ sơ cho matching.
+     *
+     * <p>Nếu đã có point INDEXED trong Qdrant thì dùng lại vector đó để tránh gọi model Python lặp lại.
+     * Nếu point bị mất hoặc chưa từng index, service sẽ tạo mới, upsert và lưu một dòng lịch sử sync.</p>
+     */
+    @Transactional
+    public List<Float> getOrCreateIndexVectorForMatching(HoSoUngVien hoSoUngVien) {
+        if (hoSoUngVien == null || hoSoUngVien.getId() == null) {
+            throw new IllegalArgumentException("Thiếu hồ sơ ứng viên để tạo vector matching");
+        }
+        if (!qdrantClientService.isEnabled()) {
+            return generateQueryVector(hoSoUngVien);
+        }
+
+        var latestIndex = chiMucRepository.findFirstByHoSoUngVien_IdOrderByIdDesc(hoSoUngVien.getId());
+        if (latestIndex.isPresent()
+                && TRANG_THAI_DA_CHI_MUC.equalsIgnoreCase(latestIndex.get().getTrangThai())
+                && StringUtils.hasText(latestIndex.get().getMaDiem())) {
+            var existingVector = qdrantClientService.getPointVector(
+                    qdrantProperties.getKhoHoSoUngVien(),
+                    latestIndex.get().getMaDiem()
+            );
+            if (existingVector.isPresent()) {
+                return existingVector.get();
+            }
+        }
+
+        String pointId = buildPointId(hoSoUngVien.getId());
+        try {
+            List<Float> vector = generateQueryVector(hoSoUngVien);
+            qdrantClientService.upsertPoint(
+                    qdrantProperties.getKhoHoSoUngVien(),
+                    pointId,
+                    vector,
+                    buildPayload(hoSoUngVien)
+            );
+            saveIndexStatus(hoSoUngVien, pointId, TRANG_THAI_DA_CHI_MUC);
+            return vector;
+        } catch (Exception ex) {
+            saveIndexStatus(hoSoUngVien, pointId, TRANG_THAI_LOI);
+            throw ex;
+        }
     }
 
     /**
      * Metadata phụ lưu kèm point trên Qdrant để phục vụ filter/debug.
      */
-    private Map<String, Object> taoPayload(HoSoUngVien hoSoUngVien) {
+    private Map<String, Object> buildPayload(HoSoUngVien hoSoUngVien) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("hoSoUngVienId", hoSoUngVien.getId());
         payload.put("nguoiDungId", hoSoUngVien.getNguoiDung() == null ? null : hoSoUngVien.getNguoiDung().getId());
@@ -138,7 +183,7 @@ public class CandidateProfileEmbeddingIndexService {
      * Hợp nhất toàn bộ nội dung hồ sơ thành một text duy nhất trước khi embedding.
      * Cách này giúp vector thể hiện ngữ cảnh tổng thể của ứng viên.
      */
-    private String ghepNoiDungNhung(HoSoUngVien hoSoUngVien) {
+    private String buildEmbeddingContent(HoSoUngVien hoSoUngVien) {
         StringBuilder sb = new StringBuilder(1024);
 
         append(sb, "Muc tieu nghe nghiep", hoSoUngVien.getMucTieuNgheNghiep());
@@ -162,7 +207,7 @@ public class CandidateProfileEmbeddingIndexService {
             append(sb, "Kinh nghiem", item.getChucDanh());
             append(sb, "Cong ty", item.getTenCongTy());
             append(sb, "Mo ta cong viec", item.getMoTaCongViec());
-            appendKhoangThoiGian(sb, "Thoi gian kinh nghiem", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
+            appendTimeRange(sb, "Thoi gian kinh nghiem", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
         });
         hoSoHocVanRepository.findByHoSoUngVien_IdOrderByHocVan_ThoiGianBatDauDesc(hoSoUngVien.getId()).forEach(link -> {
             var item = link.getHocVan();
@@ -172,7 +217,7 @@ public class CandidateProfileEmbeddingIndexService {
             append(sb, "Hoc van", item.getBacHoc());
             append(sb, "Chuyen nganh", item.getChuyenNganh());
             append(sb, "Truong", item.getTenTruong());
-            appendKhoangThoiGian(sb, "Thoi gian hoc", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
+            appendTimeRange(sb, "Thoi gian hoc", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
         });
         hoSoChungChiRepository.findByHoSoUngVien_IdOrderByChungChi_NgayBatDauDesc(hoSoUngVien.getId()).forEach(link -> {
             var item = link.getChungChi();
@@ -191,7 +236,7 @@ public class CandidateProfileEmbeddingIndexService {
     /**
      * Chuẩn hóa cách ghi mốc thời gian thành chuỗi để model embedding hiểu liên tục quá trình.
      */
-    private void appendKhoangThoiGian(StringBuilder sb, String label, LocalDate from, LocalDate to) {
+    private void appendTimeRange(StringBuilder sb, String label, LocalDate from, LocalDate to) {
         if (from == null && to == null) {
             return;
         }
