@@ -32,18 +32,21 @@ import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.KinhNghiemLamViec
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.KyNangUngVien;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.LoaiChungChi;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.NganhNgheUngVien;
+import com.phuocloc.projectfinal.recruit.ai.service.KinhNghiemEmbeddingIndexService;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CandidateProfileContentService {
 
     private static final String PROOF_STATUS_UNVERIFIED = "UNVERIFIED";
@@ -62,6 +65,7 @@ public class CandidateProfileContentService {
     private final HoSoHocVanRepository hoSoHocVanRepository;
     private final HoSoKinhNghiemRepository hoSoKinhNghiemRepository;
     private final HoSoChungChiRepository hoSoChungChiRepository;
+    private final KinhNghiemEmbeddingIndexService kinhNghiemEmbeddingIndexService;
 
     public CandidateProfileResponse.HocVanItem createHocVan(HoSoUngVien profile, UpsertHocVanRequest request) {
         NguoiDung nguoiDung = profile.getNguoiDung();
@@ -101,6 +105,7 @@ public class CandidateProfileContentService {
         applyKinhNghiem(entity, nguoiDung, request);
         KinhNghiemLamViecUngVien saved = kinhNghiemLamViecUngVienRepository.save(entity);
         hoSoKinhNghiemRepository.save(new HoSoKinhNghiem(profile, saved));
+        syncKinhNghiemIndexQuietly(saved);
         return candidateProfileMapper.mapKinhNghiem(saved, true);
     }
 
@@ -115,6 +120,7 @@ public class CandidateProfileContentService {
         if (!hoSoKinhNghiemRepository.existsByHoSoUngVien_IdAndKinhNghiem_Id(profile.getId(), kinhNghiemInt)) {
             hoSoKinhNghiemRepository.save(new HoSoKinhNghiem(profile, saved));
         }
+        syncKinhNghiemIndexQuietly(saved);
         return candidateProfileMapper.mapKinhNghiem(saved, true);
     }
 
@@ -123,6 +129,7 @@ public class CandidateProfileContentService {
         KinhNghiemLamViecUngVien entity = kinhNghiemLamViecUngVienRepository.findById(kinhNghiemInt)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy kinh nghiệm làm việc"));
         ensureOwner(profile.getNguoiDung(), entity.getNguoiDung());
+        kinhNghiemEmbeddingIndexService.deleteIndex(kinhNghiemInt);
         hoSoKinhNghiemRepository.deleteByKinhNghiem_Id(kinhNghiemInt);
         kinhNghiemLamViecUngVienRepository.delete(entity);
     }
@@ -330,6 +337,19 @@ public class CandidateProfileContentService {
         Integer actualId = actualUser == null ? null : actualUser.getId();
         if (!Objects.equals(expectedId, actualId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Không có quyền thao tác dữ liệu này");
+        }
+    }
+
+    /**
+     * Đồng bộ embedding kinh nghiệm vào Qdrant sau create/update.
+     * Lỗi embedding không làm thất bại thao tác chính — chỉ log warning.
+     */
+    private void syncKinhNghiemIndexQuietly(KinhNghiemLamViecUngVien saved) {
+        try {
+            kinhNghiemEmbeddingIndexService.syncIndex(saved);
+        } catch (Exception ex) {
+            log.warn("Không đồng bộ được embedding kinh nghiệm {} — bỏ qua để không ảnh hưởng thao tác chính",
+                    saved.getId(), ex);
         }
     }
 }

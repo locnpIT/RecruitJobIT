@@ -109,7 +109,7 @@ public class SemanticMatchingService {
                 .forEach(profile -> profiles.put(profile.getId(), profile));
 
         return resultByProfileId.entrySet().stream()
-                .map(entry -> mapCandidateMatch(job, profiles.get(entry.getKey()), entry.getValue()))
+                .map(entry -> mapCandidateMatch(job, profiles.get(entry.getKey()), entry.getValue(), queryVector))
                 .filter(Objects::nonNull)
                 .sorted(matchScoreComparator())
                 .limit(normalizeLimit(limit))
@@ -151,7 +151,7 @@ public class SemanticMatchingService {
         applications.forEach(application -> applicationById.put(application.getId(), application));
 
         return results.stream()
-                .map(result -> mapSubmittedApplicationMatch(job, applicationById.get(intPayload(result.payload(), "donUngTuyenId")), result))
+                .map(result -> mapSubmittedApplicationMatch(job, applicationById.get(intPayload(result.payload(), "donUngTuyenId")), result, queryVector))
                 .filter(Objects::nonNull)
                 .sorted(matchScoreComparator())
                 .limit(normalizeLimit(limit))
@@ -212,13 +212,14 @@ public class SemanticMatchingService {
                 .toList();
     }
 
-    private CandidateSemanticMatchResponse mapCandidateMatch(TinTuyenDung job, HoSoUngVien profile, QdrantSearchResult result) {
+    private CandidateSemanticMatchResponse mapCandidateMatch(
+            TinTuyenDung job, HoSoUngVien profile, QdrantSearchResult result, List<Float> jobVector) {
         if (profile == null || profile.getNguoiDung() == null || !Boolean.TRUE.equals(profile.getNguoiDung().getDangHoatDong())) {
             return null;
         }
         var user = profile.getNguoiDung();
         double semanticPercent = toPercent(result.score());
-        CandidateMatchExplanation explanation = explanationService.buildCandidateExplanation(job, profile, semanticPercent);
+        CandidateMatchExplanation explanation = explanationService.buildCandidateExplanation(job, profile, semanticPercent, jobVector);
         return CandidateSemanticMatchResponse.builder()
                 .hoSoUngVienId(toLong(profile.getId()))
                 .nguoiDungId(toLong(user.getId()))
@@ -239,7 +240,8 @@ public class SemanticMatchingService {
                 .build();
     }
 
-    private CandidateSemanticMatchResponse mapSubmittedApplicationMatch(TinTuyenDung job, DonUngTuyen application, QdrantSearchResult result) {
+    private CandidateSemanticMatchResponse mapSubmittedApplicationMatch(
+            TinTuyenDung job, DonUngTuyen application, QdrantSearchResult result, List<Float> jobVector) {
         if (application == null || application.getHoSoUngVien() == null) {
             return null;
         }
@@ -250,7 +252,7 @@ public class SemanticMatchingService {
 
         var user = profile.getNguoiDung();
         double semanticPercent = toPercent(result.score());
-        CandidateMatchExplanation explanation = explanationService.buildCandidateExplanation(job, profile, semanticPercent);
+        CandidateMatchExplanation explanation = explanationService.buildCandidateExplanation(job, profile, semanticPercent, jobVector);
         return CandidateSemanticMatchResponse.builder()
                 .donUngTuyenId(toLong(application.getId()))
                 .hoSoUngVienId(toLong(profile.getId()))

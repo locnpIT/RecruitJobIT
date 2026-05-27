@@ -31,4 +31,6 @@ public class QdrantProperties {
     private String khoDonUngTuyen = "chi_muc_nhung_don_ung_tuyen";
     // Tên collection lưu embedding tin tuyển dụng.
     private String khoTinTuyenDung = "chi_muc_nhung_tin_tuyen_dung";
+    // Tên collection lưu embedding kinh nghiệm làm việc ứng viên.
+    private String khoKinhNghiem = "chi_muc_nhung_kinh_nghiem";
 }
