@@ -50,12 +50,24 @@ public class KinhNghiemEmbeddingIndexService {
      */
     @Transactional
     public void syncIndex(KinhNghiemLamViecUngVien kinhNghiem) {
+        syncIndexInternal(kinhNghiem);
+    }
+
+    /**
+     * Embed kinh nghiệm và trả về kết quả để luồng admin backfill thống kê chính xác.
+     */
+    @Transactional
+    public boolean syncIndexWithResult(KinhNghiemLamViecUngVien kinhNghiem) {
+        return syncIndexInternal(kinhNghiem);
+    }
+
+    private boolean syncIndexInternal(KinhNghiemLamViecUngVien kinhNghiem) {
         if (kinhNghiem == null || kinhNghiem.getId() == null || !qdrantClientService.isEnabled()) {
-            return;
+            return false;
         }
         String noiDung = buildEmbeddingContent(kinhNghiem);
         if (!StringUtils.hasText(noiDung)) {
-            return;
+            return false;
         }
         String pointId = buildPointId(kinhNghiem.getId());
         try {
@@ -68,9 +80,11 @@ public class KinhNghiemEmbeddingIndexService {
             );
             saveIndexStatus(kinhNghiem, pointId, TRANG_THAI_DA_CHI_MUC);
             log.debug("Đã index kinh nghiệm {} vào Qdrant", kinhNghiem.getId());
+            return true;
         } catch (Exception ex) {
             saveIndexStatus(kinhNghiem, pointId, TRANG_THAI_LOI);
             log.warn("Không đồng bộ được embedding kinh nghiệm {}", kinhNghiem.getId(), ex);
+            return false;
         }
     }
 

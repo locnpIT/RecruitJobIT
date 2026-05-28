@@ -16,6 +16,7 @@ type CompanyAdminSidebarProps = {
   companyLogo?: string | null;
   companyStatus?: string | null;
   companyRole?: string | null;
+  applicationCount?: number;
 };
 
 /**
@@ -32,6 +33,7 @@ export function CompanyAdminSidebar({
   companyLogo,
   companyStatus,
   companyRole,
+  applicationCount = 0,
 }: CompanyAdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -88,6 +90,7 @@ export function CompanyAdminSidebar({
           }
           const isActive = pathname === item.href;
           const isDisabled = item.requiresApprovedCompany && !companyApproved;
+          const showApplicationBadge = item.href === "/company-admin/applications" && applicationCount > 0;
           return (
             isDisabled ? (
               // Route phụ thuộc công ty đã duyệt thì giữ nguyên label nhưng khóa trạng thái để giải thích flow.
@@ -102,26 +105,23 @@ export function CompanyAdminSidebar({
                 key={item.href}
                 href={item.href}
                 onClick={onNavigate}
-                className={`mb-1 block rounded-md px-3 py-2 transition ${
+                className={`mb-1 flex items-center justify-between gap-3 rounded-md px-3 py-2 transition ${
                   isActive ? "bg-[#008080] font-semibold text-white" : "text-slate-700 hover:bg-slate-100"
                 }`}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {showApplicationBadge ? (
+                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-semibold leading-none text-white">
+                    {applicationCount > 99 ? "99+" : applicationCount}
+                  </span>
+                ) : null}
               </Link>
             )
-          );
+            );
         })}
-      </nav>
 
-      <div className="border-t border-slate-200 p-4">
-        {!companyApproved ? (
-          <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs leading-5 text-amber-800">
-            {companyRejected
-              ? "Công ty đã bị từ chối. Chỉ có thể cập nhật logo và gửi duyệt lại ở mục Tuỳ chỉnh."
-              : "Công ty đang chờ duyệt. Chỉ có thể cập nhật logo ở mục Tuỳ chỉnh."}
-          </p>
-        ) : null}
-        <Button variant="unstyled"
+        <Button
+          variant="unstyled"
           type="button"
           onClick={() => {
             const confirmed = window.confirm("Bạn có chắc muốn đăng xuất không?");
@@ -133,11 +133,19 @@ export function CompanyAdminSidebar({
             // Company admin và public site dùng chung trang login.
             router.replace("/auth/login");
           }}
-          className="w-full rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-left text-sm font-medium text-rose-700 transition hover:bg-rose-100"
+          className="mt-2 block w-full rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-left text-sm font-medium text-rose-700 transition hover:bg-rose-100"
         >
           Đăng xuất
         </Button>
-      </div>
+
+        {!companyApproved ? (
+          <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs leading-5 text-amber-800">
+            {companyRejected
+              ? "Công ty đã bị từ chối. Chỉ có thể cập nhật logo và gửi duyệt lại ở mục Tuỳ chỉnh."
+              : "Công ty đang chờ duyệt. Chỉ có thể cập nhật logo ở mục Tuỳ chỉnh."}
+          </p>
+        ) : null}
+      </nav>
     </aside>
   );
 }

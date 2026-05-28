@@ -11,6 +11,16 @@ import { isCompanyApproved } from "../../company-admin-status";
 export function useCompanyAdminHrData() {
   const [branches, setBranches] = useState<CompanyAdminBranch[]>([]);
   const [hrs, setHrs] = useState<CompanyAdminHrAccount[]>([]);
+  const [hrStatusChart, setHrStatusChart] = useState({
+    labels: ["Hoạt động", "Tạm khóa"],
+    values: [0, 0],
+    colors: ["#008080", "#64748b"],
+  });
+  const [hrBranchChart, setHrBranchChart] = useState({
+    labels: [] as string[],
+    values: [] as number[],
+    colors: [] as string[],
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [companyStatus, setCompanyStatus] = useState<string | null>(null);
@@ -36,6 +46,24 @@ export function useCompanyAdminHrData() {
           }
           setBranches(branchData);
           setHrs(hrData);
+          const activeCount = hrData.filter((item) => item.dangHoatDong).length;
+          setHrStatusChart({
+            labels: ["Hoạt động", "Tạm khóa"],
+            values: [activeCount, Math.max(hrData.length - activeCount, 0)],
+            colors: ["#008080", "#64748b"],
+          });
+
+          const branchLabels = branchData
+            .map((branch) => branch.chiNhanhTen ?? "--")
+            .slice(0, 5);
+          const branchValues = branchLabels.map((branchName) =>
+            hrData.filter((hr) => hr.chiNhanhs?.some((branch) => branch.chiNhanhTen === branchName)).length,
+          );
+          setHrBranchChart({
+            labels: branchLabels,
+            values: branchValues,
+            colors: branchLabels.map((_, index) => palette[index % palette.length]),
+          });
         });
       })
       .catch(() => {
@@ -59,9 +87,13 @@ export function useCompanyAdminHrData() {
   return {
     branches,
     hrs,
+    hrStatusChart,
+    hrBranchChart,
     isLoading,
     error,
     companyStatus,
     setHrs,
   };
 }
+
+const palette = ["#0f766e", "#2563eb", "#f59e0b", "#8b5cf6", "#ef4444"];

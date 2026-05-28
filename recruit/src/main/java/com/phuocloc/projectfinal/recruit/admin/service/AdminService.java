@@ -18,18 +18,23 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailRespon
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageSubscriptionResponse;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantExperienceReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminReportResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminSettingsResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminUserResponse;
+import com.phuocloc.projectfinal.recruit.ai.service.KinhNghiemEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.ai.service.CandidateProfileEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.ai.service.JobEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyRepository;
+import com.phuocloc.projectfinal.recruit.candidate.repository.KinhNghiemLamViecUngVienRepository;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchProperties;
 import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantProperties;
+import com.phuocloc.projectfinal.recruit.infrastructure.qdrant.QdrantClientService;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobElasticsearchIndexService;
+import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.KinhNghiemLamViecUngVien;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -60,8 +65,11 @@ public class AdminService {
     private final ElasticsearchProperties elasticsearchProperties;
     private final PublicJobElasticsearchIndexService publicJobElasticsearchIndexService;
     private final QdrantProperties qdrantProperties;
+    private final QdrantClientService qdrantClientService;
     private final JobEmbeddingIndexService jobEmbeddingIndexService;
     private final CandidateProfileEmbeddingIndexService candidateProfileEmbeddingIndexService;
+    private final KinhNghiemEmbeddingIndexService kinhNghiemEmbeddingIndexService;
+    private final KinhNghiemLamViecUngVienRepository kinhNghiemLamViecUngVienRepository;
 
     @Transactional(readOnly = true)
     public AdminDashboardStatsResponse getStats() {
@@ -333,6 +341,44 @@ public class AdminService {
                 .tongHoSoUngVien(profiles.tongSo())
                 .soHoSoUngVienDaDongBo(profiles.soDaDongBo())
                 .soHoSoUngVienThatBai(profiles.soThatBai())
+                .build();
+    }
+
+    @Transactional
+    public AdminQdrantExperienceReindexResponse reindexWorkExperiences() {
+        if (!qdrantClientService.isEnabled()) {
+            return AdminQdrantExperienceReindexResponse.builder()
+                    .enabled(false)
+                    .experienceCollection(qdrantProperties.getKhoKinhNghiem())
+                    .tongKinhNghiem(0)
+                    .soDaDongBo(0)
+                    .soThatBai(0)
+                    .build();
+        }
+
+        List<KinhNghiemLamViecUngVien> experiences = kinhNghiemLamViecUngVienRepository.findAll().stream()
+                .filter(exp -> exp.getId() != null)
+                .toList();
+        int success = 0;
+        int failed = 0;
+        for (KinhNghiemLamViecUngVien experience : experiences) {
+            try {
+                if (kinhNghiemEmbeddingIndexService.syncIndexWithResult(experience)) {
+                    success++;
+                } else {
+                    failed++;
+                }
+            } catch (RuntimeException ex) {
+                failed++;
+            }
+        }
+
+        return AdminQdrantExperienceReindexResponse.builder()
+                .enabled(true)
+                .experienceCollection(qdrantProperties.getKhoKinhNghiem())
+                .tongKinhNghiem(experiences.size())
+                .soDaDongBo(success)
+                .soThatBai(failed)
                 .build();
     }
 }

@@ -73,11 +73,11 @@ export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout }: 
           );
         })}
 
-        {/* Đăng xuất ở cuối menu để tách khỏi nhóm điều hướng chính. */}
-        <Button variant="unstyled"
+        <Button
+          variant="unstyled"
           type="button"
           onClick={onLogout}
-          className="mt-4 flex w-full items-center justify-center rounded-md border border-red-200 px-3 py-2 font-semibold text-red-600 transition hover:bg-red-50"
+          className="mt-2 block w-full rounded-md border border-red-200 px-3 py-2 text-left font-semibold text-red-600 transition hover:bg-red-50"
         >
           Đăng xuất
         </Button>

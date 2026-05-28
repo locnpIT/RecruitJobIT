@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { SimpleChartCard } from "@/components/charts/SimpleChartCard";
 import { CompanyAdminRestrictedNotice } from "../../components/CompanyAdminRestrictedNotice";
 import { isCompanyApproved } from "../../company-admin-status";
 import { HrCreateForm } from "./HrCreateForm";
@@ -53,6 +54,27 @@ export function CompanyAdminHrClient() {
       </header>
 
       <section className="space-y-5">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <SimpleChartCard
+            title="Trạng thái HR"
+            description="Phân bố tài khoản HR đang hoạt động và bị khóa."
+            kind="bar"
+            labels={data.hrStatusChart.labels}
+            values={data.hrStatusChart.values}
+            colors={data.hrStatusChart.colors}
+            footer={`${data.hrs.length} tài khoản HR hiện có.`}
+          />
+          <SimpleChartCard
+            title="HR theo chi nhánh"
+            description="Số HR đang được gán cho từng chi nhánh chính."
+            kind="doughnut"
+            labels={data.hrBranchChart.labels}
+            values={data.hrBranchChart.values}
+            colors={data.hrBranchChart.colors}
+            footer="Chỉ hiển thị 5 chi nhánh đầu tiên để giữ biểu đồ dễ đọc."
+          />
+        </div>
+
         <div className="rounded-md border border-slate-200 bg-white p-4">
           <div className="flex items-center justify-between gap-3">
             <div>

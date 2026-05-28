@@ -57,6 +57,7 @@ export function CompanyAdminShell({ children }: CompanyAdminShellProps) {
         companyLogo={shellData.companyLogo}
         companyStatus={shellData.companyStatus}
         companyRole={shellData.companyRole}
+        applicationCount={shellData.applicationCount}
       />
 
       {/* Nội dung thực tế của từng route doanh nghiệp được render tại đây. */}

@@ -18,6 +18,7 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailRespon
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageSubscriptionResponse;
+import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantExperienceReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminReportResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminSettingsResponse;
@@ -313,6 +314,16 @@ public class AdminController {
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Reindex dữ liệu semantic lên Qdrant thành công",
                 adminService.reindexQdrantJobsAndProfiles()
+        ));
+    }
+
+    @PostMapping("/qdrant/reindex/experiences")
+    // Reindex toàn bộ kinh nghiệm làm việc lên collection riêng của Qdrant.
+    public ResponseEntity<SuccessResponse<AdminQdrantExperienceReindexResponse>> reindexWorkExperiences() {
+        requireAdmin();
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Reindex kinh nghiệm làm việc lên Qdrant thành công",
+                adminService.reindexWorkExperiences()
         ));
     }
 

@@ -12,6 +12,7 @@ export function useCompanyAdminShellData() {
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [companyStatus, setCompanyStatus] = useState<string | null>(null);
   const [companyRole, setCompanyRole] = useState<string | null>(null);
+  const [applicationCount, setApplicationCount] = useState(0);
 
   const getStoredSystemRole = () => {
     try {
@@ -67,12 +68,28 @@ export function useCompanyAdminShellData() {
 
     companyAdminService
       .getMe()
-      .then((response) => {
+      .then(async (response) => {
         if (!active) {
           return;
         }
         syncCompany(response.congTy.logoUrl, response.congTy.ten, response.congTy.trangThai ?? null);
-        setCompanyRole(resolveHighestCompanyRole(response.chiNhanhs ?? []));
+        const branches = response.chiNhanhs ?? [];
+        setCompanyRole(resolveHighestCompanyRole(branches));
+
+        const branchIds = branches
+          .map((branch) => branch.chiNhanhId)
+          .filter((branchId): branchId is number => branchId != null);
+
+        if (branchIds.length > 0) {
+          const applicationLists = await Promise.all(branchIds.map((branchId) => companyAdminService.getApplications(branchId)));
+          if (!active) {
+            return;
+          }
+          setApplicationCount(applicationLists.reduce((total, applications) => total + applications.length, 0));
+        } else {
+          setApplicationCount(0);
+        }
+
         if (response.congTy.trangThai?.toUpperCase() === "REJECTED" && pathname === "/company-admin") {
           router.replace("/company-admin/settings");
         }
@@ -94,6 +111,7 @@ export function useCompanyAdminShellData() {
         setCompanyLogo(null);
         setCompanyStatus(null);
         setCompanyRole(null);
+        setApplicationCount(0);
       });
 
     const handleLogoUpdated = (event: Event) => {
@@ -128,5 +146,6 @@ export function useCompanyAdminShellData() {
     companyLogo,
     companyStatus,
     companyRole,
+    applicationCount,
   };
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { adminService } from "@/services/admin.service";
 import type { AdminCompany, AdminStatsResponse } from "@/services/admin/types";
+import { buildDailyTrendChart } from "@/components/charts/chartTimeSeries";
 import type { DuyetGanDayItem, ThongKeNhanhItem } from "../types";
 
 // Dùng cho màn admin dashboard: nạp stats + companies và map về dữ liệu UI.
@@ -78,6 +79,8 @@ export function useAdminDashboardData() {
     }));
   }, [companies]);
 
+  const companyTrendDates = useMemo(() => companies.map((company) => company.ngayTao), [companies]);
+
   const systemActivity = useMemo(() => {
     const pendingCount = stats?.congTyChoDuyet ?? 0;
     const approvedCount = stats?.congTyDaDuyet ?? 0;
@@ -92,10 +95,37 @@ export function useAdminDashboardData() {
     ];
   }, [stats]);
 
+  const companyChart = useMemo(() => {
+    const pending = stats?.congTyChoDuyet ?? 0;
+    const approved = stats?.congTyDaDuyet ?? 0;
+    const rejected = stats?.congTyBiTuChoi ?? 0;
+
+    return {
+      labels: ["Chờ duyệt", "Đã duyệt", "Bị từ chối"],
+      values: [pending, approved, rejected],
+      colors: ["#f59e0b", "#008080", "#ef4444"],
+    };
+  }, [stats]);
+
+  const userChart = useMemo(() => {
+    const active = stats?.nguoiDungHoatDong ?? 0;
+    const inactive = stats ? Math.max(stats.tongNguoiDung - stats.nguoiDungHoatDong, 0) : 0;
+
+    return {
+      labels: ["Đang hoạt động", "Tài khoản khóa"],
+      values: [active, inactive],
+      colors: ["#008080", "#475569"],
+    };
+  }, [stats]);
+
   return {
     isLoading,
     statsCards,
     recentCompanies,
     systemActivity,
+    companyChart,
+    userChart,
+    companyTrendDates,
+    buildCompanyTrendChart: (spanDays: 7 | 30 | 90) => buildDailyTrendChart(companyTrendDates, spanDays),
   };
 }

@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.candidate.service;
 
+import com.phuocloc.projectfinal.recruit.ai.service.KinhNghiemEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.candidate.repository.ChungChiUngVienRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoChungChiRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoHocVanRepository;
@@ -27,6 +28,7 @@ public class CandidateProfileAttachmentService {
     private final HoSoHocVanRepository hoSoHocVanRepository;
     private final HoSoKinhNghiemRepository hoSoKinhNghiemRepository;
     private final HoSoChungChiRepository hoSoChungChiRepository;
+    private final KinhNghiemEmbeddingIndexService kinhNghiemEmbeddingIndexService;
 
     public void attachExistingContentByDefault(HoSoUngVien profile, Integer nguoiDungId, Integer sourceProfileId) {
         if (profile == null || profile.getId() == null || nguoiDungId == null) {
@@ -49,6 +51,10 @@ public class CandidateProfileAttachmentService {
         if (!kinhNghiemLinks.isEmpty()) {
             hoSoKinhNghiemRepository.saveAll(kinhNghiemLinks);
         }
+
+        // Kinh nghiệm là một nguồn index riêng, nên hồ sơ mới cần sync lại từng kinh nghiệm gốc của user.
+        kinhNghiemLamViecUngVienRepository.findByNguoiDung_IdOrderByThoiGianBatDauDesc(nguoiDungId)
+                .forEach(kinhNghiemEmbeddingIndexService::syncIndex);
 
         List<HoSoChungChi> chungChiLinks = chungChiUngVienRepository.findByNguoiDung_IdOrderByNgayBatDauDesc(nguoiDungId)
                 .stream()
