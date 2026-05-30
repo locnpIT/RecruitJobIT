@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { ChatMessage } from "@/services/chat.service";
+import type { ChatMessage } from "@/services/chat/chat.service";
 import { ChatMessageItem } from "./ChatMessageItem";
 
 type ChatMessageListProps = {

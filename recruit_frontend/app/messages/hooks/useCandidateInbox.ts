@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { connectChatWebSocket } from "@/lib/chat-websocket";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
-import { chatService, type ChatConversation, type ChatMessage, type ChatRealtimeEvent } from "@/services/chat.service";
+import { chatService, type ChatConversation, type ChatMessage, type ChatRealtimeEvent } from "@/services/chat/chat.service";
 
 type LocalUser = {
   id: number;

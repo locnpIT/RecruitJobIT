@@ -1,4 +1,4 @@
-import type { CandidateProfileListItem } from "@/services/candidate-profile.service";
+import type { CandidateProfileListItem } from "@/services/candidate/candidate-profile.service";
 import { ProfileActionButton } from "./ProfileActionButton";
 
 // Hero/header của màn profile.

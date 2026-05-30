@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, type Dispatch, type SetStateAction } from "react";
-import type { UserProfileResponse } from "@/services/auth.service";
+import type { UserProfileResponse } from "@/services/auth/auth.service";
 import type {
   CandidateProfile,
   CandidateProfileListItem,
-} from "@/services/candidate-profile.service";
+} from "@/services/candidate/candidate-profile.service";
 import type { PersonalInfoFormState } from "../components/PersonalInfoPanel";
 import type { SummaryFormState } from "./useCandidateProfileData";
 import { useCandidateProfileContentActions } from "./useCandidateProfileContentActions";

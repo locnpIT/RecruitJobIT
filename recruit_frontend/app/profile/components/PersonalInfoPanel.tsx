@@ -1,4 +1,4 @@
-import type { Province, Ward } from "@/services/location.service";
+import type { Province, Ward } from "@/services/common/location.service";
 import { Button } from "@/components/ui/Button";
 
 export type PersonalInfoFormState = {

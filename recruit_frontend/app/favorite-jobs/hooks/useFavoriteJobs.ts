@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
-import { publicJobService, type PublicJobSummary } from "@/services/public-job.service";
+import { publicJobService, type PublicJobSummary } from "@/services/public/public-job.service";
 
 type LocalUser = {
   vaiTro?: string;

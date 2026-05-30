@@ -2,12 +2,12 @@
 
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
-import { authService, type UserProfileResponse } from "@/services/auth.service";
+import { authService, type UserProfileResponse } from "@/services/auth/auth.service";
 import {
   candidateProfileService,
   type CandidateProfile,
   type CandidateProfileListItem,
-} from "@/services/candidate-profile.service";
+} from "@/services/candidate/candidate-profile.service";
 import type { PersonalInfoFormState } from "../components/PersonalInfoPanel";
 import type { LocalUser } from "./types";
 import type { SummaryFormState } from "./useCandidateProfileData";

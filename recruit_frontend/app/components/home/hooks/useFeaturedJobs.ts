@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { publicJobService, type PublicJobSummary } from "@/services/public-job.service";
+import { publicJobService, type PublicJobSummary } from "@/services/public/public-job.service";
 
 // Dùng cho section FeaturedJobsSection ở homepage: nạp danh sách job public nổi bật.
 export function useFeaturedJobs() {

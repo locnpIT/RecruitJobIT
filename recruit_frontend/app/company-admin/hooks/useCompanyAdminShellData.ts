@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { companyAdminService } from "@/services/company-admin.service";
+import { companyAdminService } from "@/services/company-admin/company-admin.service";
 
 // Dùng cho CompanyAdminShell: nạp thông tin công ty/role và xử lý redirect theo trạng thái + quyền.
 export function useCompanyAdminShellData() {

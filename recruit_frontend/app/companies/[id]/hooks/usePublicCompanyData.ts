@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { publicCompanyService, type PublicCompanyDetail } from "@/services/public-company.service";
-import type { PublicJobSummary } from "@/services/public-job.service";
+import { publicCompanyService, type PublicCompanyDetail } from "@/services/public/public-company.service";
+import type { PublicJobSummary } from "@/services/public/public-job.service";
 
 // Dùng cho màn /companies/[id]: nạp profile công ty public và danh sách job public của công ty.
 export function usePublicCompanyData(companyId: string) {

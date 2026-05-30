@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   candidateProfileService,
   type CandidateProfile,
-} from "@/services/candidate-profile.service";
+} from "@/services/candidate/candidate-profile.service";
 
 type UseCandidateProfilePreferenceActionsParams = {
   activeProfileId: number | null;

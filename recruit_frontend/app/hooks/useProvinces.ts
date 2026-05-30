@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { locationService, type Province } from "@/services/location.service";
+import { locationService, type Province } from "@/services/common/location.service";
 
 // Dùng chung cho các form cần danh sách tỉnh/thành (homepage hero, jobs filters,...).
 export function useProvinces() {

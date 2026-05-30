@@ -11,7 +11,7 @@ import {
   type UpsertCertificatePayload,
   type UpsertEducationPayload,
   type UpsertWorkExperiencePayload,
-} from "@/services/candidate-profile.service";
+} from "@/services/candidate/candidate-profile.service";
 import type {
   CertificateFormState,
   EducationFormState,

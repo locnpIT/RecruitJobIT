@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { publicCompanyService } from "@/services/public-company.service";
+import { publicCompanyService } from "@/services/public/public-company.service";
 import type { CompanyItem } from "../types";
 import { buildMarqueeCompanies } from "../top-companies/utils";
 

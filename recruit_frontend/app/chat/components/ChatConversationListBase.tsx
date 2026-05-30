@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import type { ChatConversation } from "@/services/chat.service";
+import type { ChatConversation } from "@/services/chat/chat.service";
 import { buildRecruiterLabel } from "@/app/chat/utils/chat-partner-label";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";

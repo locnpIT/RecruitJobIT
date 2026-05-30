@@ -7,4 +7,8 @@ export const adminStatsService = {
     const response = await apiClient.get("/admin/stats");
     return response.data.data as AdminStatsResponse;
   },
+
+  validateSession: async (): Promise<void> => {
+    await apiClient.get("/admin/stats");
+  },
 };

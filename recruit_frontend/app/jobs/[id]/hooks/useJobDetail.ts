@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { authService } from "@/services/auth.service";
-import { candidateApplicationService } from "@/services/candidate-application.service";
+import { authService } from "@/services/auth/auth.service";
+import { candidateApplicationService } from "@/services/candidate/candidate-application.service";
 import {
   candidateProfileService,
   type CandidateProfileListItem,
-} from "@/services/candidate-profile.service";
-import { chatService } from "@/services/chat.service";
-import { publicJobService, type PublicJobDetail } from "@/services/public-job.service";
+} from "@/services/candidate/candidate-profile.service";
+import { chatService } from "@/services/chat/chat.service";
+import { publicJobService, type PublicJobDetail } from "@/services/public/public-job.service";
 
 type LocalUser = {
   vaiTro?: string;

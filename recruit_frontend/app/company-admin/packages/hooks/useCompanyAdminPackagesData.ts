@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   companyAdminService,
-} from "@/services/company-admin.service";
+} from "@/services/company-admin/company-admin.service";
 import type {
   CompanyAdminMeResponse,
   CompanyPackageOverview,

@@ -1,6 +1,6 @@
 import { MessageCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import type { ChatConversation, ChatMessage } from "@/services/chat.service";
+import type { ChatConversation, ChatMessage } from "@/services/chat/chat.service";
 import { buildRecruiterLabel } from "@/app/chat/utils/chat-partner-label";
 import { ChatComposer } from "./ChatComposer";
 import { ChatMessageList } from "./ChatMessageList";

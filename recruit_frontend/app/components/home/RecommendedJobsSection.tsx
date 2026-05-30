@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Building2, Sparkles } from "lucide-react";
-import type { CandidateRecommendedJob } from "@/services/candidate-profile.service";
+import type { CandidateRecommendedJob } from "@/services/candidate/candidate-profile.service";
 import { useRecommendedJobs } from "./hooks/useRecommendedJobs";
 
 function formatMatchScore(value: number | null) {

@@ -1,4 +1,4 @@
-import type { ChatConversation, ChatMessage } from "@/services/chat.service";
+import type { ChatConversation, ChatMessage } from "@/services/chat/chat.service";
 import { ChatConversationThreadBase } from "@/app/chat/components/ChatConversationThreadBase";
 import { buildRecruiterLabel } from "@/app/chat/utils/chat-partner-label";
 

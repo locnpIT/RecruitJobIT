@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CandidateProfileMetadata } from "@/services/candidate-profile.service";
+import type { CandidateProfileMetadata } from "@/services/candidate/candidate-profile.service";
 import { ProfileActionButton } from "./ProfileActionButton";
 import { ProfileOptionSelectionModal } from "./modals/ProfileOptionSelectionModal";
 

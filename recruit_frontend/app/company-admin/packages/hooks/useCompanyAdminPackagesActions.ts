@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
-import { companyAdminService } from "@/services/company-admin.service";
+import { companyAdminService } from "@/services/company-admin/company-admin.service";
 import type {
   CompanyPackageOverview,
   CompanyPackagePlan,

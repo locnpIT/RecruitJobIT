@@ -3,7 +3,7 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { authService } from "@/services/auth.service";
+import { authService } from "@/services/auth/auth.service";
 import { companyAdminJobsService } from "@/services/company-admin/jobs.service";
 import type { CompanyAdminBranch, CompanyAdminJob, CreateCompanyJobPayload } from "@/services/company-admin/types";
 import type { JobFormValues } from "../components/JobFormModal";

@@ -1,6 +1,6 @@
 import { Building, Plus, Upload, X } from "lucide-react";
 import { OwnerRegisterNotice } from "./OwnerRegisterNotice";
-import type { OwnerProofTypeOption } from "@/services/auth.service";
+import type { OwnerProofTypeOption } from "@/services/auth/auth.service";
 
 export type OwnerProofRow = {
   id: number;

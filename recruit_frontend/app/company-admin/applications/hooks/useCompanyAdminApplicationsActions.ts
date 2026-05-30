@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { chatService } from "@/services/chat.service";
+import { chatService } from "@/services/chat/chat.service";
 import { companyAdminApplicationsService } from "@/services/company-admin/applications.service";
 import { companyAdminJobsService } from "@/services/company-admin/jobs.service";
 import type { CompanyAdminApplication } from "@/services/company-admin/types";

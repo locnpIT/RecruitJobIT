@@ -1,7 +1,7 @@
 package com.phuocloc.projectfinal.recruit.company.controller;
 
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
-import com.phuocloc.projectfinal.recruit.auth.service.AuthService;
+import com.phuocloc.projectfinal.recruit.auth.service.OwnerRegistrationService;
 import com.phuocloc.projectfinal.recruit.company.dto.request.CreateEmployerRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CreateEmployerResponse;
 import com.phuocloc.projectfinal.recruit.common.response.SuccessResponse;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 public class CompanyMemberController {
 
-    private final AuthService authService;
+    private final OwnerRegistrationService ownerRegistrationService;
 
     @PostMapping("/employers")
     // Tạo một tài khoản nhân sự mới thuộc công ty của owner đang đăng nhập.
@@ -34,7 +34,7 @@ public class CompanyMemberController {
             @AuthenticationPrincipal AppUserPrinciple principal,
             @Valid @RequestBody CreateEmployerRequest request
     ) {
-        CreateEmployerResponse data = authService.createEmployerByOwner(principal.getUserId(), request);
+        CreateEmployerResponse data = ownerRegistrationService.createEmployerByOwner(principal.getUserId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponse<>(HttpStatus.CREATED, "Tạo nhân sự công ty thành công", data));
     }

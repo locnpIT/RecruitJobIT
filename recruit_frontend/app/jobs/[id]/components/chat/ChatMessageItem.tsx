@@ -1,4 +1,4 @@
-import type { ChatMessage } from "@/services/chat.service";
+import type { ChatMessage } from "@/services/chat/chat.service";
 
 type ChatMessageItemProps = {
   message: ChatMessage;

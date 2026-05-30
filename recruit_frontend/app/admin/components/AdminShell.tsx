@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import apiClient from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
+import { adminService } from "@/services/admin/admin.service";
 
 import { AdminSidebar } from "./AdminSidebar";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
@@ -85,7 +85,7 @@ export function AdminShell({ children }: AdminShellProps) {
       }
 
       try {
-        await apiClient.get("/admin/stats");
+        await adminService.validateSession();
       } catch (error) {
         const status = typeof error === "object" && error !== null && "response" in error
           ? (error as { response?: { status?: number } }).response?.status

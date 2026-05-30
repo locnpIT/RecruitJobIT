@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { companyAdminService } from "@/services/company-admin.service";
+import { companyAdminService } from "@/services/company-admin/company-admin.service";
 import type { CompanyAdminBranch } from "@/services/company-admin/types";
 import { isCompanyApproved } from "../../company-admin-status";
 

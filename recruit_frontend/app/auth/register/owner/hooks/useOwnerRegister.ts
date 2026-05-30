@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { authService, type OwnerProofTypeOption, type RegisterOwnerPayload } from "@/services/auth.service";
-import { locationService, type Province, type Ward } from "@/services/location.service";
+import { authService, type OwnerProofTypeOption, type RegisterOwnerPayload } from "@/services/auth/auth.service";
+import { locationService, type Province, type Ward } from "@/services/common/location.service";
 import { defaultBranch, ownerRegisterSchema, type OwnerFormValues } from "../components/types";
 import type { OwnerProofRow } from "../components/OwnerProofUploadSection";
 
@@ -74,7 +74,6 @@ export function useOwnerRegister() {
 
   useEffect(() => {
     let active = true;
-    setProofTypesLoading(true);
 
     authService
       .getOwnerProofTypes()
@@ -83,6 +82,13 @@ export function useOwnerRegister() {
           return;
         }
         setProofTypes(items);
+        const firstId = items.find((item) => item.id != null)?.id;
+        if (firstId != null) {
+          const defaultId = String(firstId);
+          setProofRows((current) =>
+            current.map((row) => (row.loaiTaiLieuId ? row : { ...row, loaiTaiLieuId: defaultId })),
+          );
+        }
       })
       .catch(() => {
         if (!active) {
@@ -100,15 +106,6 @@ export function useOwnerRegister() {
       active = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!defaultProofTypeId) {
-      return;
-    }
-    setProofRows((current) =>
-      current.map((row) => (row.loaiTaiLieuId ? row : { ...row, loaiTaiLieuId: defaultProofTypeId })),
-    );
-  }, [defaultProofTypeId]);
 
   useEffect(() => {
     const provinceIdsToLoad = Array.from(

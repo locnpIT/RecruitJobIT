@@ -1,4 +1,4 @@
-import type { ChatRealtimeEvent } from "@/services/chat.service";
+import type { ChatRealtimeEvent } from "@/services/chat/chat.service";
 
 type ChatWebSocketOptions = {
   token: string;

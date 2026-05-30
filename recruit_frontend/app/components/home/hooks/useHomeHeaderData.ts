@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
-import { notificationService, type NotificationItem } from "@/services/notification.service";
+import { notificationService, type NotificationItem } from "@/services/common/notification.service";
 
 type LocalUser = {
   id: number;

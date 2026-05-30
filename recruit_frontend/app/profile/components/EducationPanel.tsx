@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CandidateEducationItem } from "@/services/candidate-profile.service";
+import type { CandidateEducationItem } from "@/services/candidate/candidate-profile.service";
 import { ProofStatusPill } from "./ProofStatusPill";
 import { ProfileActionButton } from "./ProfileActionButton";
 import { EducationModal } from "./modals/EducationModal";

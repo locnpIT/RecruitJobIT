@@ -11,6 +11,7 @@ export * from "@/services/admin/types";
 // Backward-compatible facade để giữ import cũ ở các màn admin hiện tại.
 export const adminService = {
   getStats: adminStatsService.getStats,
+  validateSession: adminStatsService.validateSession,
 
   listUsers: adminUsersService.listUsers,
   updateUserStatus: adminUsersService.updateUserStatus,

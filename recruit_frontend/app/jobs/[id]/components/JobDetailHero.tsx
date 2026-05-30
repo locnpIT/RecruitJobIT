@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Clock, MapPin, ShieldCheck, Users } from "lucide-react";
-import type { PublicJobDetail } from "@/services/public-job.service";
+import type { PublicJobDetail } from "@/services/public/public-job.service";
 
 type JobDetailHeroProps = {
   job: PublicJobDetail;

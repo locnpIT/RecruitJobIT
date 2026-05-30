@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import type { CandidateOptionItem } from "@/services/candidate-profile.service";
+import type { CandidateOptionItem } from "@/services/candidate/candidate-profile.service";
 import { ProfileActionButton } from "../ProfileActionButton";
 import { ProfileModal } from "./ProfileModal";
 

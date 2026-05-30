@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CandidateCertificateItem, CandidateProfileMetadata } from "@/services/candidate-profile.service";
+import type { CandidateCertificateItem, CandidateProfileMetadata } from "@/services/candidate/candidate-profile.service";
 import { ProfileActionButton } from "./ProfileActionButton";
 import { ProofStatusPill } from "./ProofStatusPill";
 import { CertificateModal } from "./modals/CertificateModal";

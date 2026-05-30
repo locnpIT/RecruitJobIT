@@ -2,7 +2,7 @@
 
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { authService } from "@/services/auth.service";
+import { authService } from "@/services/auth/auth.service";
 import { companyAdminSettingsService } from "@/services/company-admin/settings.service";
 import type {
   CompanyAdminMeResponse,

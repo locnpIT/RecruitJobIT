@@ -10,6 +10,8 @@ import com.phuocloc.projectfinal.recruit.auth.dto.response.CreateOwnerResponse;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.UserProfileResponse;
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
 import com.phuocloc.projectfinal.recruit.auth.service.AuthService;
+import com.phuocloc.projectfinal.recruit.auth.service.AuthUserProfileService;
+import com.phuocloc.projectfinal.recruit.auth.service.OwnerRegistrationService;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeResponse;
 import com.phuocloc.projectfinal.recruit.common.response.SuccessResponse;
 import com.phuocloc.projectfinal.recruit.infrastructure.cloudinary.CloudinaryStorageService;
@@ -35,6 +37,8 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final OwnerRegistrationService ownerRegistrationService;
+    private final AuthUserProfileService authUserProfileService;
     private final CloudinaryStorageService cloudinaryStorageService;
 
     @GetMapping("/cloudinary-signature")
@@ -65,7 +69,7 @@ public class AuthController {
     public ResponseEntity<SuccessResponse<CreateOwnerResponse>> registerOwner(
             @Valid @RequestBody CreateOwnerRequest request
     ) {
-        CreateOwnerResponse data = authService.registerOwner(request);
+        CreateOwnerResponse data = ownerRegistrationService.registerOwner(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponse<>(HttpStatus.CREATED, "Đăng ký chủ công ty thành công", data));
     }
@@ -73,7 +77,7 @@ public class AuthController {
     @GetMapping("/proof-types")
     // Danh sách loại tài liệu public cho form đăng ký công ty (owner).
     public ResponseEntity<SuccessResponse<List<CompanyProofTypeResponse>>> getOwnerProofTypes() {
-        List<CompanyProofTypeResponse> data = authService.listOwnerProofTypes();
+        List<CompanyProofTypeResponse> data = ownerRegistrationService.listOwnerProofTypes();
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách loại tài liệu thành công", data));
     }
 
@@ -90,7 +94,7 @@ public class AuthController {
     public ResponseEntity<SuccessResponse<UserProfileResponse>> getMe(
             @AuthenticationPrincipal AppUserPrinciple principal
     ) {
-        UserProfileResponse data = authService.getCurrentUserProfile(principal.getUserId());
+        UserProfileResponse data = authUserProfileService.getCurrentUserProfile(principal.getUserId());
         return ResponseEntity.ok(new SuccessResponse<>("Lấy hồ sơ người dùng thành công", data));
     }
 
@@ -100,7 +104,7 @@ public class AuthController {
             @AuthenticationPrincipal AppUserPrinciple principal,
             @Valid @RequestBody UpdateAvatarRequest request
     ) {
-        UserProfileResponse data = authService.updateAvatar(principal.getUserId(), request);
+        UserProfileResponse data = authUserProfileService.updateAvatar(principal.getUserId(), request);
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật ảnh đại diện thành công", data));
     }
 
@@ -110,7 +114,7 @@ public class AuthController {
             @AuthenticationPrincipal AppUserPrinciple principal,
             @RequestBody UpdateUserProfileRequest request
     ) {
-        UserProfileResponse data = authService.updateCurrentUserProfile(principal.getUserId(), request);
+        UserProfileResponse data = authUserProfileService.updateCurrentUserProfile(principal.getUserId(), request);
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật hồ sơ người dùng thành công", data));
     }
 }

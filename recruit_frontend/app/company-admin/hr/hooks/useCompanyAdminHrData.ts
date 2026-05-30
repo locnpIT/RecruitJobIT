@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   companyAdminService,
-} from "@/services/company-admin.service";
+} from "@/services/company-admin/company-admin.service";
 import type { CompanyAdminBranch, CompanyAdminHrAccount } from "@/services/company-admin/types";
 import { isCompanyApproved } from "../../company-admin-status";
 

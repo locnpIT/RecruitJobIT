@@ -1,5 +1,5 @@
 import apiClient from "@/lib/api-client";
-import { requirePathParam } from "./_shared/path-param";
+import { requirePathParam } from "@/services/_shared/path-param";
 
 export type PublicJobSummary = {
   id: number;

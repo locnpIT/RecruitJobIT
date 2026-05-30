@@ -2,7 +2,7 @@
 
 import { useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
-import { authService, type UserProfileResponse } from "@/services/auth.service";
+import { authService, type UserProfileResponse } from "@/services/auth/auth.service";
 import type { LocalUser } from "./types";
 
 type UseCandidateProfileMediaActionsParams = {

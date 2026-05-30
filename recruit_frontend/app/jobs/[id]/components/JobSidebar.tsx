@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Bookmark, Building2, ExternalLink, Globe2, MapPin, MessageCircle, Send, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import type { PublicJobDetail } from "@/services/public-job.service";
+import type { PublicJobDetail } from "@/services/public/public-job.service";
 
 type JobSidebarProps = {
   job: PublicJobDetail;

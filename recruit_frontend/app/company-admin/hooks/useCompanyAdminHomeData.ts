@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   companyAdminService,
-} from "@/services/company-admin.service";
+} from "@/services/company-admin/company-admin.service";
 import { companyAdminApplicationsService } from "@/services/company-admin/applications.service";
 import { companyAdminJobsService } from "@/services/company-admin/jobs.service";
 import type { CompanyAdminApplication, CompanyAdminBranch, CompanyAdminJob, CompanyAdminMeResponse } from "@/services/company-admin/types";

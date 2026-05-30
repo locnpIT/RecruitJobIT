@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { authService, type UserProfileResponse } from "@/services/auth.service";
+import { authService, type UserProfileResponse } from "@/services/auth/auth.service";
 import {
   candidateProfileService,
   type CandidateProfile,
   type CandidateProfileListItem,
   type CandidateProfileMetadata,
-} from "@/services/candidate-profile.service";
+} from "@/services/candidate/candidate-profile.service";
 import type { LocalUser } from "./types";
 
 export type SummaryFormState = {

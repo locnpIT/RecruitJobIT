@@ -5,7 +5,7 @@ import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 import {
   candidateProfileService,
   type CandidateRecommendedJob,
-} from "@/services/candidate-profile.service";
+} from "@/services/candidate/candidate-profile.service";
 
 type LocalUser = {
   vaiTro?: string | null;

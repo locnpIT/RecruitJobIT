@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { connectChatWebSocket } from "@/lib/chat-websocket";
-import { chatService, type ChatConversation, type ChatMessage, type ChatRealtimeEvent } from "@/services/chat.service";
+import { chatService, type ChatConversation, type ChatMessage, type ChatRealtimeEvent } from "@/services/chat/chat.service";
 
 // Hook điều phối state + websocket realtime cho inbox recruiter.
 export function useRecruiterInbox() {

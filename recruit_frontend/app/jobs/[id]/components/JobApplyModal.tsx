@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { FileUp, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import type { CandidateProfileListItem } from "@/services/candidate-profile.service";
-import type { PublicJobDetail } from "@/services/public-job.service";
+import type { CandidateProfileListItem } from "@/services/candidate/candidate-profile.service";
+import type { PublicJobDetail } from "@/services/public/public-job.service";
 
 type JobApplyModalProps = {
   open: boolean;

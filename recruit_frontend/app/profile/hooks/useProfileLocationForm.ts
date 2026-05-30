@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { locationService, type Province, type Ward } from "@/services/location.service";
-import type { UserProfileResponse } from "@/services/auth.service";
+import { locationService, type Province, type Ward } from "@/services/common/location.service";
+import type { UserProfileResponse } from "@/services/auth/auth.service";
 import type { PersonalInfoFormState } from "../components/PersonalInfoPanel";
 
 const INITIAL_FORM: PersonalInfoFormState = {

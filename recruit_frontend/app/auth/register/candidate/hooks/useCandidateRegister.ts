@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { authService } from "@/services/auth.service";
+import { authService } from "@/services/auth/auth.service";
 import type { RegisterFormValues } from "../components/CandidateRegisterForm";
 
 // Dùng cho màn auth/register/candidate: submit đăng ký candidate và điều hướng sau khi thành công.

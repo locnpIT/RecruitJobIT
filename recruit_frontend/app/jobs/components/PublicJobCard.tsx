@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Building2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import type { PublicJobSummary } from "@/services/public-job.service";
+import type { PublicJobSummary } from "@/services/public/public-job.service";
 
 type PublicJobCardProps = {
   job: PublicJobSummary;

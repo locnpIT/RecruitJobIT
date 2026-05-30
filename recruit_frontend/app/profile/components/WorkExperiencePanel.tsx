@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CandidateWorkExperienceItem } from "@/services/candidate-profile.service";
+import type { CandidateWorkExperienceItem } from "@/services/candidate/candidate-profile.service";
 import { ProfileActionButton } from "./ProfileActionButton";
 import { WorkExperienceModal } from "./modals/WorkExperienceModal";
 import type { WorkExperienceFormState } from "./modals/profileFormTypes";

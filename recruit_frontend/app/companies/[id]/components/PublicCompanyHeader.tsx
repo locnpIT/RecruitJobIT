@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Building2, Globe2 } from "lucide-react";
-import type { PublicCompanyDetail } from "@/services/public-company.service";
+import type { PublicCompanyDetail } from "@/services/public/public-company.service";
 
 type PublicCompanyHeaderProps = {
   company: PublicCompanyDetail;

@@ -3,7 +3,7 @@
 import { useMemo, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { useProvinces } from "@/app/hooks/useProvinces";
 import { Button } from "@/components/ui/Button";
-import type { PublicJobSearchMetadata, SearchJobsParams } from "@/services/public-job.service";
+import type { PublicJobSearchMetadata, SearchJobsParams } from "@/services/public/public-job.service";
 
 type JobsSearchFiltersProps = {
   value: SearchJobsParams;

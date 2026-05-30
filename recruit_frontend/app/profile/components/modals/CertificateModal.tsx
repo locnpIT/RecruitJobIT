@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CandidateCertificateItem, CandidateProfileMetadata } from "@/services/candidate-profile.service";
+import type { CandidateCertificateItem, CandidateProfileMetadata } from "@/services/candidate/candidate-profile.service";
 import { ProfileModal } from "./ProfileModal";
 import { ProfileModalTabs, type ProfileModalTab } from "./ProfileModalTabs";
 import { ProofUploadBox } from "./ProofUploadBox";

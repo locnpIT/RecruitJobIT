@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { setAuthCookie } from "@/lib/auth-cookie";
-import { authService } from "@/services/auth.service";
-import { companyAdminService } from "@/services/company-admin.service";
+import { authService } from "@/services/auth/auth.service";
+import { companyAdminService } from "@/services/company-admin/company-admin.service";
 import type { LoginFormValues } from "../components/LoginForm";
 
 // Dùng cho màn /auth/login: xử lý login + lưu session + điều hướng theo role/trạng thái công ty.

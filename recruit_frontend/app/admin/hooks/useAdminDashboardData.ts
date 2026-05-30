@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { adminService } from "@/services/admin.service";
+import { adminService } from "@/services/admin/admin.service";
 import type { AdminCompany, AdminStatsResponse } from "@/services/admin/types";
 import { buildDailyTrendChart } from "@/components/charts/chartTimeSeries";
 import type { DuyetGanDayItem, ThongKeNhanhItem } from "../types";

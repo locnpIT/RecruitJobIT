@@ -1,5 +1,5 @@
 import apiClient from "@/lib/api-client";
-import { requirePathParam } from "./_shared/path-param";
+import { requirePathParam } from "@/services/_shared/path-param";
 
 // Service API hồ sơ ứng viên (candidate):
 // hỗ trợ multi-profile + CRUD học vấn/chứng chỉ/kỹ năng/tóm tắt hồ sơ.

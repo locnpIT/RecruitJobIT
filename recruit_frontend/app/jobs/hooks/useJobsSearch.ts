@@ -8,7 +8,7 @@ import {
   type PublicJobSearchResponse,
   type PublicJobSummary,
   type SearchJobsParams,
-} from "@/services/public-job.service";
+} from "@/services/public/public-job.service";
 
 const DEFAULT_PAGE_SIZE = 12;
 

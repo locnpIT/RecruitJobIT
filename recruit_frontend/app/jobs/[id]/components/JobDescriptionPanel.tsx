@@ -8,7 +8,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { RichTextContent } from "@/app/components/shared/RichTextContent";
-import type { PublicJobDetail } from "@/services/public-job.service";
+import type { PublicJobDetail } from "@/services/public/public-job.service";
 import { JobSkillsPanel } from "./JobSkillsPanel";
 
 type JobDescriptionPanelProps = {
