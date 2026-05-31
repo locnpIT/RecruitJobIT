@@ -23,7 +23,6 @@ export type PublicJobDetail = {
   maTin: string | null;
   tieuDe: string;
   congTyId: number | null;
-  trangThai: string;
   congTy: string;
   logoUrl: string | null;
   congTyDaXacMinh: boolean;

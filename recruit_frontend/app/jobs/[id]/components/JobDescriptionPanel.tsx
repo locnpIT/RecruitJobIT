@@ -65,18 +65,7 @@ export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
         <JobTextSection icon={UserRound} title="Yêu cầu ứng viên" items={job.yeuCau} />
         <JobTextSection icon={Medal} title="Phúc lợi" items={job.phucLoi} />
 
-        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-          <div className="flex items-start gap-3">
-            <Sparkles className="mt-0.5 h-5 w-5 text-slate-600" />
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Gợi ý khi ứng tuyển</p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                Cập nhật hồ sơ ứng viên, kỹ năng và chứng chỉ trước khi ứng tuyển để nhà tuyển dụng
-                đánh giá nhanh hơn.
-              </p>
-            </div>
-          </div>
-        </div>
+      
       </div>
     </article>
   );

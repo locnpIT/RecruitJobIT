@@ -16,14 +16,12 @@ public class PublicJobDetailResponse {
     private String maTin;
     private String tieuDe;
     private Long congTyId;
-    private String trangThai;
     private String congTy;
     private String logoUrl;
     private Boolean congTyDaXacMinh;
     private Long nhaTuyenDungId;
     private String nhaTuyenDungTen;
     private String nganhNghe;
-    private String quyMoCongTy;
     private String websiteCongTy;
     private String diaDiem;
     private String mucLuong;

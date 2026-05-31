@@ -24,6 +24,5 @@ public class PublicJobSummaryResponse {
     private String hinhThuc;
     private String nganhNghe;
     private String hanNop;
-    private String tag;
     private LocalDateTime ngayTao;
 }

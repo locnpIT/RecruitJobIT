@@ -10,7 +10,7 @@ type JobDetailHeroProps = {
 const HERO_BACKGROUND_IMAGE_URL = `/background-job-detail-${Math.floor(Math.random() * 5) + 1}.png`;
 
 // Hero đầu trang chi tiết job.
-// Phần này tập trung vào thông tin ra quyết định nhanh: trạng thái, tiêu đề, công ty,
+// Phần này tập trung vào thông tin ra quyết định nhanh: tiêu đề, công ty,
 // địa điểm, hình thức làm việc và tag kỹ năng để ứng viên biết có nên đọc tiếp hay không.
 export function JobDetailHero({ job }: JobDetailHeroProps) {
   return (
@@ -27,12 +27,7 @@ export function JobDetailHero({ job }: JobDetailHeroProps) {
 
       <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[1.12fr_0.88fr] lg:py-10">
         <div>
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {job.trangThai}
-          </div>
-
-          <h1 className="mt-4 max-w-3xl text-3xl font-bold leading-tight tracking-[-0.03em] text-slate-950 md:text-5xl">
+          <h1 className="mt-8 max-w-3xl text-3xl font-bold leading-tight tracking-[-0.03em] text-slate-950 md:text-5xl">
             {job.tieuDe}
           </h1>
 

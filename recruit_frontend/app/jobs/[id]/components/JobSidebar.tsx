@@ -6,6 +6,7 @@ import type { PublicJobDetail } from "@/services/public/public-job.service";
 
 type JobSidebarProps = {
   job: PublicJobDetail;
+  isExpired: boolean;
   isFavorite: boolean;
   favoriteLoading: boolean;
   isApplied: boolean;
@@ -21,6 +22,7 @@ type JobSidebarProps = {
 // CTA ứng tuyển mở modal ở page cha để page kiểm soát auth, hồ sơ, upload CV và submit API.
 export function JobSidebar({
   job,
+  isExpired,
   isFavorite,
   favoriteLoading,
   isApplied,
@@ -62,10 +64,6 @@ export function JobSidebar({
                 {job.nganhNghe}
               </p>
               <p className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                {job.quyMoCongTy}
-              </p>
-              <p className="flex items-center gap-2">
                 <Globe2 className="h-4 w-4" />
                 {job.websiteCongTy}
               </p>
@@ -94,12 +92,23 @@ export function JobSidebar({
             type="button"
             variant="primary"
             onClick={onApply}
-            disabled={isApplied || applicationLoading}
+            disabled={isExpired || isApplied || applicationLoading}
             className="inline-flex h-11 w-full items-center justify-center gap-2 px-4 text-sm font-semibold disabled:bg-slate-400"
           >
             <Send className="h-4 w-4" />
-            {isApplied ? "Đã ứng tuyển" : applicationLoading ? "Đang kiểm tra..." : "Ứng tuyển ngay"}
+            {isExpired
+              ? "Tin đã hết hạn"
+              : isApplied
+                ? "Đã ứng tuyển"
+                : applicationLoading
+                  ? "Đang kiểm tra..."
+                  : "Ứng tuyển ngay"}
           </Button>
+          {isExpired ? (
+            <p className="px-1 text-xs leading-5 text-rose-600">
+              Tin này đã hết hạn nên không thể nộp hồ sơ mới.
+            </p>
+          ) : null}
           <Button
             type="button"
             variant="outline"
@@ -158,19 +167,7 @@ export function JobSidebar({
           ))}
         </div>
       </section>
-
-      <section className="rounded-lg border border-slate-200 bg-slate-50 p-5">
-        <p className="text-sm font-semibold text-slate-950">Tạo hồ sơ để ứng tuyển dễ hơn</p>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          Hồ sơ đầy đủ giúp nhà tuyển dụng hiểu kinh nghiệm, kỹ năng và mục tiêu nghề nghiệp của bạn.
-        </p>
-        <Link
-          href="/auth/register/candidate"
-          className="mt-4 inline-flex h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-        >
-          Tạo hồ sơ ngay
-        </Link>
-      </section>
+      
     </aside>
   );
 }

@@ -55,6 +55,7 @@ export function JobDetailClient({ jobId }: JobDetailClientProps) {
               <JobDescriptionPanel job={jobDetail.job} />
               <JobSidebar
                 job={jobDetail.job}
+                isExpired={jobDetail.isExpired}
                 isFavorite={jobDetail.isFavorite}
                 favoriteLoading={jobDetail.favoriteLoading}
                 isApplied={jobDetail.hasApplied}
@@ -66,14 +67,11 @@ export function JobDetailClient({ jobId }: JobDetailClientProps) {
               />
             </section>
 
-            <JobApplySection
-              chatOpenError={jobDetail.chatOpenError}
-              applyNotice={jobDetail.applyNotice}
-            />
 
             <JobApplyModal
               open={jobDetail.applyModalOpen}
               job={jobDetail.job}
+              isExpired={jobDetail.isExpired}
               profiles={jobDetail.profiles}
               selectedProfileId={jobDetail.selectedProfileId}
               cvFile={jobDetail.cvFile}

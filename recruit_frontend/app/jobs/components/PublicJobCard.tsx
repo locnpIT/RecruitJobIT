@@ -32,7 +32,6 @@ export function PublicJobCard({
             <Link href={`/jobs/${job.id}`} className="text-base font-semibold leading-6 text-slate-950 hover:underline">
               {job.tieuDe}
             </Link>
-            <span className="rounded border border-slate-300 bg-slate-100 px-2 py-0.5 text-xs font-medium">{job.tag}</span>
           </div>
 
           <div className="mt-1 flex items-center gap-2 text-sm text-slate-600">

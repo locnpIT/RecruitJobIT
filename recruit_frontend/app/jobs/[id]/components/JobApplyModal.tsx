@@ -7,6 +7,7 @@ import type { PublicJobDetail } from "@/services/public/public-job.service";
 type JobApplyModalProps = {
   open: boolean;
   job: PublicJobDetail;
+  isExpired: boolean;
   profiles: CandidateProfileListItem[];
   selectedProfileId: string;
   cvFile: File | null;
@@ -23,6 +24,7 @@ type JobApplyModalProps = {
 export function JobApplyModal({
   open,
   job,
+  isExpired,
   profiles,
   selectedProfileId,
   cvFile,
@@ -38,7 +40,7 @@ export function JobApplyModal({
   }
 
   const requiresCv = Boolean(job.batBuocCV);
-  const canSubmit = profiles.length > 0 && !submitting;
+  const canSubmit = profiles.length > 0 && !submitting && !isExpired;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 py-6">
@@ -96,6 +98,12 @@ export function JobApplyModal({
               </div>
             )}
           </div>
+
+          {isExpired ? (
+            <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              Tin tuyển dụng này đã hết hạn nên bạn không thể gửi ứng tuyển mới.
+            </div>
+          ) : null}
 
           {requiresCv ? (
             <div>
@@ -164,7 +172,7 @@ export function JobApplyModal({
             disabled={!canSubmit}
             className="h-10 px-5 text-sm font-semibold disabled:bg-slate-400"
           >
-            {submitting ? "Đang gửi..." : "Gửi ứng tuyển"}
+            {isExpired ? "Tin đã hết hạn" : submitting ? "Đang gửi..." : "Gửi ứng tuyển"}
           </Button>
         </div>
       </section>

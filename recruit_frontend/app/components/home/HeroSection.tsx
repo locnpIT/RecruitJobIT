@@ -46,7 +46,7 @@ export function HeroSection() {
         backgroundPosition: "center center",
       }}
     >
-      <div className="mx-auto w-full max-w-6xl px-4 py-14 md:py-20">
+      <div className="mx-auto w-full max-w-6xl px-4 py-20 md:py-28 lg:py-32">
         <div className="grid gap-8 lg:grid-cols-[1.35fr_0.65fr]">
           <div>
             <p className="text-sm font-medium text-slate-500">

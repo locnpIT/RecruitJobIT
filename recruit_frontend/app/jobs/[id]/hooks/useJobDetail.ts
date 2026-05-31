@@ -16,6 +16,21 @@ type LocalUser = {
   vaiTro?: string;
 };
 
+const parseJobExpiryDate = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) {
+    return null;
+  }
+
+  const [, day, month, year] = match;
+  const expiry = new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
+  return Number.isNaN(expiry.getTime()) ? null : expiry;
+};
+
 // Dùng cho trang jobs/[id]: nạp dữ liệu chi tiết tin + xử lý actions yêu thích, ứng tuyển, mở chat.
 export function useJobDetail(jobId: string) {
   const [job, setJob] = useState<PublicJobDetail | null>(null);
@@ -35,6 +50,8 @@ export function useJobDetail(jobId: string) {
   const [isCandidate, setIsCandidate] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatOpenError, setChatOpenError] = useState("");
+  const jobExpiryDate = parseJobExpiryDate(job?.hanNop);
+  const isExpired = Boolean(jobExpiryDate && jobExpiryDate < new Date());
 
   useEffect(() => {
     let isMounted = true;
@@ -180,6 +197,9 @@ export function useJobDetail(jobId: string) {
       window.location.href = "/auth/login";
       return;
     }
+    if (isExpired) {
+      return;
+    }
     if (hasApplied) {
       return;
     }
@@ -261,6 +281,7 @@ export function useJobDetail(jobId: string) {
 
   return {
     job,
+    isExpired,
     isLoading,
     error,
     isFavorite,

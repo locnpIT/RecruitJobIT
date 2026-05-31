@@ -152,14 +152,12 @@ public class PublicJobService {
                 .maTin(buildJobCode(job))
                 .tieuDe(job.getTieuDe())
                 .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
-                .trangThai("Đang tuyển dụng")
                 .congTy(resolveCompanyName(job))
                 .logoUrl(companyLogoUrl)
                 .congTyDaXacMinh(isCompanyApproved(resolveCompany(job)))
                 .nhaTuyenDungId(job.getNguoiDang() == null || job.getNguoiDang().getId() == null ? null : job.getNguoiDang().getId().longValue())
                 .nhaTuyenDungTen(resolveRecruiterName(job))
                 .nganhNghe(resolveIndustry(job))
-                .quyMoCongTy("Đang cập nhật")
                 .websiteCongTy(resolveCompany(job) == null ? null : resolveCompany(job).getWebsite())
                 .diaDiem(resolveLocation(job))
                 .mucLuong(formatSalary(job))
@@ -207,7 +205,6 @@ public class PublicJobService {
                 .hinhThuc(job.getLoaiHinhLamViec() == null ? "Đang cập nhật" : job.getLoaiHinhLamViec().getTen())
                 .nganhNghe(resolveIndustry(job))
                 .hanNop(formatDate(job.getDenHanLuc()))
-                .tag(resolveTag(job))
                 .ngayTao(job.getNgayTao())
                 .build();
     }
@@ -436,11 +433,6 @@ public class PublicJobService {
             return "Hôm nay";
         }
         return days + " ngày trước";
-    }
-
-    private String resolveTag(TinTuyenDung job) {
-        long days = job.getNgayTao() == null ? 99 : Duration.between(job.getNgayTao(), LocalDateTime.now()).toDays();
-        return days <= 3 ? "Mới" : "Đã duyệt";
     }
 
     private String buildJobCode(TinTuyenDung job) {
