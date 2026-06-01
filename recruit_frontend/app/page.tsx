@@ -7,7 +7,7 @@ import { RecommendedJobsSection } from "./components/home/RecommendedJobsSection
 import { TopCompaniesSection } from "./components/home/TopCompaniesSection";
 
 // Trang chủ public (localhost:3000):
-// compose từ các section home để dễ thay thế data mock bằng API thật sau này.
+// compose từ các section home đang nạp dữ liệu thật qua API service.
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">

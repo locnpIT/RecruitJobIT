@@ -85,6 +85,11 @@ app:
     password: ${APP_ELASTICSEARCH_PASSWORD:}
     timeout-millis: ${APP_ELASTICSEARCH_TIMEOUT_MILLIS:5000}
     job-index: ${APP_ELASTICSEARCH_JOB_INDEX:public_job_search}
+  gemini:
+    enabled: ${APP_GEMINI_ENABLED:false}
+    api-key: ${APP_GEMINI_API_KEY:}
+    model-name: ${APP_GEMINI_MODEL_NAME:gemini-2.5-flash}
+    timeout-millis: ${APP_GEMINI_TIMEOUT_MILLIS:20000}
 
 server:
   port: 8080

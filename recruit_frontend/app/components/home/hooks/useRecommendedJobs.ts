@@ -33,6 +33,7 @@ function readCandidateSession(): boolean {
 
 export function useRecommendedJobs() {
   const [jobs, setJobs] = useState<CandidateRecommendedJob[]>([]);
+  const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -41,18 +42,33 @@ export function useRecommendedJobs() {
       // QA rule: chưa đăng nhập hoặc không phải candidate thì không gọi API và không render section.
       if (!readCandidateSession()) {
         setJobs([]);
+        setShouldRender(false);
         return;
       }
 
       try {
+        // Nếu candidate chưa tạo hồ sơ thì không có dữ liệu cá nhân hóa,
+        // nên không gọi matching và không render "Việc làm phù hợp với tôi".
+        const profiles = await candidateProfileService.listProfiles();
+        if (!active) {
+          return;
+        }
+        if (!profiles || profiles.length === 0) {
+          setJobs([]);
+          setShouldRender(false);
+          return;
+        }
+
         const data = await candidateProfileService.listRecommendedJobs(RECOMMENDED_JOBS_LIMIT);
         if (active) {
-          // Backend trả [] khi candidate chưa có hồ sơ; frontend giữ nguyên rule không render.
-          setJobs(data ?? []);
+          const recommendedJobs = data ?? [];
+          setJobs(recommendedJobs);
+          setShouldRender(recommendedJobs.length > 0);
         }
       } catch {
         if (active) {
           setJobs([]);
+          setShouldRender(false);
         }
       }
     };
@@ -63,5 +79,5 @@ export function useRecommendedJobs() {
     };
   }, []);
 
-  return { jobs };
+  return { jobs, shouldRender };
 }

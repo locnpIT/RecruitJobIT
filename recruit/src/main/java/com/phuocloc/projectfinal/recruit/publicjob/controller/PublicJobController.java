@@ -1,16 +1,21 @@
 package com.phuocloc.projectfinal.recruit.publicjob.controller;
 
 import com.phuocloc.projectfinal.recruit.common.response.SuccessResponse;
+import com.phuocloc.projectfinal.recruit.publicjob.dto.request.PublicJobAiSearchRequest;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobDetailResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSearchMetadataResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSearchResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSummaryResponse;
+import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobAiSearchService;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PublicJobController {
 
     private final PublicJobService publicJobService;
+    private final PublicJobAiSearchService publicJobAiSearchService;
 
     @GetMapping
     // Lấy danh sách tin đang hiển thị public, dùng cho homepage/search job.
@@ -83,6 +89,17 @@ public class PublicJobController {
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Lấy metadata tìm kiếm tin tuyển dụng thành công",
                 publicJobService.getSearchMetadata()
+        ));
+    }
+
+    @PostMapping("/ai-search")
+    // Search AI dùng LangChain4j Gemini để hiểu prompt, sau đó tool truy vấn lại database public jobs.
+    public ResponseEntity<SuccessResponse<PublicJobSearchResponse>> aiSearchJobs(
+            @Valid @RequestBody PublicJobAiSearchRequest request
+    ) {
+        return ResponseEntity.ok(new SuccessResponse<>(
+                "Tìm kiếm tin tuyển dụng bằng AI thành công",
+                publicJobAiSearchService.searchByPrompt(request.getPrompt(), request.getGioiHan())
         ));
     }
 }

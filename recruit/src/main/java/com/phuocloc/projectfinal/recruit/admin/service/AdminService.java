@@ -5,7 +5,6 @@ import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewCompanyRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewJobRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpsertCatalogItemRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdatePackageRequest;
-import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdateAdminSettingsRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdateUserStatusRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCatalogItemResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCompanyDetailResponse;
@@ -21,7 +20,6 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageSubscrip
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantExperienceReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminReportResponse;
-import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminSettingsResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminUserResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +42,6 @@ public class AdminService {
     private final AdminPackageService adminPackageService;
     private final AdminJobService adminJobService;
     private final AdminReportService adminReportService;
-    private final AdminSettingsService adminSettingsService;
     private final AdminCandidateProofService adminCandidateProofService;
     private final AdminCatalogService adminCatalogService;
     private final AdminSearchIndexService adminSearchIndexService;
@@ -157,16 +154,6 @@ public class AdminService {
     @Transactional(readOnly = true)
     public AdminReportResponse getReport(String range) {
         return adminReportService.getReport(range);
-    }
-
-    @Transactional(readOnly = true)
-    public AdminSettingsResponse getSettings() {
-        return adminSettingsService.getSettings();
-    }
-
-    @Transactional
-    public AdminSettingsResponse updateSettings(UpdateAdminSettingsRequest request) {
-        return adminSettingsService.updateSettings(request);
     }
 
     @Transactional(readOnly = true)

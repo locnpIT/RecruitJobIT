@@ -80,8 +80,6 @@ public class AdminReportService {
 
         List<Integer> trendData = buildTrendSeries(jobs, days);
 
-        int pendingReviewTasks = (int) jobs.stream().filter(j -> "PENDING".equalsIgnoreCase(j.getTrangThai())).count();
-
         return AdminReportResponse.builder()
                 .chiSo(List.of(
                         metric("User mới", String.valueOf(newUsers), "Trong " + days + " ngày gần nhất"),
@@ -93,12 +91,6 @@ public class AdminReportService {
                 ))
                 .duLieuXuHuong(trendData)
                 .topCongTy(topCompanies)
-                .trangThaiHeThong(AdminReportResponse.SystemStatus.builder()
-                        .tyLeOnDinhApi("99.90%")
-                        .doTreTrungBinh("190ms")
-                        .tacVuChoDuyet(pendingReviewTasks)
-                        .suCoDangMo(0)
-                        .build())
                 .build();
     }
 

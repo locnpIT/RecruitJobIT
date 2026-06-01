@@ -133,6 +133,8 @@ public class PublicJobElasticsearchIndexService {
                 ? ""
                 : trimToEmpty(job.getChiNhanh().getCongTy().getTen()));
         document.put("nganhNgheTen", job.getNganhNghe() == null ? "" : trimToEmpty(job.getNganhNghe().getTen()));
+        document.put("capDoKinhNghiemTen", job.getCapDoKinhNghiem() == null ? "" : trimToEmpty(job.getCapDoKinhNghiem().getTen()));
+        document.put("loaiHinhLamViecTen", job.getLoaiHinhLamViec() == null ? "" : trimToEmpty(job.getLoaiHinhLamViec().getTen()));
         document.put("kyNangs", joinSkills(job.getId()));
         document.put("diaDiem", resolveDiaDiem(job));
         document.put("tinhThanhTen", resolveTinhThanh(job));

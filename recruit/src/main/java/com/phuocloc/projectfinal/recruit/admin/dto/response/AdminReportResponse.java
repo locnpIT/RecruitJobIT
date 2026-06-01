@@ -15,7 +15,6 @@ public class AdminReportResponse {
     private List<Metric> chiSo;
     private List<Integer> duLieuXuHuong;
     private List<TopCompany> topCongTy;
-    private SystemStatus trangThaiHeThong;
 
     @Getter
     @Builder
@@ -31,14 +30,5 @@ public class AdminReportResponse {
         private String ten;
         private int soTin;
         private int soDon;
-    }
-
-    @Getter
-    @Builder
-    public static class SystemStatus {
-        private String tyLeOnDinhApi;
-        private String doTreTrungBinh;
-        private int tacVuChoDuyet;
-        private int suCoDangMo;
     }
 }

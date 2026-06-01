@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, MapPin, Search } from "lucide-react";
+import { ChevronDown, MapPin, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useProvinces } from "@/app/hooks/useProvinces";
 
@@ -37,6 +37,16 @@ export function HeroSection() {
     router.push(nextUrl);
   };
 
+  // Search AI tái sử dụng keyword của Hero, nhưng chỉ gửi prompt sang `/jobs/ai`.
+  // Địa điểm/filter không được đẩy qua luồng này để backend LangChain4j tự hiểu prompt.
+  const handleAiSearch = () => {
+    const trimmedKeyword = keyword.trim();
+    if (!trimmedKeyword) {
+      return;
+    }
+    router.push(`/jobs/ai?prompt=${encodeURIComponent(trimmedKeyword)}`);
+  };
+
   return (
     <section
       className="border-b border-slate-200 bg-slate-100"
@@ -53,7 +63,7 @@ export function HeroSection() {
               Nền tảng tìm việc dành cho ứng viên
             </p>
 
-            <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight tracking-[-0.03em] text-slate-950 md:text-5xl">
+            <h1 className="mt-3 max-w-2xl text-4xl font-bold leading-tight tracking-[-0.03em] text-slate-950 md:text-5xl">
               Tìm công việc phù hợp với kỹ năng của bạn
             </h1>
 
@@ -102,13 +112,24 @@ export function HeroSection() {
                     <ChevronDown className="pointer-events-none absolute right-4 h-5 w-5 text-slate-900 md:right-5" />
                   </label>
 
-                  <div className="border-t border-slate-200 p-2 md:border-l md:border-t-0">
+                  <div className="flex flex-col gap-2 border-t border-slate-200 p-2 sm:flex-row md:border-l md:border-t-0">
                     <Button
                       type="submit"
                       variant="primary"
-                      className="h-12 w-full rounded-lg px-7 text-base font-semibold md:h-full md:min-w-36"
+                      className="h-12 w-full gap-2 rounded-lg px-5 text-base font-semibold md:h-full md:min-w-32"
                     >
+                      <Search className="h-4 w-4" />
                       Tìm việc
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      onClick={handleAiSearch}
+                      disabled={!keyword.trim()}
+                      className="h-12 w-full gap-2 rounded-lg px-5 text-base font-semibold md:h-full md:min-w-32"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Search AI
                     </Button>
                   </div>
                 </form>

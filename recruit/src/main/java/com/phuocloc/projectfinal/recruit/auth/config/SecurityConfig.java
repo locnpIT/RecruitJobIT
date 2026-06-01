@@ -91,6 +91,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/locations/**").permitAll()
                         // Tin tuyển dụng public chỉ trả về tin APPROVED + còn hạn, nên cho phép khách truy cập xem.
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/jobs/**").permitAll()
+                        // Search AI ở Hero là public; backend vẫn chỉ trả tin đã lọc public-visible.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/public/jobs/ai-search").permitAll()
                         // Top companies public dùng cho homepage.
                         .requestMatchers(HttpMethod.GET, "/api/v1/public/companies/**").permitAll()
                         // Handshake websocket chat dùng query token riêng nên phải mở public tại đây.

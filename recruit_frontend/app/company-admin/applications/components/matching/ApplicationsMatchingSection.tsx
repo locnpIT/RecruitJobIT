@@ -1,20 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import type { CompanyAdminApplication } from "@/services/company-admin/types";
 import type { CandidateActionTarget } from "../../hooks/useCompanyAdminApplicationsActions";
-import { ApplicationsTable } from "../ApplicationsTable";
 import { useApplicationsMatchingPreview } from "../../hooks/useApplicationsMatchingPreview";
-import { ApplicationCandidateMatchesTable } from "./ApplicationCandidateMatchesTable";
 import { ApplicationMatchInsightPanel } from "./ApplicationMatchInsightPanel";
-import { ApplicationMatchingControls } from "./ApplicationMatchingControls";
 import { ApplicationMatchingModeTabs } from "./ApplicationMatchingModeTabs";
+import { CandidateMatchingPanel } from "./CandidateMatchingPanel";
+import { SubmittedApplicationsPanel } from "./SubmittedApplicationsPanel";
 
 type ApplicationsMatchingSectionProps = {
   applications: CompanyAdminApplication[];
   filteredApplications: CompanyAdminApplication[];
   loading: boolean;
   activeFilterJobId?: string;
+  activeFilterJobRequiresCv?: boolean;
   openingChatApplicationId: number | null;
   openingChatTargetKey: string | null;
   onOpenChat: (target: CandidateActionTarget | number | null) => void;
@@ -26,12 +27,18 @@ export function ApplicationsMatchingSection({
   filteredApplications,
   loading,
   activeFilterJobId,
+  activeFilterJobRequiresCv = false,
   openingChatApplicationId,
   openingChatTargetKey,
   onOpenChat,
   onOpenDetail,
 }: ApplicationsMatchingSectionProps) {
-  const matching = useApplicationsMatchingPreview(applications, activeFilterJobId);
+  const [insightModalOpen, setInsightModalOpen] = useState(false);
+  const matching = useApplicationsMatchingPreview(applications, activeFilterJobId, {
+    disableApplicationMatches: activeFilterJobRequiresCv,
+    initialMode: activeFilterJobRequiresCv ? "job-to-candidates" : undefined,
+  });
+  const activeMode = activeFilterJobRequiresCv ? "job-to-candidates" : matching.mode;
   const applicationMatchScoreById = new Map(
     matching.applicationMatches
       .filter((match) => match.applicationId != null)
@@ -66,84 +73,52 @@ export function ApplicationsMatchingSection({
       <ApplicationMatchingModeTabs value={matching.mode} onChange={matching.setMode} />
 
       {matching.mode === "applications" ? (
-        <div className="space-y-3">
-          {activeFilterJobId ? (
-            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-              {matching.applicationSemanticLoading
-                ? "Đang xếp hạng semantic các đơn đã nộp cho tin đang chọn..."
-                : "Danh sách đơn đang được sắp xếp theo điểm semantic matching của từng đơn với tin đang chọn."}
-            </div>
-          ) : (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              Chọn một tin tuyển dụng ở bộ lọc để bật AI Matching cho danh sách đơn đã nộp.
-            </div>
-          )}
-
-          {matching.applicationSemanticError ? (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              {matching.applicationSemanticError}
-            </div>
-          ) : null}
-
-          <div className={activeFilterJobId ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]" : ""}>
-            <ApplicationsTable
-              applications={rankedApplications}
-              loading={loading}
-              semanticMatches={matching.applicationMatches}
-              selectedMatchKey={matching.selectedApplicationMatch?.matchKey}
-              showSemanticScore={Boolean(activeFilterJobId)}
-              openingChatApplicationId={openingChatApplicationId}
-              onSelectSemanticMatch={matching.selectApplicationMatch}
-              onOpenChat={onOpenChat}
-              onOpenDetail={onOpenDetail}
-            />
-
-            {activeFilterJobId ? (
-              <ApplicationMatchInsightPanel
-                candidateMatch={matching.selectedApplicationMatch}
-                dataSourceLabel="Điểm matching được tính từ semantic search trên các đơn đã nộp cho tin tuyển dụng đang chọn."
-              />
-            ) : null}
-          </div>
-        </div>
+        <SubmittedApplicationsPanel
+          activeFilterJobId={activeFilterJobId}
+          jobRequiresCv={activeFilterJobRequiresCv}
+          applications={rankedApplications}
+          loading={loading}
+          semanticMatches={matching.applicationMatches}
+          selectedMatchKey={matching.selectedApplicationMatch?.matchKey}
+          semanticLoading={matching.applicationSemanticLoading}
+          semanticError={matching.applicationSemanticError}
+          openingChatApplicationId={openingChatApplicationId}
+          onSelectSemanticMatch={matching.selectApplicationMatch}
+          onOpenSemanticInsight={() => setInsightModalOpen(true)}
+          onOpenChat={onOpenChat}
+          onOpenDetail={onOpenDetail}
+        />
       ) : (
-        <>
-          <ApplicationMatchingControls
-            selectedJobTitle={matching.selectedJobTitle}
-            minimumScore={matching.minimumScore}
-            onMinimumScoreChange={matching.setMinimumScore}
-            jobSelectedByFilter={Boolean(activeFilterJobId)}
-          />
-
-          {matching.semanticLoading ? (
-            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-              Đang lấy kết quả semantic matching từ Qdrant...
-            </div>
-          ) : null}
-
-          {matching.semanticError ? (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              {matching.semanticError}
-            </div>
-          ) : null}
-
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <ApplicationCandidateMatchesTable
-              matches={matching.candidateMatches}
-              selectedMatchKey={matching.selectedCandidateMatch?.matchKey}
-              openingChatTargetKey={openingChatTargetKey}
-              onSelectMatch={matching.selectCandidateMatch}
-              onOpenChat={onOpenChat}
-              onOpenDetail={onOpenDetail}
-            />
-
-            <ApplicationMatchInsightPanel
-              candidateMatch={matching.selectedCandidateMatch}
-              dataSourceLabel="Điểm matching chỉ lấy từ Qdrant semantic search theo vector hồ sơ ứng viên và tin tuyển dụng."
-            />
-          </div>
-        </>
+        <CandidateMatchingPanel
+          jobRequiresCv={activeFilterJobRequiresCv}
+          selectedJobTitle={matching.selectedJobTitle}
+          minimumScore={matching.minimumScore}
+          semanticLoading={matching.semanticLoading}
+          semanticError={matching.semanticError}
+          matches={matching.candidateMatches}
+          selectedMatchKey={matching.selectedCandidateMatch?.matchKey}
+          openingChatTargetKey={openingChatTargetKey}
+          jobSelectedByFilter={Boolean(activeFilterJobId)}
+          onMinimumScoreChange={matching.setMinimumScore}
+          onSelectMatch={matching.selectCandidateMatch}
+          onOpenSemanticInsight={() => setInsightModalOpen(true)}
+          onOpenChat={onOpenChat}
+          onOpenDetail={onOpenDetail}
+        />
       )}
+
+      {!activeFilterJobRequiresCv ? (
+        <ApplicationMatchInsightPanel
+          candidateMatch={activeMode === "applications" ? matching.selectedApplicationMatch : matching.selectedCandidateMatch}
+          dataSourceLabel={
+            activeMode === "applications"
+              ? "Điểm matching được tính từ semantic search trên các đơn đã nộp cho tin tuyển dụng đang chọn."
+              : "Điểm matching chỉ lấy từ Qdrant semantic search theo vector hồ sơ ứng viên và tin tuyển dụng."
+          }
+          open={insightModalOpen}
+          onClose={() => setInsightModalOpen(false)}
+        />
+      ) : null}
     </section>
   );
 }

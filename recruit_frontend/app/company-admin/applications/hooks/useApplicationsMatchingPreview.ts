@@ -15,10 +15,19 @@ type ApiErrorLike = {
   };
 };
 
+type UseApplicationsMatchingPreviewOptions = {
+  disableApplicationMatches?: boolean;
+  initialMode?: ApplicationMatchingMode;
+};
+
 // Dùng cho màn company-admin/applications: danh sách đơn thường và AI matching.
 // Tab "AI theo tin" chỉ dùng Qdrant để dễ kiểm chứng semantic search.
-export function useApplicationsMatchingPreview(applications: CompanyAdminApplication[], activeFilterJobId?: string) {
-  const [mode, setMode] = useState<ApplicationMatchingMode>("applications");
+export function useApplicationsMatchingPreview(
+  applications: CompanyAdminApplication[],
+  activeFilterJobId?: string,
+  options: UseApplicationsMatchingPreviewOptions = {}
+) {
+  const [mode, setMode] = useState<ApplicationMatchingMode>(options.initialMode ?? "applications");
   const [minimumScore, setMinimumScore] = useState(20);
   const [selectedMatchKey, setSelectedMatchKey] = useState<string | null>(null);
   const [semanticMatches, setSemanticMatches] = useState<ApplicationCandidateMatch[]>([]);
@@ -29,12 +38,20 @@ export function useApplicationsMatchingPreview(applications: CompanyAdminApplica
   const [applicationSemanticError, setApplicationSemanticError] = useState("");
 
   const effectiveJobId = activeFilterJobId ? Number(activeFilterJobId) : 0;
+  const disableApplicationMatches = Boolean(options.disableApplicationMatches);
+  const requestedInitialMode = options.initialMode;
   const selectedJobTitle = useMemo(
     () =>
       applications.find((application) => application.tinTuyenDungId === effectiveJobId)?.tieuDeTinTuyenDung ??
       (effectiveJobId ? `Tin #${effectiveJobId}` : "Tin tuyển dụng đang lọc"),
     [applications, effectiveJobId]
   );
+
+  useEffect(() => {
+    if (requestedInitialMode) {
+      setMode(requestedInitialMode);
+    }
+  }, [requestedInitialMode]);
 
   useEffect(() => {
     if (mode !== "job-to-candidates" || !effectiveJobId) {
@@ -86,7 +103,7 @@ export function useApplicationsMatchingPreview(applications: CompanyAdminApplica
   }, [applications, effectiveJobId, minimumScore, mode]);
 
   useEffect(() => {
-    if (mode !== "applications" || !effectiveJobId) {
+    if (disableApplicationMatches || mode !== "applications" || !effectiveJobId) {
       Promise.resolve().then(() => {
         setApplicationMatches([]);
         setApplicationSemanticLoading(false);
@@ -134,7 +151,7 @@ export function useApplicationsMatchingPreview(applications: CompanyAdminApplica
     return () => {
       active = false;
     };
-  }, [applications, effectiveJobId, mode]);
+  }, [applications, disableApplicationMatches, effectiveJobId, mode]);
 
   const candidateMatches = semanticMatches;
 

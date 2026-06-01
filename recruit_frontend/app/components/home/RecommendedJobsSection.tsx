@@ -97,9 +97,9 @@ function RecommendedJobCard({ job }: { job: CandidateRecommendedJob }) {
 }
 
 export function RecommendedJobsSection() {
-  const { jobs } = useRecommendedJobs();
+  const { jobs, shouldRender } = useRecommendedJobs();
 
-  if (jobs.length === 0) {
+  if (!shouldRender) {
     return null;
   }
 

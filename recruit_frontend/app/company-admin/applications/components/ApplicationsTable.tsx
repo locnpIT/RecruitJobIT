@@ -11,8 +11,10 @@ type ApplicationsTableProps = {
   semanticMatches?: ApplicationCandidateMatch[];
   selectedMatchKey?: string | null;
   showSemanticScore?: boolean;
+  showCvColumn?: boolean;
   openingChatApplicationId: number | null;
   onSelectSemanticMatch?: (matchKey: string) => void;
+  onOpenSemanticInsight?: () => void;
   onOpenChat: (applicationId: number | null) => void;
   onOpenDetail: (applicationId: number | null) => void;
 };
@@ -24,8 +26,10 @@ export function ApplicationsTable({
   semanticMatches = [],
   selectedMatchKey,
   showSemanticScore = false,
+  showCvColumn = true,
   openingChatApplicationId,
   onSelectSemanticMatch,
+  onOpenSemanticInsight,
   onOpenChat,
   onOpenDetail,
 }: ApplicationsTableProps) {
@@ -59,7 +63,7 @@ export function ApplicationsTable({
           <tr>
             <th className="py-3 pl-4 font-medium">Ứng viên</th>
             <th className="py-3 font-medium">Tin tuyển dụng</th>
-            <th className="py-3 font-medium">CV</th>
+            {showCvColumn ? <th className="py-3 font-medium">CV</th> : null}
             <th className="py-3 font-medium">Trạng thái</th>
             {showSemanticScore ? <th className="py-3 font-medium">AI Matching</th> : null}
             <th className="py-3 font-medium">Thời gian</th>
@@ -82,43 +86,20 @@ export function ApplicationsTable({
                     onClick={() => {
                       if (semanticMatch) {
                         onSelectSemanticMatch?.(semanticMatch.matchKey);
+                        onOpenSemanticInsight?.();
                       }
                     }}
-                    className="text-left"
+                    className={`text-left ${semanticMatch ? "hover:underline" : ""}`}
                   >
                     <p className="font-medium text-slate-900">{application.ungVienHoTen ?? "--"}</p>
                     <p className="text-xs text-slate-500">{application.ungVienEmail ?? "--"}</p>
                   </button>
                 </td>
                 <td className="max-w-xs py-3 text-slate-600">{application.tieuDeTinTuyenDung ?? "--"}</td>
-                <td className="py-3 text-slate-600">
-                  {application.cvUrl ? (
-                    <a href={application.cvUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-slate-800 hover:underline">
-                      <Download className="h-4 w-4" />
-                      Tải CV
-                    </a>
-                  ) : (
-                    <span className="text-slate-400">Không có</span>
-                  )}
-                </td>
+                {showCvColumn ? <ApplicationCvCell cvUrl={application.cvUrl} /> : null}
                 <td className="py-3"><ApplicationStatusBadge status={application.trangThai} /></td>
                 {showSemanticScore ? (
-                  <td className="py-3">
-                    {semanticMatch ? (
-                      <button
-                        type="button"
-                        onClick={() => onSelectSemanticMatch?.(semanticMatch.matchKey)}
-                        className="space-y-1 text-left"
-                      >
-                        <MatchScoreBadge score={semanticMatch.score} />
-                        <p className="max-w-[220px] truncate text-xs text-slate-500">
-                          {semanticMatch.matchedSignals[0] ?? semanticMatch.reason}
-                        </p>
-                      </button>
-                    ) : (
-                      <span className="text-xs text-slate-400">Chưa có điểm</span>
-                    )}
-                  </td>
+                  <ApplicationSemanticScoreCell match={semanticMatch} onSelectSemanticMatch={onSelectSemanticMatch} />
                 ) : null}
                 <td className="py-3 text-slate-600">{formatDateTime(application.ngayTao)}</td>
                 <td className="py-3 pr-4 text-right">
@@ -154,6 +135,46 @@ export function ApplicationsTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function ApplicationCvCell({ cvUrl }: { cvUrl: string | null }) {
+  return (
+    <td className="py-3 text-slate-600">
+      {cvUrl ? (
+        <a
+          href={cvUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 font-medium text-slate-800 hover:underline"
+        >
+          <Download className="h-4 w-4" />
+          Tải CV
+        </a>
+      ) : (
+        <span className="text-slate-400">Không có</span>
+      )}
+    </td>
+  );
+}
+
+function ApplicationSemanticScoreCell({
+  match,
+  onSelectSemanticMatch,
+}: {
+  match?: ApplicationCandidateMatch | null;
+  onSelectSemanticMatch?: (matchKey: string) => void;
+}) {
+  return (
+    <td className="py-3">
+      {match ? (
+        <button type="button" onClick={() => onSelectSemanticMatch?.(match.matchKey)} className="text-left">
+          <MatchScoreBadge score={match.score} />
+        </button>
+      ) : (
+        <span className="text-xs text-slate-400">Chưa có điểm</span>
+      )}
+    </td>
   );
 }
 

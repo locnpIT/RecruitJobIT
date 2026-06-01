@@ -11,6 +11,7 @@ type ApplicationCandidateMatchesTableProps = {
   selectedMatchKey?: string | null;
   openingChatTargetKey: string | null;
   onSelectMatch: (matchKey: string) => void;
+  onOpenSemanticInsight?: () => void;
   onOpenChat: (target: CandidateActionTarget) => void;
   onOpenDetail: (target: CandidateActionTarget) => void;
 };
@@ -20,6 +21,7 @@ export function ApplicationCandidateMatchesTable({
   selectedMatchKey,
   openingChatTargetKey,
   onSelectMatch,
+  onOpenSemanticInsight,
   onOpenChat,
   onOpenDetail,
 }: ApplicationCandidateMatchesTableProps) {
@@ -61,7 +63,14 @@ export function ApplicationCandidateMatchesTable({
             return (
               <tr key={match.matchKey} className={`border-b border-slate-200 last:border-0 ${selected ? "bg-teal-50/60" : "bg-white"}`}>
                 <td className="px-4 py-4">
-                  <button type="button" onClick={() => onSelectMatch(match.matchKey)} className="text-left">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSelectMatch(match.matchKey);
+                      onOpenSemanticInsight?.();
+                    }}
+                    className={`text-left ${onOpenSemanticInsight ? "hover:underline" : ""}`}
+                  >
                     <div className="flex items-center gap-3">
                       <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-600">
                         {match.candidateAvatarUrl ? (

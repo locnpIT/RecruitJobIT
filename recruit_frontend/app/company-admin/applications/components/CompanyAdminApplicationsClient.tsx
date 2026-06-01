@@ -13,6 +13,7 @@ import { useCompanyAdminApplicationsData } from "../hooks/useCompanyAdminApplica
 // Client container cho trang company-admin/applications.
 export function CompanyAdminApplicationsClient() {
   const data = useCompanyAdminApplicationsData();
+  const activeJobRequiresCv = selectedJobRequiresCv(data.jobs, data.filters.jobId);
   const actions = useCompanyAdminApplicationsActions({
     setApplications: data.setApplications,
     setError: data.setError,
@@ -67,6 +68,7 @@ export function CompanyAdminApplicationsClient() {
         filteredApplications={data.filteredApplications}
         loading={data.isLoadingApplications}
         activeFilterJobId={data.filters.jobId}
+        activeFilterJobRequiresCv={activeJobRequiresCv}
         openingChatApplicationId={actions.openingChatApplicationId}
         openingChatTargetKey={actions.openingChatTargetKey}
         onOpenChat={actions.handleOpenChat}
@@ -101,4 +103,13 @@ function resolveChatTargetKey(application: { id: number | null; tinTuyenDungId: 
     return `application-${application.id}`;
   }
   return `profile-${application.tinTuyenDungId ?? "unknown"}-${application.hoSoUngVienId ?? "unknown"}`;
+}
+
+function selectedJobRequiresCv(jobs: Array<{ id: number | null; batBuocCV: boolean | null }>, jobId: string) {
+  if (!jobId) {
+    return false;
+  }
+
+  const numericJobId = Number(jobId);
+  return jobs.some((job) => job.id === numericJobId && Boolean(job.batBuocCV));
 }

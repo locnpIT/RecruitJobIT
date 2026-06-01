@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { HomeFooter } from "@/app/components/home/HomeFooter";
 import { HomeHeader } from "@/app/components/home/HomeHeader";
-import { JobApplySection } from "./JobApplySection";
 import { JobApplyModal } from "./JobApplyModal";
 import { JobDescriptionPanel } from "./JobDescriptionPanel";
 import { JobDetailHero } from "./JobDetailHero";

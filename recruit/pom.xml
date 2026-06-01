@@ -61,6 +61,18 @@
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
 
+		<!-- dependency for LangChain4j Gemini AI job search -->
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j</artifactId>
+			<version>1.15.1</version>
+		</dependency>
+		<dependency>
+			<groupId>dev.langchain4j</groupId>
+			<artifactId>langchain4j-google-ai-gemini</artifactId>
+			<version>1.15.1</version>
+		</dependency>
+
 		<!-- dependency for spring security -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -130,14 +142,6 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		 </dependency>
-
-		<!-- dependency for extracting text from uploaded CV PDF files -->
-		<dependency>
-			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>pdfbox</artifactId>
-			<version>3.0.3</version>
-		</dependency>
-
 
 	</dependencies>
 

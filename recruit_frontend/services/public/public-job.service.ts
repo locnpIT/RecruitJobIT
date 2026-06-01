@@ -72,6 +72,11 @@ export type SearchJobsParams = {
   kichThuoc?: number;
 };
 
+export type AiSearchJobsPayload = {
+  prompt: string;
+  gioiHan?: number;
+};
+
 export type PublicJobSearchResponse = {
   danhSach: PublicJobSummary[];
   tongSo: number;
@@ -91,6 +96,43 @@ export type PublicJobSearchMetadata = {
   capDoKinhNghiems: PublicJobSearchMetadataOption[];
 };
 
+const AI_SEARCH_CACHE_TTL_MS = 30_000;
+const aiSearchInflightRequests = new Map<string, Promise<PublicJobSearchResponse>>();
+const aiSearchResponseCache = new Map<string, { data: PublicJobSearchResponse; createdAt: number }>();
+
+function buildAiSearchCacheKey(payload: AiSearchJobsPayload) {
+  return `${payload.prompt.trim().toLowerCase()}::${payload.gioiHan ?? ""}`;
+}
+
+async function postAiSearchJobs(payload: AiSearchJobsPayload): Promise<PublicJobSearchResponse> {
+  const cacheKey = buildAiSearchCacheKey(payload);
+  const cached = aiSearchResponseCache.get(cacheKey);
+
+  if (cached && Date.now() - cached.createdAt < AI_SEARCH_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  const inflightRequest = aiSearchInflightRequests.get(cacheKey);
+  if (inflightRequest) {
+    return inflightRequest;
+  }
+
+  // Dedupe POST AI search để React StrictMode/dev remount không gọi Gemini 2 lần cho cùng prompt.
+  const request = apiClient
+    .post("/public/jobs/ai-search", payload)
+    .then((response) => {
+      const data = response.data.data as PublicJobSearchResponse;
+      aiSearchResponseCache.set(cacheKey, { data, createdAt: Date.now() });
+      return data;
+    })
+    .finally(() => {
+      aiSearchInflightRequests.delete(cacheKey);
+    });
+
+  aiSearchInflightRequests.set(cacheKey, request);
+  return request;
+}
+
 // Service public job dùng cho homepage và trang chi tiết job.
 // Tất cả API `/public/jobs` chỉ trả về tin APPROVED + còn hạn theo rule backend.
 export const publicJobService = {
@@ -108,6 +150,10 @@ export const publicJobService = {
   searchJobs: async (params: SearchJobsParams = {}): Promise<PublicJobSearchResponse> => {
     const response = await apiClient.get("/public/jobs/search", { params });
     return response.data.data as PublicJobSearchResponse;
+  },
+
+  aiSearchJobs: async (payload: AiSearchJobsPayload): Promise<PublicJobSearchResponse> => {
+    return postAiSearchJobs(payload);
   },
 
   getSearchMetadata: async (): Promise<PublicJobSearchMetadata> => {

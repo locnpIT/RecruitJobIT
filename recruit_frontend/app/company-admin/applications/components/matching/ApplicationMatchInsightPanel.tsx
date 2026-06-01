@@ -1,4 +1,7 @@
+"use client";
+
 import { AlertTriangle, BriefcaseBusiness, CheckCircle2, Lightbulb, Sparkles, Target } from "lucide-react";
+import { ProfileModal } from "@/app/profile/components/modals/ProfileModal";
 import type { ApplicationCandidateMatch } from "./types";
 import { MatchScoreBadge } from "./MatchScoreBadge";
 import { SignalChips } from "./SignalChips";
@@ -6,11 +9,15 @@ import { SignalChips } from "./SignalChips";
 type ApplicationMatchInsightPanelProps = {
   candidateMatch?: ApplicationCandidateMatch | null;
   dataSourceLabel?: string;
+  open: boolean;
+  onClose: () => void;
 };
 
 export function ApplicationMatchInsightPanel({
   candidateMatch,
   dataSourceLabel = "Điểm hiện tại được lấy từ nguồn matching đang chọn.",
+  open,
+  onClose,
 }: ApplicationMatchInsightPanelProps) {
   const title = candidateMatch?.candidateName ?? "Chưa chọn kết quả";
   const subtitle = candidateMatch?.jobTitle ?? "Chọn một dòng matching để xem lý do.";
@@ -23,10 +30,10 @@ export function ApplicationMatchInsightPanel({
   const actionSuggestion = candidateMatch?.actionSuggestion ?? "";
 
   return (
-    <aside className="rounded-lg border border-slate-200 bg-white p-4">
+    <ProfileModal open={open} title={`Lý do gợi ý - ${title}`} description={subtitle} onClose={onClose}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Lý do gợi ý</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Chi tiết lý do</p>
           <h3 className="mt-2 text-base font-semibold text-slate-950">{title}</h3>
           <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
         </div>
@@ -88,7 +95,7 @@ export function ApplicationMatchInsightPanel({
       <p className="mt-4 border-t border-slate-200 pt-4 text-xs leading-5 text-slate-500">
         {dataSourceLabel}
       </p>
-    </aside>
+    </ProfileModal>
   );
 }
 

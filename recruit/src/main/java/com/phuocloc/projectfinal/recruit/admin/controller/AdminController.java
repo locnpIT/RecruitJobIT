@@ -5,7 +5,6 @@ import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewJobRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.CreatePackageRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdatePackageRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpsertCatalogItemRequest;
-import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdateAdminSettingsRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdateUserStatusRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCatalogItemResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCompanyDetailResponse;
@@ -21,7 +20,6 @@ import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminPackageSubscrip
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantExperienceReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminQdrantReindexResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminReportResponse;
-import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminSettingsResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminUserResponse;
 import com.phuocloc.projectfinal.recruit.admin.service.AdminService;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
@@ -266,25 +264,6 @@ public class AdminController {
     ) {
         requireAdmin();
         return ResponseEntity.ok(new SuccessResponse<>("Lấy báo cáo hệ thống thành công", adminService.getReport(range)));
-    }
-
-    @GetMapping("/settings")
-    // Lấy cấu hình quản trị hiện tại của hệ thống.
-    // Frontend /admin/settings dùng route này để hiển thị giá trị mặc định khi mở màn cài đặt.
-    // Về bản chất đây là "read model" cho admin settings, không thay đổi dữ liệu.
-    public ResponseEntity<SuccessResponse<AdminSettingsResponse>> settings() {
-        requireAdmin();
-        return ResponseEntity.ok(new SuccessResponse<>("Lấy cài đặt admin thành công", adminService.getSettings()));
-    }
-
-    @PatchMapping("/settings")
-    // Cập nhật các cài đặt quản trị đang expose trên UI admin.
-    // Route này thường được gọi sau thao tác "Lưu thay đổi" ở màn settings.
-    public ResponseEntity<SuccessResponse<AdminSettingsResponse>> updateSettings(
-            @Valid @RequestBody UpdateAdminSettingsRequest request
-    ) {
-        requireAdmin();
-        return ResponseEntity.ok(new SuccessResponse<>("Cập nhật cài đặt admin thành công", adminService.updateSettings(request)));
     }
 
     @GetMapping("/elasticsearch/health")

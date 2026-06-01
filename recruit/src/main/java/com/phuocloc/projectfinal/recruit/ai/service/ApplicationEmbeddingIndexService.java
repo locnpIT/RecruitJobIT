@@ -33,8 +33,8 @@ public class ApplicationEmbeddingIndexService {
 
     private static final String TRANG_THAI_DA_CHI_MUC = "INDEXED";
     private static final String TRANG_THAI_LOI = "FAILED";
+    private static final String TRANG_THAI_BO_QUA = "SKIPPED";
     private static final String PHIEN_BAN_NHUNG = "application-v2";
-    private static final String NGUON_NHUNG_CV = "CV_PDF";
     private static final String NGUON_NHUNG_HO_SO = "PROFILE";
 
     private final ChiMucNhungDonUngTuyenRepository chiMucRepository;
@@ -44,14 +44,13 @@ public class ApplicationEmbeddingIndexService {
     private final HoSoChungChiRepository hoSoChungChiRepository;
     private final KyNangUngVienRepository kyNangUngVienRepository;
     private final TextEmbeddingService vanBanNhungService;
-    private final CvContentExtractionService trichXuatNoiDungCvService;
     private final QdrantClientService qdrantClientService;
     private final QdrantProperties qdrantProperties;
 
     /**
      * Đồng bộ embedding cho một đơn ứng tuyển cụ thể.
      *
-     * <p>Nếu tin bắt buộc CV, embedding của đơn lấy từ CV PDF. Nếu không, embedding lấy từ hồ sơ ứng viên.</p>
+     * <p>Đơn của tin bắt buộc CV chỉ lưu file để HR tải xem thủ công; không đọc PDF và không đưa vào Qdrant.</p>
      */
     @Transactional
     public void syncIndex(DonUngTuyen donUngTuyen) {
@@ -59,6 +58,10 @@ public class ApplicationEmbeddingIndexService {
             return;
         }
         String pointId = buildPointId(donUngTuyen.getId());
+        if (shouldSkipEmbedding(donUngTuyen)) {
+            skipIndex(donUngTuyen, pointId);
+            return;
+        }
         try {
             String noiDung = buildEmbeddingContent(donUngTuyen);
             List<Float> vector = vanBanNhungService.generateVector(noiDung);
@@ -80,6 +83,13 @@ public class ApplicationEmbeddingIndexService {
             return;
         }
         var latestIndex = chiMucRepository.findFirstByDonUngTuyen_IdOrderByIdDesc(donUngTuyen.getId());
+        if (shouldSkipEmbedding(donUngTuyen)) {
+            if (latestIndex.isPresent() && TRANG_THAI_BO_QUA.equalsIgnoreCase(latestIndex.get().getTrangThai())) {
+                return;
+            }
+            skipIndex(donUngTuyen, buildPointId(donUngTuyen.getId()));
+            return;
+        }
         if (latestIndex.isPresent()
                 && TRANG_THAI_DA_CHI_MUC.equalsIgnoreCase(latestIndex.get().getTrangThai())
                 && StringUtils.hasText(latestIndex.get().getMaDiem())
@@ -101,6 +111,18 @@ public class ApplicationEmbeddingIndexService {
         chiMuc.setTrangThai(trangThai);
         chiMuc.setNgayTao(LocalDateTime.now());
         chiMucRepository.save(chiMuc);
+    }
+
+    /**
+     * Tin bắt buộc CV không tham gia ranking tự động theo đơn: HR vẫn xem CV thủ công qua cvUrl.
+     */
+    private void skipIndex(DonUngTuyen donUngTuyen, String pointId) {
+        try {
+            qdrantClientService.deletePoint(qdrantProperties.getKhoDonUngTuyen(), pointId);
+        } catch (Exception ex) {
+            log.debug("Không xóa được point {} khỏi Qdrant khi bỏ qua đơn ứng tuyển {}", pointId, donUngTuyen.getId(), ex);
+        }
+        saveIndexStatus(donUngTuyen, pointId, TRANG_THAI_BO_QUA);
     }
 
     private String buildPointId(Integer donUngTuyenId) {
@@ -132,31 +154,24 @@ public class ApplicationEmbeddingIndexService {
     }
 
     private String resolveEmbeddingSource(DonUngTuyen donUngTuyen) {
-        boolean batBuocCv = donUngTuyen.getTinTuyenDung() != null && Boolean.TRUE.equals(donUngTuyen.getTinTuyenDung().getBatBuocCV());
-        return batBuocCv && StringUtils.hasText(donUngTuyen.getCvUrl()) ? NGUON_NHUNG_CV : NGUON_NHUNG_HO_SO;
+        return NGUON_NHUNG_HO_SO;
+    }
+
+    private boolean shouldSkipEmbedding(DonUngTuyen donUngTuyen) {
+        return donUngTuyen.getTinTuyenDung() != null
+                && Boolean.TRUE.equals(donUngTuyen.getTinTuyenDung().getBatBuocCV())
+                && StringUtils.hasText(donUngTuyen.getCvUrl());
     }
 
     /**
      * Hợp nhất text từ:
-     * - nếu tin bắt buộc CV và ứng viên có upload CV, chỉ dùng nội dung PDF của CV
-     * - ngược lại, hồ sơ ứng viên là nguồn chính
+     * - hồ sơ ứng viên là nguồn chính
+     * - đơn của tin bắt buộc CV được bỏ qua trước khi gọi hàm này
      *
      * Kết quả này là nguồn đầu vào duy nhất cho embedding của DonUngTuyen.
      */
     private String buildEmbeddingContent(DonUngTuyen donUngTuyen) {
         StringBuilder sb = new StringBuilder(1024);
-
-        String cvUrl = donUngTuyen.getCvUrl();
-
-        if (NGUON_NHUNG_CV.equals(resolveEmbeddingSource(donUngTuyen))) {
-            String noiDungCv = trichXuatNoiDungCvService.extract(cvUrl);
-            if (StringUtils.hasText(noiDungCv)) {
-                append(sb, "Noi dung CV upload", noiDungCv);
-                return sb.toString();
-            }
-            append(sb, "Cv URL", cvUrl);
-            return sb.toString();
-        }
 
         if (donUngTuyen.getHoSoUngVien() != null) {
             Integer hoSoId = donUngTuyen.getHoSoUngVien().getId();
