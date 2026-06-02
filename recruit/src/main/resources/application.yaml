@@ -36,6 +36,8 @@ spring:
       enabled: false
 
 app:
+  public:
+    base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
   jwt:
     secret-base64: ${APP_JWT_SECRET_BASE64:${SECRET_KEY_JWT:}}
     # 604800 giây = 7 ngày. Có thể override bằng APP_JWT_ACCESS_TOKEN_EXPIRATION_SECONDS trong .env.
@@ -90,6 +92,23 @@ app:
     api-key: ${APP_GEMINI_API_KEY:}
     model-name: ${APP_GEMINI_MODEL_NAME:gemini-2.5-flash}
     timeout-millis: ${APP_GEMINI_TIMEOUT_MILLIS:20000}
+  mail:
+    enabled: ${APP_MAIL_ENABLED:false}
+    from-email: ${APP_MAIL_FROM_EMAIL:${SPRING_MAIL_USERNAME:}}
+    from-name: ${APP_MAIL_FROM_NAME:Recruit}
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:true}
+          connectiontimeout: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_CONNECTIONTIMEOUT:5000}
+          timeout: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_TIMEOUT:5000}
+          writetimeout: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_WRITETIMEOUT:5000}
 
 server:
   port: 8080

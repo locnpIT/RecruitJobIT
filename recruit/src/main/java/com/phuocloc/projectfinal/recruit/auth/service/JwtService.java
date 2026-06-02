@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.Map;
 
 import javax.crypto.SecretKey;
 
@@ -68,6 +69,22 @@ public class JwtService {
                 .expiration(Date.from(expiresAt))
                 .signWith(signingKey)
                 .compact();
+    }
+
+    public String generatePublicActionToken(Map<String, Object> claims, long expiresInSeconds) {
+        Instant now = Instant.now();
+        Instant expiresAt = now.plusSeconds(Math.max(60, expiresInSeconds));
+        var builder = Jwts.builder()
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiresAt));
+        if (claims != null) {
+            claims.forEach(builder::claim);
+        }
+        return builder.signWith(signingKey).compact();
+    }
+
+    public Claims parsePublicToken(String token) {
+        return parseClaims(token);
     }
 
     public String extractEmailFromToken(String token) {

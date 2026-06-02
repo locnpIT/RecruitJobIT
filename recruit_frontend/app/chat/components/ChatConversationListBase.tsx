@@ -173,7 +173,7 @@ export function ChatConversationListBase({
                     <div className="flex shrink-0 items-center gap-2">
                       {lastMessageAt ? <span className="text-[11px] font-medium text-slate-500">{lastMessageAt}</span> : null}
                       {unread > 0 ? (
-                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-900 px-1.5 text-[11px] font-semibold text-white">
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 text-[11px] font-semibold text-white">
                           {unread}
                         </span>
                       ) : null}

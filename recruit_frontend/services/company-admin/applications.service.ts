@@ -27,4 +27,17 @@ export const companyAdminApplicationsService = {
     });
     return response.data.data as CompanyAdminApplication;
   },
+
+  sendInterviewEmail: async (
+    applicationId: number,
+    payload: {
+      thoiGianPhongVan: string;
+      diaDiemPhongVan: string;
+      ghiChu?: string;
+    }
+  ): Promise<CompanyAdminApplication> => {
+    const safeApplicationId = requirePathParam(applicationId, "applicationId");
+    const response = await apiClient.post(`/company-admin/applications/${safeApplicationId}/interview-email`, payload);
+    return response.data.data as CompanyAdminApplication;
+  },
 };

@@ -26,6 +26,7 @@ export function useCompanyAdminApplicationsActions({ setApplications, setError }
   const [detailOpen, setDetailOpen] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [isSendingInterviewEmail, setIsSendingInterviewEmail] = useState(false);
   const [openingChatApplicationId, setOpeningChatApplicationId] = useState<number | null>(null);
   const [openingChatTargetKey, setOpeningChatTargetKey] = useState<string | null>(null);
 
@@ -70,6 +71,29 @@ export function useCompanyAdminApplicationsActions({ setApplications, setError }
     }
   };
 
+  const handleSendInterviewEmail = async (payload: {
+    thoiGianPhongVan: string;
+    diaDiemPhongVan: string;
+    ghiChu?: string;
+  }) => {
+    if (!selectedApplication?.id) {
+      return;
+    }
+
+    setIsSendingInterviewEmail(true);
+    try {
+      const updated = await companyAdminApplicationsService.sendInterviewEmail(selectedApplication.id, payload);
+      setSelectedApplication(updated);
+      setApplications((current) =>
+        current.map((item) => (item.id === updated.id ? { ...item, trangThai: updated.trangThai } : item))
+      );
+    } catch (error) {
+      setError(getApiErrorMessage(error, "Không thể gửi email phỏng vấn."));
+    } finally {
+      setIsSendingInterviewEmail(false);
+    }
+  };
+
   const handleOpenChat = async (target: CandidateActionTarget | number | null) => {
     const safeTarget = normalizeTarget(target);
     if (!safeTarget.applicationId && (!safeTarget.jobId || !safeTarget.profileId)) {
@@ -97,11 +121,13 @@ export function useCompanyAdminApplicationsActions({ setApplications, setError }
     detailOpen,
     isLoadingDetail,
     isSavingStatus,
+    isSendingInterviewEmail,
     openingChatApplicationId,
     openingChatTargetKey,
     setDetailOpen,
     handleOpenDetail,
     handleStatusChange,
+    handleSendInterviewEmail,
     handleOpenChat,
   };
 }

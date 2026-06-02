@@ -80,9 +80,11 @@ export function CompanyAdminApplicationsClient() {
         application={actions.selectedApplication}
         loading={actions.isLoadingDetail}
         savingStatus={actions.isSavingStatus}
+        sendingInterviewEmail={actions.isSendingInterviewEmail}
         openingChat={actions.openingChatTargetKey === resolveChatTargetKey(actions.selectedApplication)}
         onClose={() => actions.setDetailOpen(false)}
         onStatusChange={actions.handleStatusChange}
+        onSendInterviewEmail={actions.handleSendInterviewEmail}
         onOpenChat={() =>
           actions.handleOpenChat({
             applicationId: actions.selectedApplication?.id ?? null,

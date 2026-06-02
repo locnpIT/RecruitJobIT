@@ -5,6 +5,7 @@ import com.phuocloc.projectfinal.recruit.company.dto.request.CompanyProofUploadB
 import com.phuocloc.projectfinal.recruit.company.dto.request.CreateCompanyJobRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.RegisterCompanyPackageRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateApplicationStatusRequest;
+import com.phuocloc.projectfinal.recruit.company.dto.request.SendInterviewMailRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyInfoRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyLogoRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyProofRequest;
@@ -120,6 +121,15 @@ public class CompanyAdminService {
             UpdateApplicationStatusRequest request
     ) {
         return applicationService.updateApplicationStatus(principal, applicationId, request);
+    }
+
+    @Transactional
+    public CompanyAdminApplicationResponse sendInterviewEmail(
+            AppUserPrinciple principal,
+            Long applicationId,
+            SendInterviewMailRequest request
+    ) {
+        return applicationService.sendInterviewEmail(principal, applicationId, request);
     }
 
     @Transactional(readOnly = true)

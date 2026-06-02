@@ -5,6 +5,8 @@ const STATUS_LABELS: Record<string, string> = {
   REVIEWING: "Đang xem xét",
   ACCEPTED: "Đã chấp nhận",
   REJECTED: "Đã từ chối",
+  CONFIRMED: "Đã xác nhận phỏng vấn",
+  DECLINED: "Từ chối phỏng vấn",
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -12,6 +14,8 @@ const STATUS_STYLES: Record<string, string> = {
   REVIEWING: "border-sky-200 bg-sky-50 text-sky-700",
   ACCEPTED: "border-emerald-200 bg-emerald-50 text-emerald-700",
   REJECTED: "border-rose-200 bg-rose-50 text-rose-700",
+  CONFIRMED: "border-teal-200 bg-teal-50 text-teal-700",
+  DECLINED: "border-slate-200 bg-slate-100 text-slate-700",
 };
 
 type ApplicationStatusBadgeProps = {

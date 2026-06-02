@@ -3,13 +3,17 @@ package com.phuocloc.projectfinal.recruit.company.service;
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
 import com.phuocloc.projectfinal.recruit.candidate.repository.CandidateProfileRepository;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateApplicationStatusRequest;
+import com.phuocloc.projectfinal.recruit.company.dto.request.SendInterviewMailRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminApplicationResponse;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.DonUngTuyenRepository;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
+import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -31,7 +35,9 @@ public class CompanyAdminApplicationService {
             "PENDING",
             "REVIEWING",
             "ACCEPTED",
-            "REJECTED"
+            "REJECTED",
+            "CONFIRMED",
+            "DECLINED"
     );
 
     private final CompanyAdminAccessService accessService;
@@ -40,6 +46,7 @@ public class CompanyAdminApplicationService {
     private final DonUngTuyenRepository donUngTuyenRepository;
     private final CandidateProfileRepository candidateProfileRepository;
     private final NotificationService notificationService;
+    private final HrCredentialMailService hrCredentialMailService;
 
     public List<CompanyAdminApplicationResponse> listApplications(AppUserPrinciple principal, Integer chiNhanhId) {
         accessService.requireMembership(principal.getUserId().intValue(), chiNhanhId, COMPANY_ADMIN_ROLES);
@@ -85,6 +92,43 @@ public class CompanyAdminApplicationService {
         return applicationMapper.mapApplication(saved, true);
     }
 
+    public CompanyAdminApplicationResponse sendInterviewEmail(
+            AppUserPrinciple principal,
+            Long applicationId,
+            SendInterviewMailRequest request
+    ) {
+        DonUngTuyen application = requireManagedApplication(principal, applicationId);
+        if (!"ACCEPTED".equalsIgnoreCase(application.getTrangThai())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ có thể gửi mail phỏng vấn cho đơn đã được chấp nhận");
+        }
+        if (application.getHoSoUngVien() == null || application.getHoSoUngVien().getNguoiDung() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu thông tin ứng viên để gửi mail");
+        }
+        if (application.getTinTuyenDung() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu thông tin tin tuyển dụng");
+        }
+
+        var candidate = application.getHoSoUngVien().getNguoiDung();
+        var job = application.getTinTuyenDung();
+        var branch = job.getChiNhanh();
+        var company = branch != null ? branch.getCongTy() : null;
+
+        hrCredentialMailService.sendInterviewInvitation(
+                application.getId() == null ? applicationId : application.getId().longValue(),
+                candidate.getEmail(),
+                candidate.getTen(),
+                candidate.getHo(),
+                company == null ? "Công ty" : company.getTen(),
+                job.getTieuDe(),
+                formatInterviewDateTime(request.getThoiGianPhongVan()),
+                request.getDiaDiemPhongVan(),
+                request.getGhiChu(),
+                resolveBranchAddress(branch)
+        );
+
+        return applicationMapper.mapApplication(application, true);
+    }
+
     private DonUngTuyen requireManagedApplication(AppUserPrinciple principal, Long applicationId) {
         if (principal == null || principal.getUserId() == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập");
@@ -122,9 +166,23 @@ public class CompanyAdminApplicationService {
         if (!APPLICATION_STATUSES.contains(normalized)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Trạng thái đơn ứng tuyển không hợp lệ. Chỉ hỗ trợ PENDING, REVIEWING, ACCEPTED, REJECTED"
+                    "Trạng thái đơn ứng tuyển không hợp lệ. Chỉ hỗ trợ PENDING, REVIEWING, ACCEPTED, REJECTED, CONFIRMED, DECLINED"
             );
         }
         return normalized;
+    }
+
+    private String formatInterviewDateTime(LocalDateTime value) {
+        return value == null ? "" : value.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    private String resolveBranchAddress(com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy branch) {
+        if (branch == null) {
+            return "Chưa có địa chỉ chi nhánh";
+        }
+        if (branch.getDiaChiChiTiet() != null && !branch.getDiaChiChiTiet().isBlank()) {
+            return branch.getDiaChiChiTiet().trim();
+        }
+        return branch.getTen() == null ? "Chưa có địa chỉ chi nhánh" : branch.getTen().trim();
     }
 }

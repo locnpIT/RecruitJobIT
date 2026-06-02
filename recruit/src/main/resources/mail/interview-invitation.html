@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thư mời phỏng vấn</title>
+</head>
+<body style="margin:0;padding:0;background:#f6f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7fb;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="width:640px;max-width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+                <tr>
+                    <td style="padding:24px 28px;background:#059669;color:#ffffff;">
+                        <div style="font-size:18px;font-weight:700;line-height:1.4;">Thư mời phỏng vấn</div>
+                        <div style="margin-top:6px;font-size:13px;opacity:0.92;">Lời mời chính thức từ hệ thống tuyển dụng</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:28px;">
+                        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;">
+                            Chào <strong>${fullName}</strong>,
+                        </p>
+                        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;">
+                            Chúc mừng bạn đã được chọn tham gia phỏng vấn cho đơn <strong>${jobTitle}</strong> tại công ty <strong>${companyName}</strong>.
+                        </p>
+
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:20px 0;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;">
+                            <tr>
+                                <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;font-size:14px;"><strong>Thời gian:</strong></td>
+                                <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;font-size:14px;">${interviewDateTime}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:14px 16px;font-size:14px;"><strong>Địa điểm:</strong></td>
+                                <td style="padding:14px 16px;font-size:14px;">${interviewLocation}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:14px 16px;border-top:1px solid #e5e7eb;font-size:14px;"><strong>Địa chỉ chi nhánh:</strong></td>
+                                <td style="padding:14px 16px;border-top:1px solid #e5e7eb;font-size:14px;">${branchAddress}</td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:0 0 8px;font-size:14px;font-weight:700;line-height:1.6;color:#374151;">Ghi chú</p>
+                        <p style="margin:0;font-size:14px;line-height:1.7;color:#4b5563;">${note}</p>
+
+                        <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:24px;">
+                            <tr>
+                                <td style="padding-right:12px;">
+                                    <a href="${confirmUrl}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-size:14px;font-weight:700;">
+                                        Xác nhận tham gia
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="${declineUrl}" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-size:14px;font-weight:700;">
+                                        Từ chối phỏng vấn
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

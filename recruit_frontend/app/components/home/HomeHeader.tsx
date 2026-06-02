@@ -165,7 +165,7 @@ export function HomeHeader() {
                       ? headerData.latestNotifications.map((item) => (
                           <div
                             key={item.id}
-                            className={`mb-1 rounded-md border px-2 py-2 ${
+                            className={`mb-1 rounded-md border px-2 py-5 ${
                               item.daDoc ? "border-slate-200 bg-white" : "border-amber-200 bg-amber-50"
                             }`}
                           >

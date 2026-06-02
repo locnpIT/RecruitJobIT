@@ -12,6 +12,7 @@ import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyHrRequ
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyInfoRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyJobRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateApplicationStatusRequest;
+import com.phuocloc.projectfinal.recruit.company.dto.request.SendInterviewMailRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminApplicationResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminHrResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminJobResponse;
@@ -268,6 +269,18 @@ public class CompanySubAdminController {
     ) {
         var data = companyAdminService.updateApplicationStatus(principal, applicationId, request);
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật trạng thái đơn ứng tuyển thành công", data));
+    }
+
+    @PostMapping("/applications/{applicationId}/interview-email")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    // Gửi email phỏng vấn cho ứng viên đã được chấp nhận.
+    public ResponseEntity<SuccessResponse<CompanyAdminApplicationResponse>> sendInterviewEmail(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long applicationId,
+            @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody SendInterviewMailRequest request
+    ) {
+        var data = companyAdminService.sendInterviewEmail(principal, applicationId, request);
+        return ResponseEntity.ok(new SuccessResponse<>("Gửi email phỏng vấn thành công", data));
     }
 
     @PatchMapping("/company/info")
