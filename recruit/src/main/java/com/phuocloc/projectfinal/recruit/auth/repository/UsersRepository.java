@@ -16,6 +16,9 @@ public interface UsersRepository extends JpaRepository<NguoiDung, Integer> {
     @EntityGraph(attributePaths = {"vaiTroHeThong", "xaPhuong"})
     Optional<NguoiDung> findByEmail(String email);
 
+    @EntityGraph(attributePaths = {"vaiTroHeThong", "xaPhuong", "xaPhuong.tinhThanh"})
+    Optional<NguoiDung> findDetailedById(Integer id);
+
     boolean existsByEmail(String email);
 
     List<NguoiDung> findByVaiTroHeThong_Id(Integer roleId);

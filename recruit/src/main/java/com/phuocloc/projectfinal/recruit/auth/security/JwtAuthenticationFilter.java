@@ -20,8 +20,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 /**
  * Filter đọc JWT từ header Authorization và nạp principal vào SecurityContext.
@@ -72,8 +74,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return principle;
             }
             return null;
-        } catch (UsernameNotFoundException ex) {
+        } catch (Exception ex) {
             // Fallback: dùng trực tiếp claim trong token để tránh rơi 403 rỗng
+            // Nếu load principal đầy đủ lỗi vì memberships/relations/null data, auth vẫn nên sống
+            // để các route như /auth/me có thể hoạt động.
+            log.debug("JWT principal resolution fallback for token subject due to: {}", ex.getMessage(), ex);
             try {
                 return AppUserPrinciple.builder()
                         .userId(jwtService.extractUserIdFromToken(token))
@@ -86,8 +91,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (Exception ignored) {
                 return null;
             }
-        } catch (Exception ex) {
-            return null;
         }
     }
     

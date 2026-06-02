@@ -53,6 +53,8 @@ export function JobsPageClient() {
             <JobsPagination
               currentPage={jobsSearch.searchState?.trang ?? 0}
               hasNext={Boolean(jobsSearch.searchState?.conTrangSau)}
+              totalItems={jobsSearch.searchState?.tongSo}
+              pageSize={jobsSearch.searchState?.kichThuoc ?? 12}
               onPrev={() => void jobsSearch.handlePrevPage()}
               onNext={() => void jobsSearch.handleNextPage()}
               disabled={jobsSearch.isLoading}

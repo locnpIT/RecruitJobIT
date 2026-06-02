@@ -12,14 +12,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class AuthUserProfileService {
 
     private final UsersRepository usersRepository;
     private final XaPhuongRepository xaPhuongRepository;
 
+    @Transactional(readOnly = true)
     public UserProfileResponse getCurrentUserProfile(Long userId) {
         return mapUserProfile(requireUser(userId));
     }
@@ -63,7 +66,7 @@ public class AuthUserProfileService {
     }
 
     private NguoiDung requireUser(Long userId) {
-        return usersRepository.findById(toIntId(userId, "userId"))
+        return usersRepository.findDetailedById(toIntId(userId, "userId"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
     }
 
