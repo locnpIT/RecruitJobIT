@@ -48,10 +48,9 @@ export function EducationModal({
   const [tab, setTab] = useState<ProfileModalTab>("create");
   const [query, setQuery] = useState("");
   const [proofError, setProofError] = useState("");
+
   const initialForm = useMemo<EducationFormState>(() => {
-    if (!editingItem) {
-      return EMPTY_FORM;
-    }
+    if (!editingItem) return EMPTY_FORM;
     return {
       tenTruong: editingItem.tenTruong,
       chuyenNganh: editingItem.chuyenNganh ?? "",
@@ -65,13 +64,10 @@ export function EducationModal({
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (!normalized) {
-      return items;
-    }
-    return items.filter((item) => {
-      const haystack = `${item.tenTruong} ${item.bacHoc ?? ""} ${item.chuyenNganh ?? ""}`.toLowerCase();
-      return haystack.includes(normalized);
-    });
+    if (!normalized) return items;
+    return items.filter((item) =>
+      `${item.tenTruong} ${item.bacHoc ?? ""} ${item.chuyenNganh ?? ""}`.toLowerCase().includes(normalized)
+    );
   }, [items, query]);
 
   const title = editingItem ? "Sửa học vấn" : "Thêm học vấn";
@@ -80,17 +76,14 @@ export function EducationModal({
     : "Tạo mới hoặc chọn học vấn có sẵn để hiển thị trong hồ sơ hiện tại.";
 
   const validateProof = () => {
-    if (!form.duongDanTep) {
-      setProofError("Vui lòng upload minh chứng");
-      return false;
-    }
+    if (!form.duongDanTep) { setProofError("Vui lòng upload minh chứng"); return false; }
     setProofError("");
     return true;
   };
 
   return (
     <ProfileModal open={open} title={title} description={description} onClose={onClose}>
-      {editingItem ? null : (
+      {!editingItem ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <ProfileModalTabs value={tab} onChange={setTab} />
           {tab === "pick" ? (
@@ -102,145 +95,141 @@ export function EducationModal({
             />
           ) : null}
         </div>
-      )}
+      ) : null}
 
       {tab === "pick" && !editingItem ? (
-        <div className="mt-5 space-y-2">
-          {filteredItems.length === 0 ? (
-            <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-              Không tìm thấy học vấn phù hợp.
-            </div>
-          ) : null}
-          {filteredItems.map((item) => {
-            const dateRange = [item.thoiGianBatDau, item.thoiGianKetThuc].filter(Boolean).join(" - ");
-            return (
-              <div key={item.id} className="rounded-md border border-slate-200 bg-white p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">{item.tenTruong}</p>
-                    <p className="mt-0.5 text-xs text-slate-600">
-                      {[item.bacHoc, item.chuyenNganh].filter(Boolean).join(" • ") || "Chưa cập nhật"}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                      {dateRange ? <span>{dateRange}</span> : null}
-                      <ProofStatusPill value={item.trangThai} />
-                      {item.duongDanTep ? (
-                        <a href={item.duongDanTep} target="_blank" rel="noreferrer" className="underline">
-                          Xem minh chứng
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <ProfileActionButton
-                      type="button"
-                      variant="muted"
-                      onClick={() => onEdit(item)}
-                      className="px-3 py-2 text-xs"
-                    >
-                      Sửa
-                    </ProfileActionButton>
-                    <ProfileActionButton
-                      type="button"
-                      variant={item.duocChon ? "muted" : "primary"}
-                      onClick={() => onToggleSelection(item)}
-                      className="px-3 py-2 text-xs"
-                    >
-                      {item.duocChon ? "Ẩn khỏi hồ sơ" : "Thêm vào hồ sơ"}
-                    </ProfileActionButton>
-                    <ProfileActionButton
-                      type="button"
-                      variant="danger"
-                      onClick={() => onDelete(item)}
-                      className="px-3 py-2 text-xs"
-                    >
-                      Xoá
-                    </ProfileActionButton>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <EducationPickList items={filteredItems} onEdit={onEdit} onDelete={onDelete} onToggleSelection={onToggleSelection} />
       ) : (
-        <div className="mt-5 space-y-3">
-          <div className="grid gap-2">
-            <input
-              placeholder="Tên trường *"
-              value={form.tenTruong}
-              onChange={(e) => setForm((prev) => ({ ...prev, tenTruong: e.target.value }))}
-              className="h-10 rounded-md border border-slate-300 px-3 text-sm"
-            />
-            <input
-              placeholder="Chuyên ngành"
-              value={form.chuyenNganh}
-              onChange={(e) => setForm((prev) => ({ ...prev, chuyenNganh: e.target.value }))}
-              className="h-10 rounded-md border border-slate-300 px-3 text-sm"
-            />
-            <input
-              placeholder="Bậc học"
-              value={form.bacHoc}
-              onChange={(e) => setForm((prev) => ({ ...prev, bacHoc: e.target.value }))}
-              className="h-10 rounded-md border border-slate-300 px-3 text-sm"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="grid gap-1">
-              <label className="text-xs font-medium text-slate-600">Từ ngày</label>
-              <input
-                type="date"
-                value={form.thoiGianBatDau}
-                onChange={(e) => setForm((prev) => ({ ...prev, thoiGianBatDau: e.target.value }))}
-                className="h-10 rounded-md border border-slate-300 px-3 text-sm"
-              />
-            </div>
-            <div className="grid gap-1">
-              <label className="text-xs font-medium text-slate-600">Đến ngày</label>
-              <input
-                type="date"
-                value={form.thoiGianKetThuc}
-                onChange={(e) => setForm((prev) => ({ ...prev, thoiGianKetThuc: e.target.value }))}
-                className="h-10 rounded-md border border-slate-300 px-3 text-sm"
-              />
-            </div>
-          </div>
-
-          <ProofUploadBox
-            value={form.duongDanTep}
-            error={proofError}
-            uploading={uploadingProof}
-            onUpload={onUploadProof}
-            onChange={(uploaded) => setForm((prev) => ({ ...prev, duongDanTep: uploaded }))}
-            onClearError={() => setProofError("")}
-          />
-
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <ProfileActionButton type="button" variant="muted" onClick={onClose} disabled={submitting}>
-              Hủy
-            </ProfileActionButton>
-            <ProfileActionButton
-              type="button"
-              disabled={submitting}
-              onClick={() => {
-                void (async () => {
-                  if (!validateProof()) {
-                    return;
-                  }
-                  const result = editingItem
-                    ? await onUpdate(editingItem.id, form)
-                    : await onCreate(form);
-                  if (result) {
-                    onClose();
-                  }
-                })();
-              }}
-            >
-              {submitting ? "Đang lưu..." : editingItem ? "Lưu thay đổi" : "Thêm học vấn"}
-            </ProfileActionButton>
-          </div>
-        </div>
+        <EducationForm
+          form={form}
+          submitting={submitting}
+          uploadingProof={uploadingProof}
+          proofError={proofError}
+          editingItem={editingItem}
+          onUploadProof={onUploadProof}
+          onChange={setForm}
+          onClearProofError={() => setProofError("")}
+          onClose={onClose}
+          onSave={() => {
+            void (async () => {
+              if (!validateProof()) return;
+              const result = editingItem ? await onUpdate(editingItem.id, form) : await onCreate(form);
+              if (result) onClose();
+            })();
+          }}
+        />
       )}
     </ProfileModal>
+  );
+}
+
+// --- Private sub-components ---
+
+function EducationPickList({
+  items,
+  onEdit,
+  onDelete,
+  onToggleSelection,
+}: {
+  items: CandidateEducationItem[];
+  onEdit: (item: CandidateEducationItem) => void;
+  onDelete: (item: CandidateEducationItem) => void;
+  onToggleSelection: (item: CandidateEducationItem) => void;
+}) {
+  return (
+    <div className="mt-5 space-y-2">
+      {items.length === 0 ? (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+          Không tìm thấy học vấn phù hợp.
+        </div>
+      ) : null}
+      {items.map((item) => {
+        const dateRange = [item.thoiGianBatDau, item.thoiGianKetThuc].filter(Boolean).join(" - ");
+        return (
+          <div key={item.id} className="rounded-md border border-slate-200 bg-white p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-950">{item.tenTruong}</p>
+                <p className="mt-0.5 text-xs text-slate-600">
+                  {[item.bacHoc, item.chuyenNganh].filter(Boolean).join(" • ") || "Chưa cập nhật"}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                  {dateRange ? <span>{dateRange}</span> : null}
+                  <ProofStatusPill value={item.trangThai} />
+                  {item.duongDanTep ? (
+                    <a href={item.duongDanTep} target="_blank" rel="noreferrer" className="underline">Xem minh chứng</a>
+                  ) : null}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <ProfileActionButton type="button" variant="muted" onClick={() => onEdit(item)} className="px-3 py-2 text-xs">Sửa</ProfileActionButton>
+                <ProfileActionButton type="button" variant={item.duocChon ? "muted" : "primary"} onClick={() => onToggleSelection(item)} className="px-3 py-2 text-xs">
+                  {item.duocChon ? "Ẩn khỏi hồ sơ" : "Thêm vào hồ sơ"}
+                </ProfileActionButton>
+                <ProfileActionButton type="button" variant="danger" onClick={() => onDelete(item)} className="px-3 py-2 text-xs">Xoá</ProfileActionButton>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function EducationForm({
+  form,
+  submitting,
+  uploadingProof,
+  proofError,
+  editingItem,
+  onUploadProof,
+  onChange,
+  onClearProofError,
+  onClose,
+  onSave,
+}: {
+  form: EducationFormState;
+  submitting: boolean;
+  uploadingProof: boolean;
+  proofError: string;
+  editingItem: CandidateEducationItem | null;
+  onUploadProof: (file: File) => Promise<string>;
+  onChange: (updater: (prev: EducationFormState) => EducationFormState) => void;
+  onClearProofError: () => void;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="mt-5 space-y-3">
+      <div className="grid gap-2">
+        <input placeholder="Tên trường *" value={form.tenTruong} onChange={(e) => onChange((p) => ({ ...p, tenTruong: e.target.value }))} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+        <input placeholder="Chuyên ngành" value={form.chuyenNganh} onChange={(e) => onChange((p) => ({ ...p, chuyenNganh: e.target.value }))} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+        <input placeholder="Bậc học" value={form.bacHoc} onChange={(e) => onChange((p) => ({ ...p, bacHoc: e.target.value }))} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-1">
+          <label className="text-xs font-medium text-slate-600">Từ ngày</label>
+          <input type="date" value={form.thoiGianBatDau} onChange={(e) => onChange((p) => ({ ...p, thoiGianBatDau: e.target.value }))} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+        </div>
+        <div className="grid gap-1">
+          <label className="text-xs font-medium text-slate-600">Đến ngày</label>
+          <input type="date" value={form.thoiGianKetThuc} onChange={(e) => onChange((p) => ({ ...p, thoiGianKetThuc: e.target.value }))} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+        </div>
+      </div>
+      <ProofUploadBox
+        value={form.duongDanTep}
+        error={proofError}
+        uploading={uploadingProof}
+        onUpload={onUploadProof}
+        onChange={(uploaded) => onChange((p) => ({ ...p, duongDanTep: uploaded }))}
+        onClearError={onClearProofError}
+      />
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <ProfileActionButton type="button" variant="muted" onClick={onClose} disabled={submitting}>Hủy</ProfileActionButton>
+        <ProfileActionButton type="button" disabled={submitting} onClick={onSave}>
+          {submitting ? "Đang lưu..." : editingItem ? "Lưu thay đổi" : "Thêm học vấn"}
+        </ProfileActionButton>
+      </div>
+    </div>
   );
 }

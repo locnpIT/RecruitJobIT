@@ -31,6 +31,7 @@ public class CompanyAdminApplicationMapper {
                 .id(donUngTuyen.getId() == null ? null : donUngTuyen.getId().longValue())
                 .trangThai(donUngTuyen.getTrangThai())
                 .cvUrl(donUngTuyen.getCvUrl())
+                .thoiGianGuiThuMoi(donUngTuyen.getThoiGianGuiThuMoi())
                 .ngayTao(donUngTuyen.getNgayTao())
                 .chiNhanhId(donUngTuyen.getTinTuyenDung() == null
                         || donUngTuyen.getTinTuyenDung().getChiNhanh() == null
@@ -92,6 +93,7 @@ public class CompanyAdminApplicationMapper {
                 .id(null)
                 .trangThai(null)
                 .cvUrl(null)
+                .thoiGianGuiThuMoi(null)
                 .ngayTao(profile == null ? null : profile.getNgayTao())
                 .chiNhanhId(tinTuyenDung == null
                         || tinTuyenDung.getChiNhanh() == null

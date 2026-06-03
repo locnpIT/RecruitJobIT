@@ -46,6 +46,7 @@ export const companyAdminSettingsService = {
   },
 
   uploadCompanyProof: async (payload: {
+    loaiTaiLieuId: number;
     duongDanTep: string;
     tenTep?: string;
   }): Promise<CompanyAdminProof> => {

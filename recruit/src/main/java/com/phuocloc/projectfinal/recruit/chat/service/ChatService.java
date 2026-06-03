@@ -47,7 +47,6 @@ public class ChatService {
     private static final int MAX_MESSAGE_LENGTH = 2000;
     private static final Set<String> COMPANY_CHAT_ROLES = Set.of(
             EmployerCompanyRole.OWNER.name(),
-            EmployerCompanyRole.MASTER_BRANCH.name(),
             EmployerCompanyRole.HR.name()
     );
 
@@ -100,7 +99,7 @@ public class ChatService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đơn ứng tuyển chưa gắn chi nhánh hợp lệ");
         }
 
-        // Chỉ owner/hr/master-branch của chi nhánh quản lý đơn mới được mở chat từ màn ứng viên.
+        // Chỉ owner/hr của chi nhánh quản lý đơn mới được mở chat từ màn ứng viên.
         companyAdminAccessService.requireMembership(viewerId, job.getChiNhanh().getId(), COMPANY_CHAT_ROLES);
 
         Integer candidateId = application.getHoSoUngVien() != null && application.getHoSoUngVien().getNguoiDung() != null
@@ -135,7 +134,7 @@ public class ChatService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tin tuyển dụng chưa gắn chi nhánh hợp lệ");
         }
 
-        // Chỉ owner/hr/master-branch của chi nhánh quản lý tin mới được chủ động mở chat với ứng viên.
+        // Chỉ owner/hr của chi nhánh quản lý tin mới được chủ động mở chat với ứng viên.
         companyAdminAccessService.requireMembership(viewerId, job.getChiNhanh().getId(), COMPANY_CHAT_ROLES);
 
         HoSoUngVien profile = candidateProfileRepository.findById(safeProfileId)

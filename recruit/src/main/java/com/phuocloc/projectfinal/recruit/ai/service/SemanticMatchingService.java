@@ -47,7 +47,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class SemanticMatchingService {
 
-    private static final List<String> COMPANY_ADMIN_ROLES = List.of("OWNER", "MASTER_BRANCH", "HR");
+    private static final List<String> COMPANY_ADMIN_ROLES = List.of("OWNER", "HR");
     private static final int DEFAULT_LIMIT = 10;
     private static final int MAX_LIMIT = 50;
 

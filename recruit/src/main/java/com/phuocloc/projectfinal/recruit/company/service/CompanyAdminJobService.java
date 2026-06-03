@@ -42,7 +42,6 @@ public class CompanyAdminJobService {
 
     private static final Set<String> COMPANY_ADMIN_ROLES = Set.of(
             EmployerCompanyRole.OWNER.name(),
-            EmployerCompanyRole.MASTER_BRANCH.name(),
             EmployerCompanyRole.HR.name()
     );
 

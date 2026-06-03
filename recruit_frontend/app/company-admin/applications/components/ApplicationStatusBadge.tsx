@@ -30,11 +30,30 @@ export function ApplicationStatusBadge({ status }: ApplicationStatusBadgeProps) 
   return (
     <span
       className={clsx(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+        "inline-flex w-fit self-start items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold",
         STATUS_STYLES[normalizedStatus] ?? "border-slate-200 bg-slate-50 text-slate-600"
       )}
     >
       {STATUS_LABELS[normalizedStatus] ?? status ?? "--"}
+    </span>
+  );
+}
+
+type InterviewInviteBadgeProps = {
+  sentAt?: string | null;
+};
+
+export function InterviewInviteBadge({ sentAt }: InterviewInviteBadgeProps) {
+  if (!sentAt) {
+    return null;
+  }
+
+  return (
+    <span
+      className="inline-flex w-fit self-start items-center whitespace-nowrap rounded-full border border-fuchsia-200 bg-fuchsia-50 px-2.5 py-1 text-xs font-semibold text-fuchsia-700"
+      title={`Đã gửi lúc ${new Date(sentAt).toLocaleString("vi-VN")}`}
+    >
+      Đã gửi mail
     </span>
   );
 }

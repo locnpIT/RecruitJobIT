@@ -5,6 +5,7 @@ import { isCompanyApproved } from "../../company-admin-status";
 import { CompanyAdminRestrictedNotice } from "../../components/CompanyAdminRestrictedNotice";
 import { ApplicationDetailModal } from "./ApplicationDetailModal";
 import { ApplicationFilters } from "./ApplicationFilters";
+import { InterviewEmailModal } from "./InterviewEmailModal";
 import { ApplicationsMatchingSection } from "./matching/ApplicationsMatchingSection";
 import { ApplicationsPageHeader } from "./ApplicationsPageHeader";
 import { useCompanyAdminApplicationsActions } from "../hooks/useCompanyAdminApplicationsActions";
@@ -84,7 +85,7 @@ export function CompanyAdminApplicationsClient() {
         openingChat={actions.openingChatTargetKey === resolveChatTargetKey(actions.selectedApplication)}
         onClose={() => actions.setDetailOpen(false)}
         onStatusChange={actions.handleStatusChange}
-        onSendInterviewEmail={actions.handleSendInterviewEmail}
+        onOpenInterviewEmail={actions.handleOpenInterviewEmail}
         onOpenChat={() =>
           actions.handleOpenChat({
             applicationId: actions.selectedApplication?.id ?? null,
@@ -92,6 +93,17 @@ export function CompanyAdminApplicationsClient() {
             profileId: actions.selectedApplication?.hoSoUngVienId ?? null,
           })
         }
+        />
+
+      <InterviewEmailModal
+        open={actions.isInterviewEmailOpen}
+        applicationId={actions.selectedApplication?.id ?? null}
+        applicationName={actions.selectedApplication?.ungVienHoTen ?? null}
+        applicationEmail={actions.selectedApplication?.ungVienEmail ?? null}
+        branchName={actions.selectedApplication?.chiNhanhTen ?? null}
+        sending={actions.isSendingInterviewEmail}
+        onClose={actions.handleCloseInterviewEmail}
+        onSend={actions.handleSendInterviewEmail}
       />
     </div>
   );

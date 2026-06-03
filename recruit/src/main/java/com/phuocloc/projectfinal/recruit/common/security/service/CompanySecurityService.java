@@ -16,7 +16,7 @@ public class CompanySecurityService {
 
     /**
      * Kiểm tra người dùng hiện tại có vai trò công ty role tại chi nhánh branchId hay không.
-     * Logic phân quyền phân cấp: OWNER > MASTER_BRANCH > HR
+     * Hệ thống hiện chỉ dùng hai vai trò công ty: OWNER và HR.
      */
     public boolean hasRole(String requiredRole, Integer branchId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -35,10 +35,9 @@ public class CompanySecurityService {
         if (userRole == null) return false;
         if (requiredRole == null || requiredRole.isEmpty()) return true;
 
-        // Cấp bậc quyền: OWNER mạnh nhất, HR yếu nhất
+        // Cấp bậc quyền: OWNER mạnh nhất, HR là vai trò thao tác chi nhánh.
         return switch (userRole) {
             case "OWNER" -> true; // OWNER làm được mọi thứ
-            case "MASTER_BRANCH" -> !"OWNER".equals(requiredRole); // MASTER_BRANCH làm được mọi thứ trừ việc của OWNER
             case "HR" -> "HR".equals(requiredRole); // HR chỉ làm được việc của HR
             default -> false;
         };

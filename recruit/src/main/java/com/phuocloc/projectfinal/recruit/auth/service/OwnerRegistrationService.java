@@ -10,7 +10,6 @@ import com.phuocloc.projectfinal.recruit.company.dto.request.CreateEmployerReque
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CreateEmployerResponse;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentStatus;
-import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyStatus;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyBranchRepository;
@@ -231,19 +230,11 @@ public class OwnerRegistrationService {
         }
     }
 
-    private LoaiTaiLieu resolveOrCreateLoaiTaiLieu(String tenLoaiTaiLieu) {
-        return loaiTaiLieuRepository.findByTenIgnoreCase(tenLoaiTaiLieu)
-                .orElseGet(() -> {
-                    LoaiTaiLieu loaiTaiLieu = new LoaiTaiLieu();
-                    loaiTaiLieu.setTen(tenLoaiTaiLieu);
-                    loaiTaiLieu.setMoTa("Tự tạo từ luồng đăng ký công ty");
-                    return loaiTaiLieuRepository.save(loaiTaiLieu);
-                });
-    }
-
     private LoaiTaiLieu resolveLoaiTaiLieuOwnerProof(Long loaiTaiLieuId) {
         if (loaiTaiLieuId == null) {
-            return resolveOrCreateLoaiTaiLieu(CompanyProofDocumentType.OWNER_ID_CARD.name());
+            return loaiTaiLieuRepository.findAllByOrderByIdAsc().stream()
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa có loại tài liệu nào trong hệ thống"));
         }
         Integer safeId = toIntId(loaiTaiLieuId, "loaiTaiLieuId");
         return loaiTaiLieuRepository.findById(safeId)

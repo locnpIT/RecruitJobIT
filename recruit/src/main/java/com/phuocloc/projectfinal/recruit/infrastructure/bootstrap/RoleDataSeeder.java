@@ -60,8 +60,7 @@ public class RoleDataSeeder implements ApplicationRunner {
     private void seedCompanyRoles() {
         Map<EmployerCompanyRole, String> descriptions = Map.of(
                 EmployerCompanyRole.OWNER, "Chủ công ty",
-                EmployerCompanyRole.HR, "Nhân sự công ty",
-                EmployerCompanyRole.MASTER_BRANCH, "Chủ chi nhánh"
+                EmployerCompanyRole.HR, "Nhân sự công ty"
         );
 
         for (EmployerCompanyRole role : EmployerCompanyRole.values()) {

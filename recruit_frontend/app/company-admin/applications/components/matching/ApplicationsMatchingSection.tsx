@@ -55,20 +55,6 @@ export function ApplicationsMatchingSection({
 
   return (
     <section className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-teal-600" />
-            <h2 className="text-base font-semibold text-slate-950">Workspace xử lý ứng viên</h2>
-          </div>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-            Quản lý đơn ứng tuyển và dùng AI Matching để chủ động tìm ứng viên phù hợp theo tin tuyển dụng.
-          </p>
-        </div>
-        <span className="w-fit rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
-          Qdrant ready
-        </span>
-      </div>
 
       <ApplicationMatchingModeTabs value={matching.mode} onChange={matching.setMode} />
 

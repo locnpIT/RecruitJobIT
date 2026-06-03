@@ -55,7 +55,6 @@ export function ChatConversationThreadBase({
   };
 
   useEffect(() => {
-    // Khi mở room hoặc load xong lịch sử, luôn đưa viewport xuống tin mới nhất.
     if (!loading) {
       scrollToBottom();
     }
@@ -93,13 +92,13 @@ export function ChatConversationThreadBase({
             ) : (
               messages.map((message) => (
                 <div key={message.id} className={`flex ${message.cuaToi ? "justify-end" : "justify-start"}`}>
-                    <article
-                      className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                        message.cuaToi
-                          ? "rounded-br-md border border-emerald-200 bg-emerald-50 text-emerald-950"
-                          : "rounded-bl-md border border-slate-200 bg-white text-slate-900"
-                      }`}
-                    >
+                  <article
+                    className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                      message.cuaToi
+                        ? "rounded-br-md border border-emerald-200 bg-emerald-50 text-emerald-950"
+                        : "rounded-bl-md border border-slate-200 bg-white text-slate-900"
+                    }`}
+                  >
                     <p className="whitespace-pre-wrap break-words leading-6">{message.noiDung}</p>
                     <p className={`mt-1 text-right text-[11px] ${message.cuaToi ? "text-emerald-700" : "text-slate-500"}`}>
                       {formatTime(message.ngayTao)}
@@ -128,7 +127,8 @@ export function ChatConversationThreadBase({
             placeholder={inputPlaceholder}
             className="min-h-[44px] flex-1 resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
           />
-          <Button variant="unstyled"
+          <Button
+            variant="unstyled"
             type="button"
             onClick={onSend}
             disabled={!canSend}

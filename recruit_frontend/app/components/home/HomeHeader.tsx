@@ -4,10 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type UIEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
-import { clearAdminSession } from "@/lib/admin-session";
 import { Button } from "@/components/ui/Button";
 import { useHomeHeaderData } from "./hooks/useHomeHeaderData";
+import { NotificationDropdown } from "./NotificationDropdown";
+import { UserMenuDropdown } from "./UserMenuDropdown";
 
 // Header dùng chung cho khu public/auth/profile.
 // API thông báo + đọc session được tách sang hook useHomeHeaderData để page/component chỉ còn UI wiring.
@@ -30,11 +30,8 @@ export function HomeHeader() {
         setUserMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handlePointerDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-    };
+    return () => document.removeEventListener("mousedown", handlePointerDown);
   }, []);
 
   const handleNotificationScroll = (event: UIEvent<HTMLDivElement>) => {
@@ -43,30 +40,8 @@ export function HomeHeader() {
     }
     const container = event.currentTarget;
     const nearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 24;
-    if (!nearBottom) {
-      return;
-    }
-    void headerData.loadMoreNotifications();
-  };
-
-  const handleClickNotification = async (item: (typeof headerData.latestNotifications)[number]) => {
-    try {
-      await headerData.markReadAndSync(item);
-    } catch {
-      // Không chặn điều hướng nếu API markRead lỗi.
-    }
-
-    setNotificationOpen(false);
-    if (item.duongDan) {
-      window.location.assign(item.duongDan);
-    }
-  };
-
-  const handleDeleteNotification = async (item: (typeof headerData.latestNotifications)[number]) => {
-    try {
-      await headerData.deleteNotification(item);
-    } catch {
-      // ignore
+    if (nearBottom) {
+      void headerData.loadMoreNotifications();
     }
   };
 
@@ -123,168 +98,21 @@ export function HomeHeader() {
 
         {headerData.user && (
           <div className="flex items-center gap-2">
-            <div ref={notificationRef} className="relative">
-              <Button
-                type="button"
-                variant="unstyled"
-                onClick={() => {
-                  setNotificationOpen((current) => !current);
-                  setUserMenuOpen(false);
-                }}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-md p-0 text-slate-700 hover:bg-slate-100"
-                aria-label="Mở thông báo"
-              >
-                <Bell className="h-5 w-5" />
-                {headerData.unreadCount > 0 ? (
-                  <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-semibold text-white">
-                    {headerData.unreadCount > 99 ? "99+" : headerData.unreadCount}
-                  </span>
-                ) : null}
-              </Button>
-              {notificationOpen ? (
-                <div className="absolute right-0 z-20 mt-2 w-80 rounded-md border border-slate-200 bg-white p-2 shadow-lg">
-                  <div className="mb-2 flex items-center justify-between px-1">
-                    <p className="text-sm font-semibold text-slate-900">Thông báo</p>
-                    <Button
-                      type="button"
-                      variant="unstyled"
-                      onClick={() => void headerData.markAllRead()}
-                      className="text-xs font-medium text-slate-600 hover:text-slate-900"
-                    >
-                      Đánh dấu đã đọc
-                    </Button>
-                  </div>
-                  <div className="max-h-96 overflow-y-auto" onScroll={handleNotificationScroll}>
-                    {headerData.loadingNotifications ? (
-                      <p className="px-2 py-4 text-xs text-slate-500">Đang tải thông báo...</p>
-                    ) : null}
-                    {!headerData.loadingNotifications && headerData.latestNotifications.length === 0 ? (
-                      <p className="px-2 py-4 text-xs text-slate-500">Chưa có thông báo nào.</p>
-                    ) : null}
-                    {!headerData.loadingNotifications
-                      ? headerData.latestNotifications.map((item) => (
-                          <div
-                            key={item.id}
-                            className={`mb-1 rounded-md border px-2 py-5 ${
-                              item.daDoc ? "border-slate-200 bg-white" : "border-amber-200 bg-amber-50"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <Button
-                                type="button"
-                                variant="unstyled"
-                                onClick={() => void handleClickNotification(item)}
-                                className="flex-1 text-left hover:bg-slate-50"
-                              >
-                                <p className="text-xs font-semibold text-slate-900">{item.tieuDe}</p>
-                                <p className="mt-1 text-xs text-slate-600">{item.noiDung}</p>
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="unstyled"
-                                onClick={() => void handleDeleteNotification(item)}
-                                className="rounded px-1.5 py-0.5 text-[11px] font-medium text-rose-700 hover:bg-rose-50"
-                                aria-label="Xoá thông báo"
-                              >
-                                Xoá
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      : null}
-                    {headerData.loadingMoreNotifications ? (
-                      <p className="px-2 py-3 text-center text-xs text-slate-500">Đang tải thêm...</p>
-                    ) : null}
-                    {!headerData.loadingMoreNotifications && headerData.notificationHasNext ? (
-                      <p className="px-2 py-3 text-center text-xs text-slate-500">Kéo xuống để tải thêm</p>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div ref={userMenuRef} className="relative">
-              <Button
-                type="button"
-                variant="unstyled"
-                onClick={() => {
-                  setUserMenuOpen((current) => !current);
-                  setNotificationOpen(false);
-                }}
-                className={`inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full p-0 text-sm font-semibold ${
-                  headerData.user.anhDaiDienUrl ? "bg-slate-100" : "bg-slate-900 text-white"
-                }`}
-                aria-label="Mở menu tài khoản"
-              >
-                {headerData.user.anhDaiDienUrl ? (
-                  <span className="relative block h-10 w-10 overflow-hidden rounded-full">
-                    <Image
-                      src={headerData.user.anhDaiDienUrl}
-                      alt="Avatar người dùng"
-                      fill
-                      sizes="40px"
-                      className="object-cover object-center"
-                    />
-                  </span>
-                ) : (
-                  headerData.userInitial
-                )}
-              </Button>
-              {userMenuOpen ? (
-                <div className="absolute right-0 z-20 mt-2 w-56 rounded-md border border-slate-200 bg-white p-2 shadow-lg">
-                  <div className="mb-2 rounded-md bg-slate-50 px-3 py-2">
-                    <p className="text-sm font-semibold text-slate-900">{headerData.fullName}</p>
-                    <p className="text-xs text-slate-600">{headerData.user.email}</p>
-                  </div>
-                  {headerData.isCandidate ? (
-                    <Link
-                      href="/profile"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                      Hồ sơ
-                    </Link>
-                  ) : (
-                    <Link
-                      href={headerData.role === "ADMIN" ? "/admin" : "/company-admin"}
-                      onClick={() => setUserMenuOpen(false)}
-                      className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                      Vào hệ thống
-                    </Link>
-                  )}
-                  {headerData.isCandidate ? (
-                    <Link
-                      href="/messages"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                      Tin nhắn
-                    </Link>
-                  ) : null}
-                  {headerData.isCandidate ? (
-                    <Link
-                      href="/favorite-jobs"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    >
-                      Việc làm yêu thích
-                    </Link>
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="unstyled"
-                    onClick={() => {
-                      clearAdminSession();
-                      window.location.assign("/");
-                    }}
-                    className="mt-1 block w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
-                  >
-                    Đăng xuất
-                  </Button>
-                </div>
-              ) : null}
-            </div>
+            <NotificationDropdown
+              open={notificationOpen}
+              dropdownRef={notificationRef}
+              data={headerData}
+              onToggle={() => { setNotificationOpen((v) => !v); setUserMenuOpen(false); }}
+              onClose={() => setNotificationOpen(false)}
+              onScroll={handleNotificationScroll}
+            />
+            <UserMenuDropdown
+              open={userMenuOpen}
+              dropdownRef={userMenuRef}
+              data={headerData}
+              onToggle={() => { setUserMenuOpen((v) => !v); setNotificationOpen(false); }}
+              onClose={() => setUserMenuOpen(false)}
+            />
           </div>
         )}
       </div>

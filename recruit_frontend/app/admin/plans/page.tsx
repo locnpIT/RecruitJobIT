@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { PlansAdminClient } from "./PlansAdminClient";
+import { PlansAdminClient } from "./components/PlansAdminClient";
 
 export const metadata: Metadata = {
   title: "Gói dịch vụ | Admin",

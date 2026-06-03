@@ -21,6 +21,7 @@ public class CompanyAdminApplicationResponse {
     private Long id;
     private String trangThai;
     private String cvUrl;
+    private LocalDateTime thoiGianGuiThuMoi;
     private LocalDateTime ngayTao;
     private Long chiNhanhId;
     private String chiNhanhTen;

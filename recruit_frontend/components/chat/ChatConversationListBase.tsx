@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import type { ChatConversation } from "@/services/chat/chat.service";
-import { buildRecruiterLabel } from "@/app/chat/utils/chat-partner-label";
+import { buildRecruiterLabel } from "./chat-partner-label";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +34,6 @@ function resolvePartnerName(
 
 function resolvePartnerAvatarUrl(conversation: ChatConversation, currentUserId: number | null) {
   const isCandidateView = currentUserId != null && currentUserId === conversation.ungVienId;
-  // Candidate view => partner is recruiter; recruiter view => partner is candidate.
   return isCandidateView ? conversation.nhaTuyenDungAnhDaiDienUrl : conversation.ungVienAnhDaiDienUrl;
 }
 
@@ -43,7 +42,6 @@ function resolvePartnerInitial(partnerName: string) {
   if (!trimmed) {
     return "?";
   }
-  // Prefer last "word" initial for Vietnamese names.
   const parts = trimmed.split(/\s+/).filter(Boolean);
   const last = parts[parts.length - 1] ?? trimmed;
   return (last.charAt(0) || "?").toUpperCase();
@@ -147,7 +145,8 @@ export function ChatConversationListBase({
           const lastMessageAt = formatConversationTime(conversation.tinNhanGanNhatLuc);
           return (
             <li key={conversation.id}>
-              <Button variant="unstyled"
+              <Button
+                variant="unstyled"
                 type="button"
                 onClick={() => onSelect(conversation)}
                 className={cn(

@@ -1,6 +1,6 @@
 import type { ChatConversation, ChatMessage } from "@/services/chat/chat.service";
-import { ChatConversationThreadBase } from "@/app/chat/components/ChatConversationThreadBase";
-import { buildRecruiterLabel } from "@/app/chat/utils/chat-partner-label";
+import { ChatConversationThreadBase } from "@/components/chat/ChatConversationThreadBase";
+import { buildRecruiterLabel } from "@/components/chat/chat-partner-label";
 
 type CandidateConversationThreadProps = {
   conversation: ChatConversation | null;

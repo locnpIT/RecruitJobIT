@@ -2,16 +2,16 @@
 
 import { Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { PageHeader } from "../components/PageHeader";
-import { PackageFormModal } from "./components/PackageFormModal";
-import { PackageStatsCards } from "./components/PackageStatsCards";
-import { PackageSubscriptionsTable } from "./components/PackageSubscriptionsTable";
-import { PackageTable } from "./components/PackageTable";
-import { useEffect } from "react";
-import { useAdminPlansData } from "./hooks/useAdminPlansData";
-import { useAdminPlansActions } from "./hooks/useAdminPlansActions";
+import { PageHeader } from "../../components/PageHeader";
+import { PackageFormModal } from "./PackageFormModal";
+import { PackageStatsCards } from "./PackageStatsCards";
+import { PackageSubscriptionsTable } from "./PackageSubscriptionsTable";
+import { PackageTable } from "./PackageTable";
+import { useAdminPlansData } from "../hooks/useAdminPlansData";
+import { useAdminPlansActions } from "../hooks/useAdminPlansActions";
 
 export function PlansAdminClient() {
   const data = useAdminPlansData();

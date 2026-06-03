@@ -1,5 +1,5 @@
 import type { ChatConversation } from "@/services/chat/chat.service";
-import { ChatConversationListBase } from "@/app/chat/components/ChatConversationListBase";
+import { ChatConversationListBase } from "@/components/chat/ChatConversationListBase";
 
 type ConversationListProps = {
   conversations: ChatConversation[];

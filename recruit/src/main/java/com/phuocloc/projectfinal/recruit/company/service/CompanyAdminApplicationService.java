@@ -28,7 +28,6 @@ public class CompanyAdminApplicationService {
 
     private static final Set<String> COMPANY_ADMIN_ROLES = Set.of(
             EmployerCompanyRole.OWNER.name(),
-            EmployerCompanyRole.MASTER_BRANCH.name(),
             EmployerCompanyRole.HR.name()
     );
     private static final Set<String> APPLICATION_STATUSES = Set.of(
@@ -125,6 +124,9 @@ public class CompanyAdminApplicationService {
                 request.getGhiChu(),
                 resolveBranchAddress(branch)
         );
+
+        application.setThoiGianGuiThuMoi(LocalDateTime.now());
+        application = donUngTuyenRepository.save(application);
 
         return applicationMapper.mapApplication(application, true);
     }

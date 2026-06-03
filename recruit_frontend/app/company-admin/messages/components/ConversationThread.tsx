@@ -1,5 +1,5 @@
 import type { ChatConversation, ChatMessage } from "@/services/chat/chat.service";
-import { ChatConversationThreadBase } from "@/app/chat/components/ChatConversationThreadBase";
+import { ChatConversationThreadBase } from "@/components/chat/ChatConversationThreadBase";
 
 type ConversationThreadProps = {
   conversation: ChatConversation | null;

@@ -140,7 +140,7 @@ public class CompanyAdminAccessService {
 
     /**
      * Kiểm tra và trả về membership OWNER.
-     * Các luồng nhạy cảm như quản lý gói hoặc HR thường bám vào helper này.
+     * Các luồng nhạy cảm như quản lý gói hoặc mở rộng quyền chi nhánh thường bám vào helper này.
      */
     @Transactional(readOnly = true)
     public ThanhVienCongTy requireOwnerMembership(Integer userId) {

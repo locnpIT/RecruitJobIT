@@ -1,6 +1,6 @@
 import { Download, Eye, Loader2 } from "lucide-react";
 import type { CompanyAdminApplication } from "@/services/company-admin/types";
-import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
+import { ApplicationStatusBadge, InterviewInviteBadge } from "./ApplicationStatusBadge";
 import { Button } from "@/components/ui/Button";
 import type { ApplicationCandidateMatch } from "./matching/types";
 import { MatchScoreBadge } from "./matching/MatchScoreBadge";
@@ -97,7 +97,12 @@ export function ApplicationsTable({
                 </td>
                 <td className="max-w-xs py-3 text-slate-600">{application.tieuDeTinTuyenDung ?? "--"}</td>
                 {showCvColumn ? <ApplicationCvCell cvUrl={application.cvUrl} /> : null}
-                <td className="py-3"><ApplicationStatusBadge status={application.trangThai} /></td>
+                <td className="py-3">
+                  <div className="flex flex-col gap-2">
+                    <ApplicationStatusBadge status={application.trangThai} />
+                    <InterviewInviteBadge sentAt={application.thoiGianGuiThuMoi} />
+                  </div>
+                </td>
                 {showSemanticScore ? (
                   <ApplicationSemanticScoreCell match={semanticMatch} onSelectSemanticMatch={onSelectSemanticMatch} />
                 ) : null}

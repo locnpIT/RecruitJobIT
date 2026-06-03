@@ -5,10 +5,10 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/Button";
-import { PageHeader } from "../components/PageHeader";
-import { CatalogCrudSection } from "./components/CatalogCrudSection";
-import { useAdminCatalogsActions } from "./hooks/useAdminCatalogsActions";
-import { type CatalogKey, useAdminCatalogsData } from "./hooks/useAdminCatalogsData";
+import { PageHeader } from "../../components/PageHeader";
+import { CatalogCrudSection } from "./CatalogCrudSection";
+import { useAdminCatalogsActions } from "../hooks/useAdminCatalogsActions";
+import { type CatalogKey, useAdminCatalogsData } from "../hooks/useAdminCatalogsData";
 
 type CatalogConfig = {
   key: CatalogKey;

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { CatalogsAdminClient } from "./CatalogsAdminClient";
+import { CatalogsAdminClient } from "./components/CatalogsAdminClient";
 
 export const metadata: Metadata = {
   title: "Danh mục hệ thống | Admin",

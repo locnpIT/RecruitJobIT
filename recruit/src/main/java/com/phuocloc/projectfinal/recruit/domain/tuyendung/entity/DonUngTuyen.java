@@ -46,4 +46,7 @@ public class DonUngTuyen {
 
     @Column(name = "cvUrl")
     private String cvUrl;
+
+    @Column(name = "thoiGianGuiThuMoi")
+    private LocalDateTime thoiGianGuiThuMoi;
 }

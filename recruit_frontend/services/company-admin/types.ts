@@ -146,6 +146,7 @@ export interface CompanyAdminApplication {
   id: number | null;
   trangThai: string | null;
   cvUrl: string | null;
+  thoiGianGuiThuMoi: string | null;
   ngayTao: string | null;
   chiNhanhId: number | null;
   chiNhanhTen: string | null;

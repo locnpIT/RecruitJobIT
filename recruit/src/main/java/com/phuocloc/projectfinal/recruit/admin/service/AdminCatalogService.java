@@ -4,7 +4,6 @@ import com.phuocloc.projectfinal.recruit.admin.dto.request.UpsertCatalogItemRequ
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminCatalogItemResponse;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
 import com.phuocloc.projectfinal.recruit.auth.repository.RolesRepository;
-import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
 import com.phuocloc.projectfinal.recruit.company.repository.LoaiTaiLieuRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.VaiTroCongTyRepository;
@@ -159,10 +158,6 @@ public class AdminCatalogService {
         LoaiTaiLieu item = loaiTaiLieuRepository.findById(toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại tài liệu"));
         String tenMoi = requireTen(request);
-
-        if (isCoreProofType(item.getTen()) && !item.getTen().equalsIgnoreCase(tenMoi)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không được đổi tên loại tài liệu lõi");
-        }
         if (!item.getTen().equalsIgnoreCase(tenMoi) && loaiTaiLieuRepository.existsByTenIgnoreCase(tenMoi)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên loại tài liệu đã tồn tại");
         }
@@ -177,9 +172,6 @@ public class AdminCatalogService {
     public void deleteProofType(Long id) {
         LoaiTaiLieu item = loaiTaiLieuRepository.findById(toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại tài liệu"));
-        if (isCoreProofType(item.getTen())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể xoá loại tài liệu lõi");
-        }
         safeDelete(() -> loaiTaiLieuRepository.delete(item), "Loại tài liệu đang được sử dụng");
     }
 
@@ -263,19 +255,7 @@ public class AdminCatalogService {
         }
         String normalized = ten.trim().toUpperCase(Locale.ROOT);
         return normalized.equals(EmployerCompanyRole.OWNER.name())
-                || normalized.equals(EmployerCompanyRole.HR.name())
-                || normalized.equals(EmployerCompanyRole.MASTER_BRANCH.name());
-    }
-
-    private boolean isCoreProofType(String ten) {
-        if (!StringUtils.hasText(ten)) {
-            return false;
-        }
-        String normalized = ten.trim().toUpperCase(Locale.ROOT);
-        return normalized.equals(CompanyProofDocumentType.BUSINESS_REGISTRATION.name())
-                || normalized.equals(CompanyProofDocumentType.TAX_CERTIFICATE.name())
-                || normalized.equals(CompanyProofDocumentType.OWNER_ID_CARD.name())
-                || normalized.equals(CompanyProofDocumentType.OTHER.name());
+                || normalized.equals(EmployerCompanyRole.HR.name());
     }
 
     private AdminCatalogItemResponse mapSystemRole(VaiTroHeThong item) {

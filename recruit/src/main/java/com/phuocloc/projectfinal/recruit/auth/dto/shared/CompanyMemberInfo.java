@@ -16,5 +16,5 @@ import lombok.NoArgsConstructor;
 public class CompanyMemberInfo {
     private Integer congTyId;
     private Integer chiNhanhId;
-    private String vaiTroCongTy; // OWNER, MASTER_BRANCH, HR
+    private String vaiTroCongTy; // OWNER, HR
 }

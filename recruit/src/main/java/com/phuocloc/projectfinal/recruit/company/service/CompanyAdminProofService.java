@@ -6,7 +6,6 @@ import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyProofR
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminProofResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeResponse;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentStatus;
-import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentType;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyProofDocumentRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.LoaiTaiLieuRepository;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
@@ -34,7 +33,7 @@ public class CompanyAdminProofService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "duongDanTep không hợp lệ");
         }
 
-        LoaiTaiLieu loaiTaiLieu = resolveOrCreateLoaiTaiLieu(CompanyProofDocumentType.BUSINESS_REGISTRATION.name());
+        LoaiTaiLieu loaiTaiLieu = resolveDefaultLoaiTaiLieu();
         return saveProofDocument(congTy, loaiTaiLieu, request.getDuongDanTep(), request.getTenTep());
     }
 
@@ -60,14 +59,10 @@ public class CompanyAdminProofService {
                 .toList();
     }
 
-    private LoaiTaiLieu resolveOrCreateLoaiTaiLieu(String tenLoaiTaiLieu) {
-        return loaiTaiLieuRepository.findByTenIgnoreCase(tenLoaiTaiLieu)
-                .orElseGet(() -> {
-                    LoaiTaiLieu loaiTaiLieu = new LoaiTaiLieu();
-                    loaiTaiLieu.setTen(tenLoaiTaiLieu);
-                    loaiTaiLieu.setMoTa("Tự động tạo cho luồng company-admin");
-                    return loaiTaiLieuRepository.save(loaiTaiLieu);
-                });
+    private LoaiTaiLieu resolveDefaultLoaiTaiLieu() {
+        return loaiTaiLieuRepository.findAllByOrderByIdAsc().stream()
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa có loại tài liệu nào trong hệ thống"));
     }
 
     private LoaiTaiLieu resolveLoaiTaiLieuById(Integer loaiTaiLieuId) {
