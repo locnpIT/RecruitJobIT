@@ -102,6 +102,21 @@ public class ApplicationEmbeddingIndexService {
     }
 
     /**
+     * Xóa point khỏi Qdrant khi ứng viên huỷ đơn ứng tuyển.
+     * Lỗi xóa không làm thất bại luồng huỷ đơn.
+     */
+    public void removeFromIndex(DonUngTuyen donUngTuyen) {
+        if (donUngTuyen == null || donUngTuyen.getId() == null || !qdrantClientService.isEnabled()) {
+            return;
+        }
+        try {
+            qdrantClientService.deletePoint(qdrantProperties.getKhoDonUngTuyen(), buildPointId(donUngTuyen.getId()));
+        } catch (Exception ex) {
+            log.debug("Không xóa được point Qdrant khi huỷ đơn ứng tuyển {}", donUngTuyen.getId(), ex);
+        }
+    }
+
+    /**
      * Ghi log trạng thái index mới để giữ quan hệ 1-nhiều giữa đơn ứng tuyển và lịch sử đồng bộ.
      */
     private void saveIndexStatus(DonUngTuyen donUngTuyen, String maDiem, String trangThai) {

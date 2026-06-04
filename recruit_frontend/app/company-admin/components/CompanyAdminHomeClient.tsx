@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { SimpleChartCard } from "@/components/charts/SimpleChartCard";
-import { TREND_RANGE_OPTIONS, type TrendRangeDays } from "@/components/charts/chartTimeSeries";
+import { buildDailyTrendChart, TREND_RANGE_OPTIONS, type TrendRangeDays } from "@/components/charts/chartTimeSeries";
 import { CompanyAdminRestrictedNotice } from "./CompanyAdminRestrictedNotice";
 import { CompanyInfoSection } from "./CompanyInfoSection";
 import { BranchSummaryTable } from "./BranchSummaryTable";
@@ -35,6 +35,16 @@ export function CompanyAdminHomeClient() {
 
   const selectedJobsCount = selectedJobs.length;
   const selectedApplicationsCount = selectedApplications.length;
+
+  const jobTrendChart = useMemo(
+    () => buildDailyTrendChart(selectedJobs.map((j) => j.ngayTao ?? null), selectedRangeDays),
+    [selectedJobs, selectedRangeDays],
+  );
+  const applicationTrendChart = useMemo(
+    () => buildDailyTrendChart(selectedApplications.map((a) => a.ngayTao ?? null), selectedRangeDays),
+    [selectedApplications, selectedRangeDays],
+  );
+
   const jobStatusChart = buildStatusChart(
     selectedJobs.map((job) => job.trangThai),
     ["APPROVED", "PENDING", "REJECTED"],
@@ -121,6 +131,29 @@ export function CompanyAdminHomeClient() {
           values={applicationStatusChart.values}
           colors={applicationStatusChart.colors}
           footer={`${selectedApplicationsCount} đơn ứng tuyển trong ${selectedRangeDays} ngày gần nhất.`}
+        />
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <SimpleChartCard
+          title="Xu hướng tin tuyển dụng theo ngày"
+          description="Số tin mới được tạo mỗi ngày trong khoảng thời gian đang chọn."
+          kind="line"
+          labels={jobTrendChart.labels}
+          values={jobTrendChart.values}
+          colors={jobTrendChart.colors}
+          heightClassName="h-60"
+          footer={`${selectedJobsCount} tin trong ${selectedRangeDays} ngày.`}
+        />
+        <SimpleChartCard
+          title="Xu hướng đơn ứng tuyển theo ngày"
+          description="Số đơn nộp mới mỗi ngày trong khoảng thời gian đang chọn."
+          kind="line"
+          labels={applicationTrendChart.labels}
+          values={applicationTrendChart.values}
+          colors={["#2563eb"]}
+          heightClassName="h-60"
+          footer={`${selectedApplicationsCount} đơn trong ${selectedRangeDays} ngày.`}
         />
       </section>
 

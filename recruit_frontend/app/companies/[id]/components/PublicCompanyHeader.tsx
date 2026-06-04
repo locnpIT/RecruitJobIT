@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Building2, Globe2 } from "lucide-react";
+import { Briefcase, Building2, Globe2 } from "lucide-react";
 import type { PublicCompanyDetail } from "@/services/public/public-company.service";
 
 type PublicCompanyHeaderProps = {
@@ -10,7 +10,7 @@ type PublicCompanyHeaderProps = {
 // Tách riêng để page chính tập trung vào orchestration data + render list jobs.
 export function PublicCompanyHeader({ company }: PublicCompanyHeaderProps) {
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5">
+    <article className="rounded-lg border border-slate-200 bg-white p-5 sm:p-6">
       <div className="flex flex-wrap items-start gap-4">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
           {company.logoUrl ? (
@@ -27,21 +27,30 @@ export function PublicCompanyHeader({ company }: PublicCompanyHeaderProps) {
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-semibold tracking-[-0.02em] text-slate-950">{company.ten}</h1>
-          <p className="mt-1 text-sm text-slate-600">Đang có {company.soTinDang} tin tuyển dụng public.</p>
-          {company.website ? (
-            <a
-              href={company.website}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-slate-700 hover:underline"
-            >
-              <Globe2 className="h-4 w-4" />
-              {company.website}
-            </a>
-          ) : null}
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-slate-600">
+            <span className="inline-flex items-center gap-1.5">
+              <Briefcase className="h-4 w-4 text-slate-400" />
+              {company.soTinDang > 0
+                ? `${company.soTinDang} tin tuyển dụng đang mở`
+                : "Chưa có tin tuyển dụng"}
+            </span>
+            {company.website ? (
+              <a
+                href={company.website}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 hover:underline"
+              >
+                <Globe2 className="h-4 w-4 text-slate-400" />
+                {company.website}
+              </a>
+            ) : null}
+          </div>
         </div>
       </div>
-      <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-700">{company.moTa}</p>
+      {company.moTa ? (
+        <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-700">{company.moTa}</p>
+      ) : null}
     </article>
   );
 }

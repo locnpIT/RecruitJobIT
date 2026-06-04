@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -72,6 +73,17 @@ public class CandidateJobApplicationController {
                 "Ứng tuyển thành công",
                 applicationService.apply(principal.getUserId(), jobId, request)
         ));
+    }
+
+    @DeleteMapping("/{applicationId}")
+    // Huỷ đơn ứng tuyển. Chỉ được huỷ khi trạng thái là PENDING hoặc REVIEWING.
+    public ResponseEntity<Void> withdraw(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long applicationId
+    ) {
+        requireCandidate(principal);
+        applicationService.withdraw(principal.getUserId(), applicationId);
+        return ResponseEntity.noContent().build();
     }
 
     private void requireCandidate(AppUserPrinciple principal) {

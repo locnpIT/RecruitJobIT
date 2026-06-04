@@ -1,9 +1,9 @@
 import {
+  Banknote,
   BriefcaseBusiness,
   CalendarClock,
   ListChecks,
   Medal,
-  Sparkles,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -19,6 +19,7 @@ type JobDescriptionPanelProps = {
 // Tách khỏi page để sau này có thể map trực tiếp từ API detail mà không làm page bị dài.
 export function JobDescriptionPanel({ job }: JobDescriptionPanelProps) {
   const infoItems = [
+    { label: "Mức lương", value: job.mucLuong, icon: Banknote },
     { label: "Cấp bậc", value: job.capDo, icon: UserRound },
     { label: "Ngành nghề", value: job.nganhNghe, icon: BriefcaseBusiness },
     { label: "Kinh nghiệm", value: job.kinhNghiem, icon: CalendarClock },

@@ -209,6 +209,12 @@ export function useCompanyAdminJobActions({
     onBranchChange(branchId);
   };
 
+  const handleSelectTemplate = (job: CompanyAdminJob) => {
+    setValue("moTa", job.moTa ?? "", { shouldDirty: true });
+    setValue("yeuCau", job.yeuCau ?? "", { shouldDirty: true });
+    setValue("phucLoi", job.phucLoi ?? "", { shouldDirty: true });
+  };
+
   return {
     isSubmitting,
     isCreateModalOpen,
@@ -236,6 +242,7 @@ export function useCompanyAdminJobActions({
     handleUploadCvTemplate,
     handleDeleteJob,
     handleBranchChangeFromForm,
+    handleSelectTemplate,
     onSubmitForm,
   };
 }

@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, MapPin, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useProvinces } from "@/app/hooks/useProvinces";
+
+const BANNER_IMAGES = [
+  "/bannerforhomepage.png",
+  "/bannerforhomepage1.png",
+  "/bannerforhomepage2.png",
+  "/bannerforhomage3.png",
+];
 
 // Hero section của homepage.
 // Đây là khối entry-point để người dùng hiểu value proposition và thực hiện tìm việc nhanh.
@@ -14,6 +21,14 @@ export function HeroSection() {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [selectedProvinceId, setSelectedProvinceId] = useState("");
+  const [bannerIndex, setBannerIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBannerIndex((prev) => (prev + 1) % BANNER_IMAGES.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Submit từ Hero sẽ điều hướng sang /jobs với query params,
   // để trang /jobs gọi API search (Elasticsearch) theo bộ lọc tương ứng.
@@ -49,22 +64,27 @@ export function HeroSection() {
 
   return (
     <section
-      className="border-b border-slate-200 bg-slate-100"
-      style={{
-        backgroundImage: "url('/bannerforhomepage.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center center",
-      }}
+      className="relative border-b border-slate-200 bg-slate-100 overflow-hidden"
     >
-      <div className="mx-auto w-full max-w-6xl px-4 py-20 md:py-28 lg:py-32">
+      {BANNER_IMAGES.map((src, i) => (
+        <div
+          key={src}
+          className="absolute inset-0 transition-opacity duration-1000"
+          style={{
+            backgroundImage: `url('${src}')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center center",
+            opacity: i === bannerIndex ? 1 : 0,
+          }}
+        />
+      ))}
+      <div className="relative mx-auto w-full max-w-6xl px-4 py-20 md:py-28 lg:py-32">
         <div className="grid gap-8 lg:grid-cols-[1.35fr_0.65fr]">
           <div>
-            <p className="text-sm font-medium text-slate-500">
-              Nền tảng tìm việc dành cho ứng viên
-            </p>
+
 
             <h1 className="mt-3 max-w-2xl text-4xl font-bold leading-tight tracking-[-0.03em] text-slate-950 md:text-5xl">
-              Tìm công việc phù hợp với kỹ năng của bạn
+              Tìm công việc phù hợp với <br/> kỹ năng của bạn
             </h1>
 
             <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">

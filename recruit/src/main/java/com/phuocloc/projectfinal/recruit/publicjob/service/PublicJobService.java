@@ -1,26 +1,17 @@
 package com.phuocloc.projectfinal.recruit.publicjob.service;
 
-import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
-import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.CapDoKinhNghiem;
-import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.LoaiHinhLamViec;
-import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.NganhNghe;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.CapDoKinhNghiemRepository;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.LoaiHinhLamViecRepository;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.repository.NganhNgheRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
-import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.KyNangTinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobDetailResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSearchMetadataResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSearchResponse;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicJobSummaryResponse;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -42,31 +33,23 @@ import org.springframework.web.server.ResponseStatusException;
  */
 public class PublicJobService {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final int DEFAULT_LIMIT = 8;
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_SIZE = 12;
     private static final int SIMILAR_LIMIT = 4;
 
     private final TinTuyenDungRepository tinTuyenDungRepository;
-    private final KyNangTinTuyenDungRepository kyNangTinTuyenDungRepository;
     private final NganhNgheRepository nganhNgheRepository;
     private final LoaiHinhLamViecRepository loaiHinhLamViecRepository;
     private final CapDoKinhNghiemRepository capDoKinhNghiemRepository;
     private final PublicJobElasticsearchSearchService publicJobElasticsearchSearchService;
+    private final PublicJobMapper mapper;
+    private final JobSearchTextAnalyzer textAnalyzer;
 
     @Transactional(readOnly = true)
     public List<PublicJobSummaryResponse> listJobs(String keyword, String location, Integer limit) {
         int safeLimit = limit == null || limit <= 0 ? DEFAULT_LIMIT : Math.min(limit, 30);
-        PublicJobSearchResponse result = searchJobs(
-                keyword,
-                location,
-                null,
-                null,
-                null,
-                DEFAULT_PAGE,
-                safeLimit
-        );
+        PublicJobSearchResponse result = searchJobs(keyword, location, null, null, null, DEFAULT_PAGE, safeLimit);
         return result.getDanhSach();
     }
 
@@ -85,15 +68,7 @@ public class PublicJobService {
 
         if (publicJobElasticsearchSearchService.isEnabled()) {
             var esResult = publicJobElasticsearchSearchService.searchJobIds(
-                    tuKhoa,
-                    diaDiem,
-                    nganhNgheId,
-                    loaiHinhLamViecId,
-                    capDoKinhNghiemId,
-                    safePage,
-                    safeSize
-            );
-
+                    tuKhoa, diaDiem, nganhNgheId, loaiHinhLamViecId, capDoKinhNghiemId, safePage, safeSize);
             List<PublicJobSummaryResponse> data = mapSummaryFromSearchDocumentIds(esResult.getDocumentIds());
             long total = esResult.getTotal();
             return PublicJobSearchResponse.builder()
@@ -119,7 +94,7 @@ public class PublicJobService {
         }
         int to = Math.min(from + safeSize, all.size());
         return PublicJobSearchResponse.builder()
-                .danhSach(all.subList(from, to).stream().map(this::mapSummary).toList())
+                .danhSach(all.subList(from, to).stream().map(mapper::mapSummary).toList())
                 .tongSo(all.size())
                 .trang(safePage)
                 .kichThuoc(safeSize)
@@ -144,19 +119,9 @@ public class PublicJobService {
 
         if (publicJobElasticsearchSearchService.isEnabled()) {
             var esResult = publicJobElasticsearchSearchService.searchJobIdsForAi(
-                    tuKhoa,
-                    diaDiem,
-                    luongToiThieuMongMuon,
-                    luongToiDaMongMuon,
-                    capDoKinhNghiemText,
-                    loaiHinhLamViecText,
-                    remote,
-                    khongYeuCauKinhNghiem,
-                    tuKhoaLoaiTru,
-                    DEFAULT_PAGE,
-                    safeSize
-            );
-
+                    tuKhoa, diaDiem, luongToiThieuMongMuon, luongToiDaMongMuon,
+                    capDoKinhNghiemText, loaiHinhLamViecText, remote, khongYeuCauKinhNghiem,
+                    tuKhoaLoaiTru, DEFAULT_PAGE, safeSize);
             List<PublicJobSummaryResponse> data = mapSummaryFromSearchDocumentIds(esResult.getDocumentIds());
             long total = esResult.getTotal();
             return PublicJobSearchResponse.builder()
@@ -169,16 +134,16 @@ public class PublicJobService {
         }
 
         var all = searchWithJpa(tuKhoa, diaDiem, null, null, null).stream()
-                .filter(job -> matchesSalary(job, luongToiThieuMongMuon, luongToiDaMongMuon))
-                .filter(job -> matchesTextOption(resolveExperienceLevel(job), capDoKinhNghiemText))
-                .filter(job -> matchesTextOption(resolveWorkType(job), loaiHinhLamViecText))
-                .filter(job -> matchesRemote(job, remote))
-                .filter(job -> matchesNoExperienceRequired(job, khongYeuCauKinhNghiem))
-                .filter(job -> !matchesExcludedKeywords(job, tuKhoaLoaiTru))
+                .filter(job -> mapper.matchesSalary(job, luongToiThieuMongMuon, luongToiDaMongMuon))
+                .filter(job -> mapper.matchesTextOption(resolveExperienceLevel(job), capDoKinhNghiemText))
+                .filter(job -> mapper.matchesTextOption(resolveWorkType(job), loaiHinhLamViecText))
+                .filter(job -> mapper.matchesRemote(job, remote))
+                .filter(job -> mapper.matchesNoExperienceRequired(job, khongYeuCauKinhNghiem))
+                .filter(job -> !mapper.matchesExcludedKeywords(job, tuKhoaLoaiTru))
                 .toList();
         int to = Math.min(safeSize, all.size());
         return PublicJobSearchResponse.builder()
-                .danhSach(all.subList(0, to).stream().map(this::mapSummary).toList())
+                .danhSach(all.subList(0, to).stream().map(mapper::mapSummary).toList())
                 .tongSo(all.size())
                 .trang(DEFAULT_PAGE)
                 .kichThuoc(safeSize)
@@ -189,56 +154,23 @@ public class PublicJobService {
     @Transactional(readOnly = true)
     public PublicJobSearchMetadataResponse getSearchMetadata() {
         return PublicJobSearchMetadataResponse.builder()
-                .nganhNghes(nganhNgheRepository.findAll(Sort.by(Sort.Direction.ASC, "ten")).stream().map(this::mapOption).toList())
-                .loaiHinhLamViecs(loaiHinhLamViecRepository.findAll(Sort.by(Sort.Direction.ASC, "ten")).stream().map(this::mapOption).toList())
-                .capDoKinhNghiems(capDoKinhNghiemRepository.findAll(Sort.by(Sort.Direction.ASC, "ten")).stream().map(this::mapOption).toList())
+                .nganhNghes(nganhNgheRepository.findAll(Sort.by(Sort.Direction.ASC, "ten")).stream().map(mapper::mapOption).toList())
+                .loaiHinhLamViecs(loaiHinhLamViecRepository.findAll(Sort.by(Sort.Direction.ASC, "ten")).stream().map(mapper::mapOption).toList())
+                .capDoKinhNghiems(capDoKinhNghiemRepository.findAll(Sort.by(Sort.Direction.ASC, "ten")).stream().map(mapper::mapOption).toList())
                 .build();
     }
 
     @Transactional(readOnly = true)
     public PublicJobDetailResponse getJobDetail(Long jobId) {
         TinTuyenDung job = requirePublicJob(jobId);
-        String companyLogoUrl = resolveCompany(job) == null ? null : resolveCompany(job).getLogoUrl();
-        List<PublicJobSummaryResponse> similarJobs = tinTuyenDungRepository.findPublicApprovedActiveJobs(LocalDateTime.now()).stream()
+        List<PublicJobSummaryResponse> similarJobs = tinTuyenDungRepository
+                .findPublicApprovedActiveJobs(LocalDateTime.now()).stream()
                 .filter(item -> !Objects.equals(item.getId(), job.getId()))
-                .filter(item -> sameIndustry(item, job) || sameLocation(item, job))
+                .filter(item -> mapper.sameIndustry(item, job) || mapper.sameLocation(item, job))
                 .limit(SIMILAR_LIMIT)
-                .map(this::mapSummary)
+                .map(mapper::mapSummary)
                 .toList();
-
-        return PublicJobDetailResponse.builder()
-                .id(toLong(job.getId()))
-                .maTin(buildJobCode(job))
-                .tieuDe(job.getTieuDe())
-                .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
-                .congTy(resolveCompanyName(job))
-                .logoUrl(companyLogoUrl)
-                .congTyDaXacMinh(isCompanyApproved(resolveCompany(job)))
-                .nhaTuyenDungId(job.getNguoiDang() == null || job.getNguoiDang().getId() == null ? null : job.getNguoiDang().getId().longValue())
-                .nhaTuyenDungTen(resolveRecruiterName(job))
-                .nganhNghe(resolveIndustry(job))
-                .websiteCongTy(resolveCompany(job) == null ? null : resolveCompany(job).getWebsite())
-                .diaDiem(resolveLocation(job))
-                .mucLuong(formatSalary(job))
-                .capDo(job.getCapDoKinhNghiem() == null ? "Đang cập nhật" : job.getCapDoKinhNghiem().getTen())
-                .loaiHinhLamViec(job.getLoaiHinhLamViec() == null ? "Đang cập nhật" : job.getLoaiHinhLamViec().getTen())
-                .kinhNghiem(job.getCapDoKinhNghiem() == null ? "Đang cập nhật" : job.getCapDoKinhNghiem().getTen())
-                .hanNop(formatDate(job.getDenHanLuc()))
-                .dangLuc(formatRelativeTime(job.getNgayTao()))
-                .soLuongTuyen(job.getSoLuongTuyen() == null ? "Đang cập nhật" : job.getSoLuongTuyen() + " người")
-                .capNhatLuc(formatRelativeTime(job.getNgayCapNhat()))
-                .batBuocCV(Boolean.TRUE.equals(job.getBatBuocCV()))
-                .mauCvUrl(job.getMauCvUrl())
-                .the(buildTags(job))
-                .kyNangs(resolveJobSkills(job))
-                .moTa(splitContent(job.getMoTa()))
-                .yeuCau(splitContent(job.getYeuCau()))
-                .phucLoi(splitContent(job.getPhucLoi()))
-                .moTaCongTy(resolveCompany(job) == null || !StringUtils.hasText(resolveCompany(job).getMoTa())
-                        ? "Doanh nghiệp đang cập nhật thông tin giới thiệu."
-                        : resolveCompany(job).getMoTa())
-                .viecLamTuongTu(similarJobs)
-                .build();
+        return mapper.mapDetail(job, similarJobs);
     }
 
     public TinTuyenDung requirePublicJob(Long jobId) {
@@ -249,128 +181,36 @@ public class PublicJobService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng đang hiển thị"));
     }
 
+    /** Delegation cho {@link CandidateFavoriteJobService} và {@link PublicCompanyService}. */
     public PublicJobSummaryResponse mapSummary(TinTuyenDung job) {
-        String companyLogoUrl = resolveCompany(job) == null ? null : resolveCompany(job).getLogoUrl();
-        return PublicJobSummaryResponse.builder()
-                .id(toLong(job.getId()))
-                .maTin(buildJobCode(job))
-                .tieuDe(job.getTieuDe())
-                .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
-                .congTyTen(resolveCompanyName(job))
-                .logoUrl(companyLogoUrl)
-                .diaDiem(resolveLocation(job))
-                .mucLuong(formatSalary(job))
-                .capDo(job.getCapDoKinhNghiem() == null ? "Đang cập nhật" : job.getCapDoKinhNghiem().getTen())
-                .hinhThuc(job.getLoaiHinhLamViec() == null ? "Đang cập nhật" : job.getLoaiHinhLamViec().getTen())
-                .nganhNghe(resolveIndustry(job))
-                .hanNop(formatDate(job.getDenHanLuc()))
-                .ngayTao(job.getNgayTao())
-                .build();
+        return mapper.mapSummary(job);
     }
 
+    /** Delegation cho {@link CandidateFavoriteJobService}. */
     public boolean isPublicVisible(TinTuyenDung job) {
-        if (job == null) {
-            return false;
-        }
-        CongTy company = resolveCompany(job);
-        return job.getNgayXoa() == null
-                && "APPROVED".equalsIgnoreCase(job.getTrangThai())
-                && (job.getDenHanLuc() == null || !job.getDenHanLuc().isBefore(LocalDateTime.now()))
-                && company != null
-                && company.getNgayXoa() == null
-                && "APPROVED".equalsIgnoreCase(company.getTrangThai());
+        return mapper.isPublicVisible(job);
     }
 
-    private boolean matchesKeyword(TinTuyenDung job, String keyword) {
-        if (!StringUtils.hasText(keyword)) {
-            return true;
-        }
-        String searchableText = buildSearchableJobText(job);
-        List<String> tokens = splitSearchTokens(keyword);
-        if (tokens.isEmpty()) {
-            return true;
-        }
+    // -------------------------------------------------------------------------
+    // Private
+    // -------------------------------------------------------------------------
 
-        // Fallback JPA phải quét rộng gần giống Elasticsearch multi_match:
-        // chỉ cần keyword xuất hiện trong bất kỳ nội dung chính nào của tin tuyển dụng.
-        return tokens.stream().allMatch(token -> contains(searchableText, token));
-    }
-
-    private boolean matchesLocation(TinTuyenDung job, String location) {
-        return !StringUtils.hasText(location) || contains(normalize(resolveLocation(job)), location);
-    }
-
-    private boolean matchesTextOption(String source, String expectedText) {
-        if (!StringUtils.hasText(expectedText)) {
-            return true;
-        }
-        List<String> expectedTokens = splitSearchTokens(expandSearchAliases(expectedText));
-        String normalizedSource = normalize(expandSearchAliases(source));
-        return expectedTokens.stream().allMatch(token -> contains(normalizedSource, token));
-    }
-
-    private boolean matchesSalary(TinTuyenDung job, Integer expectedMinSalary, Integer expectedMaxSalary) {
-        if (expectedMinSalary == null && expectedMaxSalary == null) {
-            return true;
-        }
-        Integer jobMinSalary = job.getLuongToiThieu();
-        Integer jobMaxSalary = job.getLuongToiDa();
-
-        // Khi tin để "Thỏa thuận" không có số lương, không thể chứng minh đạt filter lương cụ thể.
-        if (jobMinSalary == null && jobMaxSalary == null) {
-            return false;
-        }
-
-        // Khoảng lương của tin và khoảng lương mong muốn chỉ cần giao nhau là phù hợp.
-        boolean reachesExpectedMin = expectedMinSalary == null
-                || (jobMaxSalary != null && jobMaxSalary >= expectedMinSalary)
-                || (jobMaxSalary == null && jobMinSalary != null && jobMinSalary >= expectedMinSalary);
-        boolean doesNotStartAboveExpectedMax = expectedMaxSalary == null
-                || (jobMinSalary != null && jobMinSalary <= expectedMaxSalary)
-                || (jobMinSalary == null && jobMaxSalary != null && jobMaxSalary <= expectedMaxSalary);
-
-        return reachesExpectedMin && doesNotStartAboveExpectedMax;
-    }
-
-    private boolean matchesRemote(TinTuyenDung job, Boolean remote) {
-        if (!Boolean.TRUE.equals(remote)) {
-            return true;
-        }
-        String searchableText = buildSearchableJobText(job);
-        return contains(searchableText, "remote")
-                || contains(searchableText, "tu xa")
-                || contains(searchableText, "từ xa")
-                || contains(searchableText, "online")
-                || contains(searchableText, "work from home")
-                || contains(searchableText, "lam o nha")
-                || contains(searchableText, "làm ở nhà");
-    }
-
-    private boolean matchesNoExperienceRequired(TinTuyenDung job, Boolean noExperienceRequired) {
-        if (!Boolean.TRUE.equals(noExperienceRequired)) {
-            return true;
-        }
-        String searchableText = buildSearchableJobText(job);
-        return contains(searchableText, "fresher")
-                || contains(searchableText, "intern")
-                || contains(searchableText, "thuc tap")
-                || contains(searchableText, "thực tập")
-                || contains(searchableText, "entry")
-                || contains(searchableText, "khong yeu cau kinh nghiem")
-                || contains(searchableText, "không yêu cầu kinh nghiệm")
-                || contains(searchableText, "chua co kinh nghiem")
-                || contains(searchableText, "chưa có kinh nghiệm");
-    }
-
-    private boolean matchesExcludedKeywords(TinTuyenDung job, String excludedKeywords) {
-        if (!StringUtils.hasText(excludedKeywords)) {
-            return false;
-        }
-        String searchableText = buildSearchableJobText(job);
-        return splitExcludedKeywords(excludedKeywords).stream()
-                .map(this::expandSearchAliases)
-                .map(this::normalize)
-                .anyMatch(keyword -> contains(searchableText, keyword));
+    private List<TinTuyenDung> searchWithJpa(
+            String tuKhoa,
+            String diaDiem,
+            Integer nganhNgheId,
+            Integer loaiHinhLamViecId,
+            Integer capDoKinhNghiemId
+    ) {
+        String normalizedKeyword = textAnalyzer.normalize(tuKhoa);
+        String normalizedLocation = textAnalyzer.normalize(diaDiem);
+        return tinTuyenDungRepository.findPublicApprovedActiveJobs(LocalDateTime.now()).stream()
+                .filter(job -> mapper.matchesKeyword(job, normalizedKeyword))
+                .filter(job -> mapper.matchesLocation(job, normalizedLocation))
+                .filter(job -> nganhNgheId == null || (job.getNganhNghe() != null && Objects.equals(job.getNganhNghe().getId(), nganhNgheId)))
+                .filter(job -> loaiHinhLamViecId == null || (job.getLoaiHinhLamViec() != null && Objects.equals(job.getLoaiHinhLamViec().getId(), loaiHinhLamViecId)))
+                .filter(job -> capDoKinhNghiemId == null || (job.getCapDoKinhNghiem() != null && Objects.equals(job.getCapDoKinhNghiem().getId(), capDoKinhNghiemId)))
+                .toList();
     }
 
     private List<PublicJobSummaryResponse> mapSummaryFromSearchDocumentIds(List<String> documentIds) {
@@ -395,7 +235,7 @@ public class PublicJobService {
         return jobIds.stream()
                 .map(jobMap::get)
                 .filter(Objects::nonNull)
-                .map(this::mapSummary)
+                .map(mapper::mapSummary)
                 .toList();
     }
 
@@ -414,266 +254,11 @@ public class PublicJobService {
         }
     }
 
-    private List<TinTuyenDung> searchWithJpa(
-            String tuKhoa,
-            String diaDiem,
-            Integer nganhNgheId,
-            Integer loaiHinhLamViecId,
-            Integer capDoKinhNghiemId
-    ) {
-        String normalizedKeyword = normalize(tuKhoa);
-        String normalizedLocation = normalize(diaDiem);
-        return tinTuyenDungRepository.findPublicApprovedActiveJobs(LocalDateTime.now()).stream()
-                .filter(job -> matchesKeyword(job, normalizedKeyword))
-                .filter(job -> matchesLocation(job, normalizedLocation))
-                .filter(job -> nganhNgheId == null || (job.getNganhNghe() != null && Objects.equals(job.getNganhNghe().getId(), nganhNgheId)))
-                .filter(job -> loaiHinhLamViecId == null || (job.getLoaiHinhLamViec() != null && Objects.equals(job.getLoaiHinhLamViec().getId(), loaiHinhLamViecId)))
-                .filter(job -> capDoKinhNghiemId == null || (job.getCapDoKinhNghiem() != null && Objects.equals(job.getCapDoKinhNghiem().getId(), capDoKinhNghiemId)))
-                .toList();
-    }
-
-    private String buildSearchableJobText(TinTuyenDung job) {
-        return normalize(expandSearchAliases(String.join(" ",
-                nullToEmpty(job.getTieuDe()),
-                nullToEmpty(job.getMoTa()),
-                nullToEmpty(job.getYeuCau()),
-                nullToEmpty(job.getPhucLoi()),
-                resolveCompanyName(job),
-                resolveIndustry(job),
-                resolveLocation(job),
-                resolveExperienceLevel(job),
-                resolveWorkType(job),
-                String.join(" ", resolveJobSkills(job))
-        )));
-    }
-
-    private List<String> splitSearchTokens(String keyword) {
-        if (!StringUtils.hasText(keyword)) {
-            return List.of();
-        }
-        return Arrays.stream(normalize(keyword).split("\\s+"))
-                .map(String::trim)
-                .filter(StringUtils::hasText)
-                .distinct()
-                .toList();
-    }
-
-    private List<String> splitExcludedKeywords(String excludedKeywords) {
-        if (!StringUtils.hasText(excludedKeywords)) {
-            return List.of();
-        }
-        return Arrays.stream(excludedKeywords.split("[,;|\\n]+"))
-                .map(String::trim)
-                .filter(StringUtils::hasText)
-                .distinct()
-                .toList();
-    }
-
-    private String expandSearchAliases(String value) {
-        if (!StringUtils.hasText(value)) {
-            return "";
-        }
-        String normalized = value;
-        String lower = value.toLowerCase(Locale.ROOT);
-        if (lower.contains("javascript") || lower.matches(".*\\bjs\\b.*")) {
-            normalized += " JavaScript JS";
-        }
-        if (lower.contains("typescript") || lower.matches(".*\\bts\\b.*")) {
-            normalized += " TypeScript TS";
-        }
-        if (lower.contains("react")) {
-            normalized += " React ReactJS";
-        }
-        if (lower.contains("node")) {
-            normalized += " Node Node.js NodeJS";
-        }
-        if (lower.contains("spring")) {
-            normalized += " Spring Spring Boot";
-        }
-        if (lower.contains("cicd") || lower.contains("ci/cd") || lower.contains("ci cd")) {
-            normalized += " CI/CD CICD CI CD";
-        }
-        if (lower.contains("remote") || lower.contains("từ xa") || lower.contains("tu xa") || lower.contains("work from home")) {
-            normalized += " remote từ xa tu xa online work from home làm ở nhà";
-        }
-        if (lower.contains("fulltime") || lower.contains("full-time") || lower.contains("toàn thời gian")) {
-            normalized += " fulltime full-time toàn thời gian";
-        }
-        if (lower.contains("parttime") || lower.contains("part-time") || lower.contains("bán thời gian")) {
-            normalized += " parttime part-time bán thời gian";
-        }
-        if (lower.contains("intern") || lower.contains("thực tập") || lower.contains("thuc tap")) {
-            normalized += " intern internship thực tập thuc tap";
-        }
-        return normalized;
-    }
-
-    private boolean sameIndustry(TinTuyenDung source, TinTuyenDung target) {
-        return source.getNganhNghe() != null
-                && target.getNganhNghe() != null
-                && Objects.equals(source.getNganhNghe().getId(), target.getNganhNghe().getId());
-    }
-
-    private boolean sameLocation(TinTuyenDung source, TinTuyenDung target) {
-        return Objects.equals(normalize(resolveLocation(source)), normalize(resolveLocation(target)));
-    }
-
-    private List<String> buildTags(TinTuyenDung job) {
-        return Arrays.asList(
-                        resolveIndustry(job),
-                        job.getCapDoKinhNghiem() == null ? null : job.getCapDoKinhNghiem().getTen(),
-                        job.getLoaiHinhLamViec() == null ? null : job.getLoaiHinhLamViec().getTen(),
-                        buildJobCode(job)
-                ).stream()
-                .filter(StringUtils::hasText)
-                .distinct()
-                .toList();
-    }
-
-    private List<String> splitContent(String value) {
-        if (!StringUtils.hasText(value)) {
-            return List.of("Doanh nghiệp đang cập nhật nội dung.");
-        }
-        return Arrays.stream(value.split("\\r?\\n"))
-                .map(String::trim)
-                .map(item -> item.replaceFirst("^[-•*]\\s*", ""))
-                .filter(StringUtils::hasText)
-                .toList();
-    }
-
-    private List<String> resolveJobSkills(TinTuyenDung job) {
-        if (job == null || job.getId() == null) {
-            return List.of();
-        }
-        return kyNangTinTuyenDungRepository.findByTinTuyenDungIdOrderByKyNangTenAsc(job.getId()).stream()
-                .filter(link -> link.getKyNang() != null && StringUtils.hasText(link.getKyNang().getTen()))
-                .map(link -> link.getKyNang().getTen())
-                .distinct()
-                .toList();
-    }
-
-    private String resolveLocation(TinTuyenDung job) {
-        if (job.getChiNhanh() == null || job.getChiNhanh().getXaPhuong() == null) {
-            return "Đang cập nhật";
-        }
-        String ward = job.getChiNhanh().getXaPhuong().getTen();
-        String province = job.getChiNhanh().getXaPhuong().getTinhThanh() == null
-                ? null
-                : job.getChiNhanh().getXaPhuong().getTinhThanh().getTen();
-        if (StringUtils.hasText(ward) && StringUtils.hasText(province)) {
-            return ward + ", " + province;
-        }
-        return StringUtils.hasText(province) ? province : ward;
-    }
-
-    private CongTy resolveCompany(TinTuyenDung job) {
-        return job.getChiNhanh() == null ? null : job.getChiNhanh().getCongTy();
-    }
-
-    private String resolveCompanyName(TinTuyenDung job) {
-        CongTy company = resolveCompany(job);
-        return company == null || !StringUtils.hasText(company.getTen()) ? "Đang cập nhật" : company.getTen();
-    }
-
-    private String resolveIndustry(TinTuyenDung job) {
-        return job.getNganhNghe() == null || !StringUtils.hasText(job.getNganhNghe().getTen())
-                ? "Đang cập nhật"
-                : job.getNganhNghe().getTen();
-    }
-
     private String resolveExperienceLevel(TinTuyenDung job) {
-        return job.getCapDoKinhNghiem() == null ? "" : nullToEmpty(job.getCapDoKinhNghiem().getTen());
+        return job.getCapDoKinhNghiem() == null ? "" : (job.getCapDoKinhNghiem().getTen() == null ? "" : job.getCapDoKinhNghiem().getTen());
     }
 
     private String resolveWorkType(TinTuyenDung job) {
-        return job.getLoaiHinhLamViec() == null ? "" : nullToEmpty(job.getLoaiHinhLamViec().getTen());
-    }
-
-    private PublicJobSearchMetadataResponse.OptionItem mapOption(NganhNghe item) {
-        return PublicJobSearchMetadataResponse.OptionItem.builder()
-                .id(item == null || item.getId() == null ? null : item.getId().longValue())
-                .ten(item == null ? null : item.getTen())
-                .build();
-    }
-
-    private PublicJobSearchMetadataResponse.OptionItem mapOption(LoaiHinhLamViec item) {
-        return PublicJobSearchMetadataResponse.OptionItem.builder()
-                .id(item == null || item.getId() == null ? null : item.getId().longValue())
-                .ten(item == null ? null : item.getTen())
-                .build();
-    }
-
-    private PublicJobSearchMetadataResponse.OptionItem mapOption(CapDoKinhNghiem item) {
-        return PublicJobSearchMetadataResponse.OptionItem.builder()
-                .id(item == null || item.getId() == null ? null : item.getId().longValue())
-                .ten(item == null ? null : item.getTen())
-                .build();
-    }
-
-    private String resolveRecruiterName(TinTuyenDung job) {
-        if (job.getNguoiDang() == null) {
-            return "Nhà tuyển dụng";
-        }
-        String fullName = ((job.getNguoiDang().getHo() == null ? "" : job.getNguoiDang().getHo().trim())
-                + " "
-                + (job.getNguoiDang().getTen() == null ? "" : job.getNguoiDang().getTen().trim())).trim();
-        if (StringUtils.hasText(fullName)) {
-            return fullName;
-        }
-        return StringUtils.hasText(job.getNguoiDang().getEmail()) ? job.getNguoiDang().getEmail() : "Nhà tuyển dụng";
-    }
-
-    private boolean isCompanyApproved(CongTy company) {
-        return company != null && "APPROVED".equalsIgnoreCase(company.getTrangThai());
-    }
-
-    private String formatSalary(TinTuyenDung job) {
-        if (job.getLuongToiThieu() == null && job.getLuongToiDa() == null) {
-            return "Thỏa thuận";
-        }
-        if (job.getLuongToiThieu() != null && job.getLuongToiDa() != null) {
-            return formatMillion(job.getLuongToiThieu()) + " - " + formatMillion(job.getLuongToiDa()) + " triệu";
-        }
-        Integer salary = job.getLuongToiThieu() != null ? job.getLuongToiThieu() : job.getLuongToiDa();
-        return "Từ " + formatMillion(salary) + " triệu";
-    }
-
-    private String formatMillion(Integer amount) {
-        return amount == null ? "" : String.valueOf(Math.round(amount / 1_000_000.0));
-    }
-
-    private String formatDate(LocalDateTime value) {
-        return value == null ? "Không giới hạn" : value.format(DATE_FORMATTER);
-    }
-
-    private String formatRelativeTime(LocalDateTime value) {
-        if (value == null) {
-            return "Đang cập nhật";
-        }
-        long days = Duration.between(value, LocalDateTime.now()).toDays();
-        if (days <= 0) {
-            return "Hôm nay";
-        }
-        return days + " ngày trước";
-    }
-
-    private String buildJobCode(TinTuyenDung job) {
-        return job.getId() == null ? null : "JOB-" + job.getId();
-    }
-
-    private Long toLong(Integer value) {
-        return value == null ? null : value.longValue();
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private boolean contains(String source, String keyword) {
-        return StringUtils.hasText(source) && source.contains(keyword);
-    }
-
-    private String nullToEmpty(String value) {
-        return value == null ? "" : value;
+        return job.getLoaiHinhLamViec() == null ? "" : (job.getLoaiHinhLamViec().getTen() == null ? "" : job.getLoaiHinhLamViec().getTen());
     }
 }

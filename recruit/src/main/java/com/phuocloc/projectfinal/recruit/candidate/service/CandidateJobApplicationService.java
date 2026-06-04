@@ -10,6 +10,8 @@ import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.DonUngTuyenRepository;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobService;
+import java.time.LocalDateTime;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class CandidateJobApplicationService {
 
     private static final String STATUS_PENDING = "PENDING";
+    private static final Set<String> WITHDRAWABLE_STATUSES = Set.of("PENDING", "REVIEWING");
 
     private final PublicJobService publicJobService;
     private final CandidateProfileRepository candidateProfileRepository;
@@ -85,6 +88,31 @@ public class CandidateJobApplicationService {
                         .daUngTuyen(false)
                         .donUngTuyen(null)
                         .build());
+    }
+
+    @Transactional
+    public void withdraw(Long userId, Long applicationId) {
+        Integer candidateId = toIntId(userId, "userId");
+        Integer safeApplicationId = toIntId(applicationId, "applicationId");
+
+        DonUngTuyen application = donUngTuyenRepository.findByIdAndNgayXoaIsNull(safeApplicationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đơn ứng tuyển"));
+
+        boolean isOwner = application.getHoSoUngVien() != null
+                && application.getHoSoUngVien().getNguoiDung() != null
+                && candidateId.equals(application.getHoSoUngVien().getNguoiDung().getId());
+        if (!isOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền huỷ đơn ứng tuyển này");
+        }
+
+        if (!WITHDRAWABLE_STATUSES.contains(application.getTrangThai())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Không thể huỷ đơn ứng tuyển ở trạng thái " + application.getTrangThai() + ". Chỉ có thể huỷ khi đơn ở trạng thái PENDING hoặc REVIEWING.");
+        }
+
+        application.setNgayXoa(LocalDateTime.now());
+        donUngTuyenRepository.save(application);
+        chiMucNhungDonUngTuyenService.removeFromIndex(application);
     }
 
     @Transactional(readOnly = true)

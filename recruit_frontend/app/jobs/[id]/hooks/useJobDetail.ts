@@ -40,6 +40,10 @@ export function useJobDetail(jobId: string) {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [applicationLoading, setApplicationLoading] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+  const [applicationId, setApplicationId] = useState<number | null>(null);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [withdrawConfirming, setWithdrawConfirming] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
   const [applyModalOpen, setApplyModalOpen] = useState(false);
   const [profiles, setProfiles] = useState<CandidateProfileListItem[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState("");
@@ -149,6 +153,7 @@ export function useJobDetail(jobId: string) {
       .then((data) => {
         if (isMounted) {
           setHasApplied(Boolean(data.daUngTuyen));
+          setApplicationId(data.donUngTuyen?.id ?? null);
         }
       })
       .catch(() => {
@@ -218,6 +223,34 @@ export function useJobDetail(jobId: string) {
       } catch (profileError) {
         setApplyError(getApiErrorMessage(profileError, "Không tải được danh sách hồ sơ ứng viên."));
       }
+    }
+  };
+
+  const handleWithdrawRequest = () => {
+    setWithdrawError("");
+    setWithdrawConfirming(true);
+  };
+
+  const handleWithdrawCancel = () => {
+    setWithdrawConfirming(false);
+    setWithdrawError("");
+  };
+
+  const handleWithdrawConfirm = async () => {
+    if (!applicationId) {
+      return;
+    }
+    setWithdrawLoading(true);
+    setWithdrawError("");
+    try {
+      await candidateApplicationService.withdrawApplication(applicationId);
+      setHasApplied(false);
+      setApplicationId(null);
+      setWithdrawConfirming(false);
+    } catch (err) {
+      setWithdrawError(getApiErrorMessage(err, "Không thể huỷ đơn ứng tuyển. Vui lòng thử lại."));
+    } finally {
+      setWithdrawLoading(false);
     }
   };
 
@@ -304,5 +337,11 @@ export function useJobDetail(jobId: string) {
     handleOpenApplyModal,
     handleSubmitApplication,
     handleOpenChat,
+    withdrawConfirming,
+    withdrawLoading,
+    withdrawError,
+    handleWithdrawRequest,
+    handleWithdrawConfirm,
+    handleWithdrawCancel,
   };
 }

@@ -5,7 +5,7 @@ import type { UseFormRegisterReturn } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
-import type { CompanyAdminBranch, CompanyJobMetadataOption } from "@/services/company-admin/types";
+import type { CompanyAdminBranch, CompanyAdminJob, CompanyJobMetadataOption } from "@/services/company-admin/types";
 import { JobSkillsMultiSelect } from "./JobSkillsMultiSelect";
 
 // Modal tạo/cập nhật tin tuyển dụng của công ty.
@@ -55,6 +55,8 @@ type JobFormModalProps = {
   onUploadCvTemplate: (file: File | null) => void;
   batBuocCVField: UseFormRegisterReturn;
   isSubmitting: boolean;
+  templateJobs?: CompanyAdminJob[];
+  onSelectTemplate?: (job: CompanyAdminJob) => void;
 };
 
 export function JobFormModal({
@@ -84,6 +86,8 @@ export function JobFormModal({
   onUploadCvTemplate,
   batBuocCVField,
   isSubmitting,
+  templateJobs,
+  onSelectTemplate,
 }: JobFormModalProps) {
   if (!open) return null;
 
@@ -106,6 +110,28 @@ export function JobFormModal({
             Đóng
           </Button>
         </div>
+
+        {editingJobId == null && templateJobs && templateJobs.length > 0 && onSelectTemplate ? (
+          <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="mb-1.5 text-xs font-medium text-slate-600">Dùng nội dung từ tin cũ làm template</p>
+            <select
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              defaultValue=""
+              onChange={(e) => {
+                const job = templateJobs.find((j) => String(j.id) === e.target.value);
+                if (job) onSelectTemplate(job);
+              }}
+            >
+              <option value="">-- Không dùng template --</option>
+              {templateJobs.map((job) => (
+                <option key={job.id} value={String(job.id)}>
+                  {job.tieuDe ?? `Job #${job.id}`}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-slate-400">Chọn tin cũ để tự fill mô tả, yêu cầu và phúc lợi. Bạn có thể chỉnh lại sau.</p>
+          </div>
+        ) : null}
 
         <form className="space-y-4" onSubmit={onSubmit}>
           <JobFormSelectFields

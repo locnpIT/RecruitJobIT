@@ -13,9 +13,9 @@ export function FavoriteJobsPageClient() {
   const favoriteJobs = useFavoriteJobs();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <HomeHeader />
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 md:py-10">
+      <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-8 md:py-10">
         <FavoriteJobsHeader />
 
         {favoriteJobs.isLoading ? (

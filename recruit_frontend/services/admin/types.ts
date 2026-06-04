@@ -160,6 +160,24 @@ export interface ReviewJobPayload {
   lyDoTuChoi: string;
 }
 
+export interface AdminReportMetric {
+  label: string;
+  value: string;
+  ghiChu: string | null;
+}
+
+export interface AdminReportTopCompany {
+  ten: string;
+  soTin: number;
+  soDon: number;
+}
+
+export interface AdminReport {
+  chiSo: AdminReportMetric[];
+  duLieuXuHuong: number[];
+  topCongTy: AdminReportTopCompany[];
+}
+
 export interface CreatePackagePayload {
   tenGoi: string;
   moTa?: string;

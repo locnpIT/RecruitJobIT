@@ -174,7 +174,7 @@ export function JobsSearchFilters({ value, metadata, onChange, onSubmit, onReset
           </Button>
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             onClick={onReset}
             disabled={loading}
             className="h-10 px-4 text-sm font-semibold disabled:bg-slate-500"

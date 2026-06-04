@@ -6,9 +6,9 @@ import { HomeFooter } from "@/app/components/home/HomeFooter";
 // Mục tiêu là giữ trải nghiệm login/register đồng bộ với phần public của website.
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <HomeHeader />
-      <main className="bg-[radial-gradient(circle_at_top_left,_#e2e8f0_0%,_#f8fafc_45%)] px-4 py-8 md:py-12">
+      <main className="flex-1 bg-[radial-gradient(circle_at_top_left,_#e2e8f0_0%,_#f8fafc_45%)] px-4 py-8 md:py-12">
         <div className="mx-auto w-full max-w-6xl">{children}</div>
       </main>
       <HomeFooter />
@@ -19,15 +19,12 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 export function AuthSectionHeader({
   title,
   description,
-  eyebrow = "Recruit Platform",
 }: {
   title: string;
   description: string;
-  eyebrow?: string;
 }) {
   return (
     <div className="text-center">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{eyebrow}</p>
       <h2 className="mt-2 text-3xl font-bold text-slate-900">{title}</h2>
       <p className="mt-2 text-sm text-slate-600">{description}</p>
     </div>

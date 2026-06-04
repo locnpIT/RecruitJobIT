@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Bookmark, Building2, ExternalLink, Globe2, MapPin, MessageCircle, Send, ShieldCheck, Users } from "lucide-react";
+import { Bookmark, Building2, ExternalLink, Globe2, Loader2, MapPin, MessageCircle, Send, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { PublicJobDetail } from "@/services/public/public-job.service";
 
@@ -12,9 +12,15 @@ type JobSidebarProps = {
   isApplied: boolean;
   applicationLoading: boolean;
   chatLoading: boolean;
+  withdrawConfirming: boolean;
+  withdrawLoading: boolean;
+  withdrawError: string;
   onToggleFavorite: () => void;
   onApply: () => void;
   onOpenChat: () => void;
+  onWithdrawRequest: () => void;
+  onWithdrawConfirm: () => void;
+  onWithdrawCancel: () => void;
 };
 
 // Sidebar của trang chi tiết job.
@@ -28,9 +34,15 @@ export function JobSidebar({
   isApplied,
   applicationLoading,
   chatLoading,
+  withdrawConfirming,
+  withdrawLoading,
+  withdrawError,
   onToggleFavorite,
   onApply,
   onOpenChat,
+  onWithdrawRequest,
+  onWithdrawConfirm,
+  onWithdrawCancel,
 }: JobSidebarProps) {
   const companyLogoUrl = job.logoUrl;
 
@@ -104,6 +116,49 @@ export function JobSidebar({
                   ? "Đang kiểm tra..."
                   : "Ứng tuyển ngay"}
           </Button>
+
+          {isApplied && !withdrawConfirming ? (
+            <Button
+              type="button"
+              variant="unstyled"
+              onClick={onWithdrawRequest}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-rose-300 px-4 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+            >
+              Huỷ đơn ứng tuyển
+            </Button>
+          ) : null}
+
+          {isApplied && withdrawConfirming ? (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
+              <p className="text-sm font-medium text-rose-800">Bạn chắc chắn muốn huỷ đơn?</p>
+              <p className="mt-1 text-xs text-rose-600">Sau khi huỷ, bạn có thể ứng tuyển lại nếu tin vẫn còn hạn.</p>
+              {withdrawError ? (
+                <p className="mt-2 text-xs text-rose-700">{withdrawError}</p>
+              ) : null}
+              <div className="mt-3 flex gap-2">
+                <Button
+                  type="button"
+                  variant="unstyled"
+                  onClick={onWithdrawConfirm}
+                  disabled={withdrawLoading}
+                  className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-rose-600 px-3 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+                >
+                  {withdrawLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  {withdrawLoading ? "Đang huỷ..." : "Xác nhận huỷ"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="unstyled"
+                  onClick={onWithdrawCancel}
+                  disabled={withdrawLoading}
+                  className="inline-flex h-9 flex-1 items-center justify-center rounded-md border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Thoát
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
           {isExpired ? (
             <p className="px-1 text-xs leading-5 text-rose-600">
               Tin này đã hết hạn nên không thể nộp hồ sơ mới.

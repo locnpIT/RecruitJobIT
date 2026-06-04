@@ -60,9 +60,15 @@ export function JobDetailClient({ jobId }: JobDetailClientProps) {
                 isApplied={jobDetail.hasApplied}
                 applicationLoading={jobDetail.applicationLoading}
                 chatLoading={jobDetail.chatLoading}
+                withdrawConfirming={jobDetail.withdrawConfirming}
+                withdrawLoading={jobDetail.withdrawLoading}
+                withdrawError={jobDetail.withdrawError}
                 onToggleFavorite={jobDetail.handleToggleFavorite}
                 onApply={jobDetail.handleOpenApplyModal}
                 onOpenChat={jobDetail.handleOpenChat}
+                onWithdrawRequest={jobDetail.handleWithdrawRequest}
+                onWithdrawConfirm={jobDetail.handleWithdrawConfirm}
+                onWithdrawCancel={jobDetail.handleWithdrawCancel}
               />
             </section>
 

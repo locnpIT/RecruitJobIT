@@ -46,4 +46,9 @@ export const candidateApplicationService = {
     const response = await apiClient.get("/candidate/applications");
     return response.data.data as CandidateJobApplication[];
   },
+
+  withdrawApplication: async (applicationId: number): Promise<void> => {
+    const safeId = requirePathParam(applicationId, "applicationId");
+    await apiClient.delete(`/candidate/applications/${safeId}`);
+  },
 };

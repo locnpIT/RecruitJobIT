@@ -12,13 +12,14 @@ type AdminSidebarProps = {
   onClose?: () => void;
   onNavigate?: () => void;
   onLogout?: () => void;
+  badges?: Record<string, number>;
 };
 
 /**
  * Sidebar điều hướng cố định của khu vực admin.
  * Nguồn sự thật cho menu nằm ở `admin-nav.ts`, component này chỉ render và tô active state.
  */
-export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout }: AdminSidebarProps) {
+export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout, badges = {} }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -64,11 +65,18 @@ export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout }: 
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className={`block px-3 py-2 transition ${
+              className={`flex items-center justify-between px-3 py-2 transition ${
                 isActive ? "bg-[#008080] text-white" : "text-slate-700 hover:bg-slate-100"
               }`}
             >
-              {item.label}
+              <span>{item.label}</span>
+              {(badges[item.href] ?? 0) > 0 && (
+                <span className={`ml-2 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold ${
+                  isActive ? "bg-white text-[#008080]" : "bg-rose-500 text-white"
+                }`}>
+                  {badges[item.href]}
+                </span>
+              )}
             </Link>
           );
         })}

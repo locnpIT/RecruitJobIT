@@ -22,6 +22,7 @@ type AdminShellProps = {
  */
 export function AdminShell({ children }: AdminShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [pendingCompanies, setPendingCompanies] = useState(0);
   const router = useRouter();
 
   /**
@@ -102,6 +103,9 @@ export function AdminShell({ children }: AdminShellProps) {
     scheduleExpiryLogout();
     intervalId = setInterval(validateSession, 60_000);
 
+    // Tải số công ty chờ duyệt để hiển thị badge trên sidebar.
+    adminService.getStats().then((s) => setPendingCompanies(s.congTyChoDuyet ?? 0)).catch(() => {});
+
     return () => {
       if (intervalId) {
         clearInterval(intervalId);
@@ -152,10 +156,11 @@ export function AdminShell({ children }: AdminShellProps) {
         onClose={() => setIsMenuOpen(false)}
         onNavigate={() => setIsMenuOpen(false)}
         onLogout={handleLogout}
+        badges={{ "/admin/companies": pendingCompanies }}
       />
 
       {/* Nội dung của từng route con trong admin sẽ được render vào vùng main này. */}
-      <main className="px-4 py-5 sm:px-6 lg:px-8">{children}</main>
+      <main className="min-w-0 px-4 py-5 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 }

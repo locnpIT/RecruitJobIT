@@ -137,6 +137,8 @@ export function CompanyAdminJobsClient() {
         onUploadCvTemplate={actions.handleUploadCvTemplate}
         batBuocCVField={actions.batBuocCVField}
         isSubmitting={actions.isSubmitting}
+        templateJobs={data.jobs}
+        onSelectTemplate={actions.handleSelectTemplate}
       />
 
       <JobPreviewModal
