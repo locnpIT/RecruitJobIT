@@ -115,6 +115,38 @@ public class QdrantClientService {
         return parseSearchResults(response.body());
     }
 
+    /**
+     * Search vector trong collection, lọc theo danh sách giá trị của một payload field.
+     * Dùng cho luồng rank ứng viên đã nộp đơn: filter hoSoUngVienId IN [...] thay vì dùng collection riêng.
+     */
+    public List<QdrantSearchResult> searchPointsByPayloadIds(
+            String collection,
+            List<Float> vector,
+            int limit,
+            String payloadKey,
+            List<Integer> ids
+    ) {
+        if (!isEnabled() || ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        ensureCollection(collection);
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("vector", vector);
+        body.put("limit", Math.max(limit, 1));
+        body.put("with_payload", true);
+        body.put("with_vector", false);
+        body.put("filter", Map.of("must", List.of(
+                Map.of("key", payloadKey, "match", Map.of("any", ids))
+        )));
+        HttpResponse<String> response = sendRequest(
+                "POST",
+                "/collections/" + encoded(collection) + "/points/search",
+                body,
+                true
+        );
+        return parseSearchResults(response.body());
+    }
+
     private Map<String, Object> buildPayloadEqualsFilter(Map<String, Object> payloadEquals) {
         List<Map<String, Object>> must = payloadEquals.entrySet().stream()
                 .filter(entry -> StringUtils.hasText(entry.getKey()) && entry.getValue() != null)

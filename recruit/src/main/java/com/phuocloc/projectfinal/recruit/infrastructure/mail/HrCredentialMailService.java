@@ -171,6 +171,64 @@ public class HrCredentialMailService {
         }
     }
 
+    /**
+     * Gửi link xác nhận email candidate theo yêu cầu hiện tại: link chỉ mang userId
+     * và bấm vào là kích hoạt tài khoản. Cách này đơn giản cho demo nhưng không
+     * có độ an toàn như token một lần.
+     */
+    @Async("mailTaskExecutor")
+    public void sendCandidateEmailVerification(
+            Long userId,
+            String toEmail,
+            String firstName,
+            String lastName
+    ) {
+        String fullName = buildFullName(firstName, lastName);
+        String verificationUrl = buildSimpleEmailVerificationUrl(userId);
+
+        if (!mailProperties.isEnabled()) {
+            log.info(
+                    "[CANDIDATE-VERIFY][MAIL_DISABLED] userId={}, to={}, fullName={}, url={}",
+                    userId,
+                    toEmail,
+                    fullName,
+                    verificationUrl
+            );
+            return;
+        }
+
+        JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
+        if (mailSender == null) {
+            log.warn("[CANDIDATE-VERIFY][MAIL_NOT_CONFIGURED] Missing JavaMailSender bean, fallback to log-only.");
+            log.info(
+                    "[CANDIDATE-VERIFY] userId={}, to={}, fullName={}, url={}",
+                    userId,
+                    toEmail,
+                    fullName,
+                    verificationUrl
+            );
+            return;
+        }
+
+        String fromEmail = resolveFromEmail();
+        String subject = "Xác nhận email tài khoản ứng viên";
+        String body = renderCandidateVerificationTemplate(fullName, toEmail, verificationUrl);
+
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
+            helper.setTo(toEmail);
+            helper.setFrom(fromEmail);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+            mailSender.send(mimeMessage);
+
+            log.info("[CANDIDATE-VERIFY][SENT] userId={}, to={}", userId, toEmail);
+        } catch (MessagingException | MailException ex) {
+            log.error("[CANDIDATE-VERIFY][FAILED] userId={}, to={}, reason={}", userId, toEmail, ex.getMessage(), ex);
+        }
+    }
+
     private String resolveFromEmail() {
         if (StringUtils.hasText(mailProperties.getFromEmail())) {
             return mailProperties.getFromEmail().trim();
@@ -256,6 +314,20 @@ public class HrCredentialMailService {
         }
     }
 
+    private String renderCandidateVerificationTemplate(String fullName, String email, String verificationUrl) {
+        try {
+            ClassPathResource resource = new ClassPathResource("mail/candidate-email-verification.html");
+            String template = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return template
+                    .replace("${fullName}", escapeHtml(fullName))
+                    .replace("${email}", escapeHtml(email))
+                    .replace("${verificationUrl}", escapeHtml(verificationUrl));
+        } catch (IOException ex) {
+            log.warn("[CANDIDATE-VERIFY][TEMPLATE_FALLBACK] Cannot load HTML template, using plain text body.");
+            return buildCandidateVerificationBody(fullName, email, verificationUrl).replace("\n", "<br>");
+        }
+    }
+
     private String escapeHtml(String value) {
         if (!StringUtils.hasText(value)) {
             return "";
@@ -301,6 +373,17 @@ public class HrCredentialMailService {
                 """.formatted(fullName, jobTitle, companyName, email, interviewDateTime, interviewLocation, safeBranchAddress, safeNote, confirmUrl, declineUrl);
     }
 
+    private String buildCandidateVerificationBody(String fullName, String email, String verificationUrl) {
+        return """
+                Chào %s,
+
+                Tài khoản ứng viên của bạn đã được tạo với email: %s.
+
+                Vui lòng bấm vào link sau để xác nhận email và kích hoạt tài khoản:
+                %s
+                """.formatted(fullName, email, verificationUrl);
+    }
+
     private String safeText(String value) {
         return StringUtils.hasText(value) ? value.trim() : "Tin tuyển dụng";
     }
@@ -314,5 +397,12 @@ public class HrCredentialMailService {
         claims.put("action", action);
         String token = jwtService.generatePublicActionToken(claims, 7L * 24 * 60 * 60);
         return baseUrl + "/api/v1/public/interview/respond?token=" + token + "&action=" + action;
+    }
+
+    private String buildSimpleEmailVerificationUrl(Long userId) {
+        String baseUrl = StringUtils.hasText(publicUrlProperties.getBaseUrl())
+                ? publicUrlProperties.getBaseUrl().trim()
+                : "http://localhost:8080";
+        return baseUrl + "/api/v1/auth/verify-email?userId=" + userId;
     }
 }

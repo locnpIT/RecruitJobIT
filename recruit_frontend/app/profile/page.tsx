@@ -25,7 +25,7 @@ import { useCandidateProfileActions } from "./hooks/useCandidateProfileActions";
 // toàn bộ state dữ liệu/mutation đã tách xuống hooks.
 export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const { user } = useCandidateProfileSession();
+  const { user, accountTypeChecked, isCandidateAccount } = useCandidateProfileSession();
   const {
     provinces,
     wards,
@@ -51,7 +51,7 @@ export default function ProfilePage() {
     setSelectedIndustryIds,
     summaryForm,
     setSummaryForm,
-  } = useCandidateProfileData(user, hydratePersonalInfoFromMe);
+  } = useCandidateProfileData(user, accountTypeChecked && isCandidateAccount, hydratePersonalInfoFromMe);
 
   const actions = useCandidateProfileActions({
     activeProfileId,
@@ -81,7 +81,7 @@ export default function ProfilePage() {
   const emailText = profile?.email ?? user?.email ?? "";
   const activeText = profile?.dangHoatDong ?? user?.dangHoatDong ?? false;
 
-  if (!user) {
+  if (!user || !accountTypeChecked) {
     return <ProfileLoadingState />;
   }
 
@@ -89,17 +89,27 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <HomeHeader />
       <main className="mx-auto w-full max-w-6xl px-4 py-8">
-        <ProfileHero
-          profiles={profiles}
-          activeProfileId={activeProfileId}
-          creatingProfile={actions.creatingProfile}
-          onChangeProfile={setActiveProfileId}
-          onCreateProfile={() => void actions.handleCreateProfile()}
-        />
+        {isCandidateAccount ? (
+          <ProfileHero
+            profiles={profiles}
+            activeProfileId={activeProfileId}
+            creatingProfile={actions.creatingProfile}
+            onChangeProfile={setActiveProfileId}
+            onCreateProfile={() => void actions.handleCreateProfile()}
+          />
+        ) : (
+          <section className="mb-6 rounded-lg border border-slate-200 bg-white p-6">
+            <p className="text-sm font-medium text-slate-600">← Về trang chủ</p>
+            <h1 className="mt-2 text-3xl font-bold text-slate-900">Thông tin cá nhân</h1>
+            <p className="mt-2 text-slate-600">Xem và cập nhật thông tin tài khoản của bạn.</p>
+          </section>
+        )}
 
         <section className="rounded-lg border border-slate-200 bg-white">
           <div className="border-b border-slate-200 px-6 py-5">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Candidate profile</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+              {isCandidateAccount ? "Candidate profile" : "Thông tin tài khoản"}
+            </p>
           </div>
 
           <div className="grid gap-5 p-6">
@@ -134,13 +144,14 @@ export default function ProfilePage() {
           />
         </section>
 
-        {!activeProfileId ? (
-          <ProfileEmptyState
-            creating={actions.creatingProfile}
-            onCreateProfile={() => void actions.handleCreateProfile()}
-          />
-        ) : (
-          <>
+        {isCandidateAccount ? (
+          !activeProfileId ? (
+            <ProfileEmptyState
+              creating={actions.creatingProfile}
+              onCreateProfile={() => void actions.handleCreateProfile()}
+            />
+          ) : (
+            <>
             <section className="mt-6">
               <SummaryPanel
                 tenHoSo={summaryForm.tenHoSo}
@@ -211,8 +222,9 @@ export default function ProfilePage() {
                 {actions.savingProfileIndex ? "Đang lưu hồ sơ..." : "Lưu hồ sơ"}
               </ProfileActionButton>
             </section>
-          </>
-        )}
+            </>
+          )
+        ) : null}
       </main>
       <HomeFooter />
     </div>

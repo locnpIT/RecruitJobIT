@@ -62,7 +62,6 @@ public class SemanticMatchingService {
     private final KyNangTinTuyenDungRepository kyNangTinTuyenDungRepository;
     private final CompanyAdminAccessService accessService;
     private final JobEmbeddingIndexService jobEmbeddingIndexService;
-    private final ApplicationEmbeddingIndexService applicationEmbeddingIndexService;
     private final CandidateProfileEmbeddingIndexService candidateProfileEmbeddingIndexService;
     private final SemanticCandidateExplanationService explanationService;
     private final SemanticMatchSignalService signalService;
@@ -137,21 +136,35 @@ public class SemanticMatchingService {
             return List.of();
         }
 
-        applications.forEach(applicationEmbeddingIndexService::ensureIndexedForMatching);
+        // Dùng khoHoSoUngVien thay vì collection riêng — vector hồ sơ là nguồn duy nhất,
+        // filter theo danh sách hoSoUngVienId của những người đã nộp đơn vào job này.
+        Map<Integer, DonUngTuyen> applicationByProfileId = new LinkedHashMap<>();
+        applications.forEach(app -> {
+            if (app.getHoSoUngVien() != null && app.getHoSoUngVien().getId() != null) {
+                applicationByProfileId.putIfAbsent(app.getHoSoUngVien().getId(), app);
+            }
+        });
+
+        if (applicationByProfileId.isEmpty()) {
+            return List.of();
+        }
 
         List<Float> queryVector = jobEmbeddingIndexService.getOrCreateIndexVectorForMatching(job);
-        List<QdrantSearchResult> results = qdrantClientService.searchPoints(
-                qdrantProperties.getKhoDonUngTuyen(),
+        List<Integer> profileIds = new ArrayList<>(applicationByProfileId.keySet());
+        List<QdrantSearchResult> results = qdrantClientService.searchPointsByPayloadIds(
+                qdrantProperties.getKhoHoSoUngVien(),
                 queryVector,
                 Math.max(normalizeLimit(limit), 1),
-                Map.of("tinTuyenDungId", normalizedJobId)
+                "hoSoUngVienId",
+                profileIds
         );
 
-        Map<Integer, DonUngTuyen> applicationById = new LinkedHashMap<>();
-        applications.forEach(application -> applicationById.put(application.getId(), application));
-
         return results.stream()
-                .map(result -> mapSubmittedApplicationMatch(job, applicationById.get(intPayload(result.payload(), "donUngTuyenId")), result, queryVector))
+                .map(result -> mapSubmittedApplicationMatch(
+                        job,
+                        applicationByProfileId.get(intPayload(result.payload(), "hoSoUngVienId")),
+                        result,
+                        queryVector))
                 .filter(Objects::nonNull)
                 .sorted(matchScoreComparator())
                 .limit(normalizeLimit(limit))

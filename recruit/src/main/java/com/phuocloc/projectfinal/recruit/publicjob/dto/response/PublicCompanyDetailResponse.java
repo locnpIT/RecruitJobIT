@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.publicjob.dto.response;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,5 +17,14 @@ public class PublicCompanyDetailResponse {
     private String website;
     private String moTa;
     private Long soTinDang;
-}
+    private List<BranchItem> chiNhanhs;
 
+    @Getter
+    @Builder
+    public static class BranchItem {
+        private Long id;
+        private String ten;
+        private String diaChi;
+        private boolean laTruSoChinh;
+    }
+}

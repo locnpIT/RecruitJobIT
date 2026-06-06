@@ -8,6 +8,7 @@ import com.phuocloc.projectfinal.recruit.auth.repository.RolesRepository;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
+import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final HrCredentialMailService mailService;
 
     @Transactional
     public AuthResponse registerCandidate(RegisterRequest request) {
@@ -48,9 +50,17 @@ public class AuthService {
         user.setTen(request.getTen().trim());
         user.setHo(request.getHo().trim());
         user.setSoDienThoai(trimToNull(request.getSoDienThoai()));
-        user.setDangHoatDong(true);
+        // Candidate phải bấm link xác nhận email trước khi đăng nhập.
+        user.setDangHoatDong(false);
         user.setVaiTroHeThong(candidateRole);
         user = usersRepository.save(user);
+
+        mailService.sendCandidateEmailVerification(
+                user.getId() == null ? null : user.getId().longValue(),
+                user.getEmail(),
+                user.getTen(),
+                user.getHo()
+        );
 
         String accessToken = jwtService.generateAccessToken(user);
         return buildAuthResponse(user, accessToken);
@@ -79,6 +89,15 @@ public class AuthService {
         return buildAuthResponse(user, accessToken);
     }
 
+    @Transactional
+    public void verifyEmailByUserId(Long userId) {
+        Integer safeUserId = toIntId(userId, "userId");
+        NguoiDung user = usersRepository.findById(safeUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản cần xác nhận"));
+        user.setDangHoatDong(true);
+        usersRepository.save(user);
+    }
+
     private VaiTroHeThong requireRole(RoleName roleName) {
         return rolesRepository.findByTen(roleName.name())
                 .orElseThrow(() -> new ResponseStatusException(
@@ -105,6 +124,17 @@ public class AuthService {
             return null;
         }
         return value.trim();
+    }
+
+    private Integer toIntId(Long value, String fieldName) {
+        if (value == null || value <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không hợp lệ");
+        }
+        try {
+            return Math.toIntExact(value);
+        } catch (ArithmeticException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " vượt quá giới hạn", ex);
+        }
     }
 
     private AuthResponse buildAuthResponse(NguoiDung nguoiDung, String accessToken) {

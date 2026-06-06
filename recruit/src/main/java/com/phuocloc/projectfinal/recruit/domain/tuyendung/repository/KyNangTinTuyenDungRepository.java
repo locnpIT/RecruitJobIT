@@ -5,8 +5,10 @@ import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.KyNangTinTuyenD
 import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Repository truy cập dữ liệu cho KyNangTinTuyenDungRepository.
@@ -32,5 +34,8 @@ public interface KyNangTinTuyenDungRepository extends JpaRepository<KyNangTinTuy
             """)
     List<KyNangTinTuyenDung> findByTinTuyenDungIdsOrderByKyNangTenAsc(@Param("jobIds") Collection<Integer> jobIds);
 
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM KyNangTinTuyenDung link WHERE link.tinTuyenDung.id = :jobId")
     void deleteByTinTuyenDung_Id(Integer jobId);
 }

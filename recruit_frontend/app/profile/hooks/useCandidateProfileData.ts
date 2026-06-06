@@ -17,8 +17,12 @@ export type SummaryFormState = {
   mucTieuNgheNghiep: string;
 };
 
-// Nạp dữ liệu hồ sơ ứng viên: me, danh sách hồ sơ, metadata, active profile.
-export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me: UserProfileResponse) => void) {
+// Luôn nạp thông tin tài khoản; dữ liệu hồ sơ ứng viên chỉ nạp cho role CANDIDATE.
+export function useCandidateProfileData(
+  user: LocalUser | null,
+  candidateEnabled: boolean,
+  onLoadedMe?: (me: UserProfileResponse) => void,
+) {
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
   const [candidateData, setCandidateData] = useState<CandidateProfile | null>(null);
   const [metadata, setMetadata] = useState<CandidateProfileMetadata | null>(null);
@@ -38,8 +42,19 @@ export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me
         return;
       }
       try {
-        const [me, profileList, meta] = await Promise.all([
-          authService.getMe(),
+        const me = await authService.getMe();
+        setProfile(me);
+        onLoadedMe?.(me);
+
+        if (!candidateEnabled) {
+          setProfiles([]);
+          setActiveProfileId(null);
+          setCandidateData(null);
+          setMetadata(null);
+          return;
+        }
+
+        const [profileList, meta] = await Promise.all([
           candidateProfileService.listProfiles(),
           candidateProfileService.getMetadata(),
         ]);
@@ -47,7 +62,6 @@ export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me
         const selectedId = profileList[0]?.id ?? null;
         const cp = selectedId ? await candidateProfileService.getProfileById(selectedId) : null;
 
-        setProfile(me);
         setProfiles(profileList);
         setActiveProfileId(selectedId);
         setCandidateData(cp);
@@ -59,19 +73,18 @@ export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me
           gioiThieuBanThan: cp?.gioiThieuBanThan ?? "",
           mucTieuNgheNghiep: cp?.mucTieuNgheNghiep ?? "",
         });
-        onLoadedMe?.(me);
       } catch (error) {
         console.error(error);
-        toast.error("Không tải được dữ liệu hồ sơ ứng viên.");
+        toast.error(candidateEnabled ? "Không tải được dữ liệu hồ sơ ứng viên." : "Không tải được thông tin cá nhân.");
       }
     };
 
     void loadAll();
-  }, [onLoadedMe, user]);
+  }, [candidateEnabled, onLoadedMe, user]);
 
   useEffect(() => {
     const loadActiveProfile = async () => {
-      if (!activeProfileId) {
+      if (!candidateEnabled || !activeProfileId) {
         setCandidateData(null);
         setSelectedSkillIds([]);
         setSelectedIndustryIds([]);
@@ -99,7 +112,7 @@ export function useCandidateProfileData(user: LocalUser | null, onLoadedMe?: (me
     };
 
     void loadActiveProfile();
-  }, [activeProfileId]);
+  }, [activeProfileId, candidateEnabled]);
 
   return {
     profile,

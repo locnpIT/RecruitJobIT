@@ -47,11 +47,12 @@ public class PublicCompanyController {
     @GetMapping("/{companyId}/jobs")
     public ResponseEntity<SuccessResponse<List<PublicJobSummaryResponse>>> listCompanyJobs(
             @PathVariable Long companyId,
+            @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) Integer gioiHan
     ) {
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Lấy danh sách tin tuyển dụng theo công ty thành công",
-                publicCompanyService.listCompanyJobs(companyId, gioiHan)
+                publicCompanyService.listCompanyJobs(companyId, branchId == null ? null : Math.toIntExact(branchId), gioiHan)
         ));
     }
 }

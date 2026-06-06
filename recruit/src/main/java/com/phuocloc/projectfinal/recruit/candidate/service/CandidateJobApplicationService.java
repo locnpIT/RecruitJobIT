@@ -1,6 +1,5 @@
 package com.phuocloc.projectfinal.recruit.candidate.service;
 
-import com.phuocloc.projectfinal.recruit.ai.service.ApplicationEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.candidate.dto.request.CreateJobApplicationRequest;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateJobApplicationResponse;
 import com.phuocloc.projectfinal.recruit.candidate.dto.response.CandidateJobApplicationStatusResponse;
@@ -36,7 +35,6 @@ public class CandidateJobApplicationService {
     private final PublicJobService publicJobService;
     private final CandidateProfileRepository candidateProfileRepository;
     private final DonUngTuyenRepository donUngTuyenRepository;
-    private final ApplicationEmbeddingIndexService chiMucNhungDonUngTuyenService;
 
     @Transactional
     public CandidateJobApplicationResponse apply(Long userId, Long jobId, CreateJobApplicationRequest request) {
@@ -67,8 +65,6 @@ public class CandidateJobApplicationService {
         application.setTrangThai(STATUS_PENDING);
         application.setCvUrl(cvUrl);
         DonUngTuyen saved = donUngTuyenRepository.save(application);
-        // Sau khi tạo đơn thành công, đồng bộ chỉ mục nhúng để phục vụ semantic matching.
-        chiMucNhungDonUngTuyenService.syncIndex(saved);
         return mapApplication(saved);
     }
 
@@ -112,7 +108,6 @@ public class CandidateJobApplicationService {
 
         application.setNgayXoa(LocalDateTime.now());
         donUngTuyenRepository.save(application);
-        chiMucNhungDonUngTuyenService.removeFromIndex(application);
     }
 
     @Transactional(readOnly = true)

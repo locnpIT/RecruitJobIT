@@ -15,6 +15,12 @@ export type PublicCompanyDetail = {
   website: string | null;
   moTa: string;
   soTinDang: number;
+  chiNhanhs: Array<{
+    id: number;
+    ten: string;
+    diaChi: string | null;
+    laTruSoChinh: boolean;
+  }>;
 };
 
 export const publicCompanyService = {
@@ -29,9 +35,17 @@ export const publicCompanyService = {
     return response.data.data as PublicCompanyDetail;
   },
 
-  listCompanyJobs: async (companyId: string | number, gioiHan = 12): Promise<PublicJobSummary[]> => {
+  listCompanyJobs: async (
+    companyId: string | number,
+    gioiHan = 12,
+    branchId?: number | null,
+  ): Promise<PublicJobSummary[]> => {
     const safeCompanyId = requirePathParam(companyId, "companyId");
-    const response = await apiClient.get(`/public/companies/${safeCompanyId}/jobs`, { params: { gioiHan } });
+    const params: { gioiHan: number; branchId?: number } = { gioiHan };
+    if (branchId) {
+      params.branchId = branchId;
+    }
+    const response = await apiClient.get(`/public/companies/${safeCompanyId}/jobs`, { params });
     return response.data.data as PublicJobSummary[];
   },
 };

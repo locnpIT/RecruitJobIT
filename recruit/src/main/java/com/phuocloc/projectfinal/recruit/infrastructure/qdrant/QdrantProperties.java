@@ -27,8 +27,6 @@ public class QdrantProperties {
     private int vectorSize = 384;
     // Tên collection lưu embedding hồ sơ ứng viên.
     private String khoHoSoUngVien = "chi_muc_nhung_ho_so_ung_vien";
-    // Tên collection lưu embedding đơn ứng tuyển.
-    private String khoDonUngTuyen = "chi_muc_nhung_don_ung_tuyen";
     // Tên collection lưu embedding tin tuyển dụng.
     private String khoTinTuyenDung = "chi_muc_nhung_tin_tuyen_dung";
     // Tên collection lưu embedding kinh nghiệm làm việc ứng viên.

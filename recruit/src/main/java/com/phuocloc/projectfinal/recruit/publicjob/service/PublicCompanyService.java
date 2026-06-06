@@ -1,7 +1,10 @@
 package com.phuocloc.projectfinal.recruit.publicjob.service;
 
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyRepository;
+import com.phuocloc.projectfinal.recruit.company.repository.CompanyBranchRepository;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.PublicTopCompanyProjection;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.publicjob.dto.response.PublicCompanyDetailResponse;
@@ -34,6 +37,7 @@ public class PublicCompanyService {
 
     private final TinTuyenDungRepository tinTuyenDungRepository;
     private final CompanyRepository companyRepository;
+    private final CompanyBranchRepository companyBranchRepository;
     private final PublicJobService publicJobService;
 
     @Transactional(readOnly = true)
@@ -64,6 +68,10 @@ public class PublicCompanyService {
                 safeCompanyId,
                 LocalDateTime.now()
         );
+        List<PublicCompanyDetailResponse.BranchItem> branches = companyBranchRepository.findByCongTy_Id(safeCompanyId).stream()
+                .filter(branch -> branch != null && branch.getNgayXoa() == null)
+                .map(this::mapBranch)
+                .toList();
 
         return PublicCompanyDetailResponse.builder()
                 .id(company.getId() == null ? null : company.getId().longValue())
@@ -72,20 +80,23 @@ public class PublicCompanyService {
                 .website(company.getWebsite())
                 .moTa(StringUtils.hasText(company.getMoTa()) ? company.getMoTa() : "Doanh nghiệp đang cập nhật thông tin giới thiệu.")
                 .soTinDang(activeJobs)
+                .chiNhanhs(branches)
                 .build();
     }
 
     @Transactional(readOnly = true)
-    public List<PublicJobSummaryResponse> listCompanyJobs(Long companyId, Integer limit) {
+    public List<PublicJobSummaryResponse> listCompanyJobs(Long companyId, Integer branchId, Integer limit) {
         Integer safeCompanyId = toIntId(companyId, "companyId");
         requirePublicCompany(safeCompanyId);
         int safeLimit = limit == null || limit <= 0 ? DEFAULT_COMPANY_JOBS_LIMIT : Math.min(limit, MAX_COMPANY_JOBS_LIMIT);
 
-        return tinTuyenDungRepository.findPublicApprovedActiveJobsByCompanyId(safeCompanyId, LocalDateTime.now())
+        List<TinTuyenDung> jobs = tinTuyenDungRepository.findPublicApprovedActiveJobsByCompanyId(safeCompanyId, LocalDateTime.now())
                 .stream()
+                .filter(job -> branchId == null || branchId <= 0
+                        || (job.getChiNhanh() != null && branchId.equals(job.getChiNhanh().getId())))
                 .limit(safeLimit)
-                .map(publicJobService::mapSummary)
                 .toList();
+        return jobs.stream().map(publicJobService::mapSummary).toList();
     }
 
     private CongTy requirePublicCompany(Integer companyId) {
@@ -98,5 +109,14 @@ public class PublicCompanyService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không hợp lệ");
         }
         return Math.toIntExact(id);
+    }
+
+    private PublicCompanyDetailResponse.BranchItem mapBranch(ChiNhanhCongTy branch) {
+        return PublicCompanyDetailResponse.BranchItem.builder()
+                .id(branch.getId() == null ? null : branch.getId().longValue())
+                .ten(branch.getTen())
+                .diaChi(branch.getDiaChiChiTiet())
+                .laTruSoChinh(Boolean.TRUE.equals(branch.getLaTruSoChinh()))
+                .build();
     }
 }

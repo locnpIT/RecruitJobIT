@@ -44,6 +44,8 @@ public class PublicJobMapper {
                 .tieuDe(job.getTieuDe())
                 .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
                 .congTyTen(resolveCompanyName(job))
+                .chiNhanhId(job.getChiNhanh() == null || job.getChiNhanh().getId() == null ? null : job.getChiNhanh().getId().longValue())
+                .chiNhanhTen(job.getChiNhanh() == null ? null : job.getChiNhanh().getTen())
                 .logoUrl(companyLogoUrl)
                 .diaDiem(resolveLocation(job))
                 .mucLuong(formatSalary(job))

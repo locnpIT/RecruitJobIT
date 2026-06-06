@@ -24,6 +24,7 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
     @Query("SELECT t FROM TinTuyenDung t WHERE t.id = :id AND t.chiNhanh.id = :chiNhanhId AND t.ngayXoa IS NULL")
     Optional<TinTuyenDung> findByIdAndChiNhanh_IdAndNgayXoaIsNull(Integer id, Integer chiNhanhId);
 
+    @Query("SELECT t FROM TinTuyenDung t WHERE t.ngayXoa IS NULL")
     List<TinTuyenDung> findByNgayXoaIsNull(Sort sort);
 
     @Query("""

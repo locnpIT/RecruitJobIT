@@ -15,11 +15,14 @@ import com.phuocloc.projectfinal.recruit.auth.service.OwnerRegistrationService;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeResponse;
 import com.phuocloc.projectfinal.recruit.common.response.SuccessResponse;
 import com.phuocloc.projectfinal.recruit.infrastructure.cloudinary.CloudinaryStorageService;
+import com.phuocloc.projectfinal.recruit.infrastructure.mail.PublicUrlProperties;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +43,7 @@ public class AuthController {
     private final OwnerRegistrationService ownerRegistrationService;
     private final AuthUserProfileService authUserProfileService;
     private final CloudinaryStorageService cloudinaryStorageService;
+    private final PublicUrlProperties publicUrlProperties;
 
     @GetMapping("/cloudinary-signature")
     // Cấp chữ ký upload cho frontend.
@@ -81,6 +85,18 @@ public class AuthController {
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách loại tài liệu thành công", data));
     }
 
+    @GetMapping("/verify-email")
+    // Luồng xác nhận email đơn giản theo yêu cầu: link có userId và bấm vào sẽ kích hoạt tài khoản.
+    // Không dùng token nên chỉ phù hợp demo/nội bộ, không nên dùng làm cơ chế bảo mật production.
+    public RedirectView verifyEmail(@RequestParam("userId") Long userId) {
+        try {
+            authService.verifyEmailByUserId(userId);
+            return new RedirectView(buildFrontendVerifyUrl("success"));
+        } catch (RuntimeException ex) {
+            return new RedirectView(buildFrontendVerifyUrl("error"));
+        }
+    }
+
     @PostMapping("/login")
     // Xác thực email + mật khẩu và trả về access token cùng thông tin user hiện tại.
     public ResponseEntity<SuccessResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
@@ -116,5 +132,12 @@ public class AuthController {
     ) {
         UserProfileResponse data = authUserProfileService.updateCurrentUserProfile(principal.getUserId(), request);
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật hồ sơ người dùng thành công", data));
+    }
+
+    private String buildFrontendVerifyUrl(String status) {
+        String baseUrl = StringUtils.hasText(publicUrlProperties.getFrontendBaseUrl())
+                ? publicUrlProperties.getFrontendBaseUrl().trim()
+                : "http://localhost:3000";
+        return baseUrl + "/auth/verify-email?status=" + status;
     }
 }

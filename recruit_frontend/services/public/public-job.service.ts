@@ -7,6 +7,8 @@ export type PublicJobSummary = {
   tieuDe: string;
   congTyId: number | null;
   congTyTen: string;
+  chiNhanhId: number | null;
+  chiNhanhTen: string | null;
   logoUrl: string | null;
   diaDiem: string;
   mucLuong: string;

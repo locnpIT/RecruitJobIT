@@ -4,7 +4,6 @@ import { ApplicationMatchingControls } from "./ApplicationMatchingControls";
 import type { ApplicationCandidateMatch } from "./types";
 
 type CandidateMatchingPanelProps = {
-  jobRequiresCv: boolean;
   selectedJobTitle?: string | null;
   minimumScore: number;
   semanticLoading: boolean;
@@ -20,9 +19,7 @@ type CandidateMatchingPanelProps = {
   onOpenDetail: (target: CandidateActionTarget) => void;
 };
 
-// Tab AI theo tin: dùng để tìm ứng viên phù hợp; job yêu cầu CV không mở modal giải thích.
 export function CandidateMatchingPanel({
-  jobRequiresCv,
   selectedJobTitle,
   minimumScore,
   semanticLoading,
@@ -39,12 +36,6 @@ export function CandidateMatchingPanel({
 }: CandidateMatchingPanelProps) {
   return (
     <>
-      {jobRequiresCv ? (
-        <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-          AI theo tin dùng để tìm ứng viên phù hợp và nhắn họ chuẩn bị CV. Job này không hiển thị modal giải thích lý do match.
-        </div>
-      ) : null}
-
       <ApplicationMatchingControls
         selectedJobTitle={selectedJobTitle}
         minimumScore={minimumScore}
@@ -69,7 +60,7 @@ export function CandidateMatchingPanel({
         selectedMatchKey={selectedMatchKey}
         openingChatTargetKey={openingChatTargetKey}
         onSelectMatch={onSelectMatch}
-        onOpenSemanticInsight={jobRequiresCv ? undefined : onOpenSemanticInsight}
+        onOpenSemanticInsight={onOpenSemanticInsight}
         onOpenChat={onOpenChat}
         onOpenDetail={onOpenDetail}
       />

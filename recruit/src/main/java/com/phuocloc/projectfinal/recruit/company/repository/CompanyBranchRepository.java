@@ -4,6 +4,7 @@ import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  * Repository truy cập dữ liệu cho CompanyBranchRepository.
@@ -11,7 +12,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface CompanyBranchRepository extends JpaRepository<ChiNhanhCongTy, Integer> {
 
+    @Query("SELECT c FROM ChiNhanhCongTy c WHERE c.congTy.id = :congTyId")
     List<ChiNhanhCongTy> findByCongTy_Id(Integer congTyId);
 
+    @Query("""
+            SELECT c FROM ChiNhanhCongTy c
+            WHERE c.congTy.id = :congTyId
+              AND c.laTruSoChinh = TRUE
+            """)
     Optional<ChiNhanhCongTy> findByCongTy_IdAndLaTruSoChinhTrue(Integer congTyId);
 }

@@ -13,6 +13,11 @@ import org.springframework.data.jpa.repository.Query;
 public interface CuocTroChuyenRepository extends JpaRepository<CuocTroChuyen, Integer> {
 
     // Conversation là duy nhất theo cặp (ứng viên, nhà tuyển dụng) theo thiết kế DB hiện tại.
+    @Query("""
+            SELECT c FROM CuocTroChuyen c
+            WHERE c.ungVien.id = :ungVienId
+              AND c.nhaTuyenDung.id = :nhaTuyenDungId
+            """)
     Optional<CuocTroChuyen> findByUngVien_IdAndNhaTuyenDung_Id(Integer ungVienId, Integer nhaTuyenDungId);
 
     @Query("""

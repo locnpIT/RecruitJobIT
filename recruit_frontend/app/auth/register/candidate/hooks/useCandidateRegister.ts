@@ -17,8 +17,8 @@ export function useCandidateRegister() {
       const { confirmPassword, ...registerData } = data;
       void confirmPassword;
       await authService.registerCandidate(registerData);
-      toast.success("Đăng ký thành công! Chào mừng bạn.");
-      router.push("/auth/login");
+      toast.success("Đăng ký thành công. Vui lòng kiểm tra email để xác nhận tài khoản.");
+      router.push(`/auth/verify-email?status=sent&email=${encodeURIComponent(registerData.email)}`);
     } catch (error: unknown) {
       const message =
         typeof error === "object" && error !== null && "response" in error

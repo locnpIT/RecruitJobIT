@@ -38,6 +38,7 @@ spring:
 app:
   public:
     base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
+    frontend-base-url: ${APP_FRONTEND_BASE_URL:http://localhost:3000}
   jwt:
     secret-base64: ${APP_JWT_SECRET_BASE64:${SECRET_KEY_JWT:}}
     # 604800 giây = 7 ngày. Có thể override bằng APP_JWT_ACCESS_TOKEN_EXPIRATION_SECONDS trong .env.

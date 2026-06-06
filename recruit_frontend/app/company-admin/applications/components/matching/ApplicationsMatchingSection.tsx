@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
 import type { CompanyAdminApplication } from "@/services/company-admin/types";
 import type { CandidateActionTarget } from "../../hooks/useCompanyAdminApplicationsActions";
 import { useApplicationsMatchingPreview } from "../../hooks/useApplicationsMatchingPreview";
@@ -76,7 +75,6 @@ export function ApplicationsMatchingSection({
         />
       ) : (
         <CandidateMatchingPanel
-          jobRequiresCv={activeFilterJobRequiresCv}
           selectedJobTitle={matching.selectedJobTitle}
           minimumScore={matching.minimumScore}
           semanticLoading={matching.semanticLoading}
@@ -93,18 +91,16 @@ export function ApplicationsMatchingSection({
         />
       )}
 
-      {!activeFilterJobRequiresCv ? (
-        <ApplicationMatchInsightPanel
-          candidateMatch={activeMode === "applications" ? matching.selectedApplicationMatch : matching.selectedCandidateMatch}
-          dataSourceLabel={
-            activeMode === "applications"
-              ? "Điểm matching được tính từ semantic search trên các đơn đã nộp cho tin tuyển dụng đang chọn."
-              : "Điểm matching chỉ lấy từ Qdrant semantic search theo vector hồ sơ ứng viên và tin tuyển dụng."
-          }
-          open={insightModalOpen}
-          onClose={() => setInsightModalOpen(false)}
-        />
-      ) : null}
+      <ApplicationMatchInsightPanel
+        candidateMatch={activeMode === "applications" ? matching.selectedApplicationMatch : matching.selectedCandidateMatch}
+        dataSourceLabel={
+          activeMode === "applications"
+            ? "Điểm matching được tính từ semantic search trên các đơn đã nộp cho tin tuyển dụng đang chọn."
+            : "Điểm matching chỉ lấy từ Qdrant semantic search theo vector hồ sơ ứng viên và tin tuyển dụng."
+        }
+        open={insightModalOpen}
+        onClose={() => setInsightModalOpen(false)}
+      />
     </section>
   );
 }
