@@ -54,9 +54,9 @@ public class AdminUserService {
     @Transactional(readOnly = true)
     public List<AdminUserResponse> listUsers(String keyword, String role, String status) {
         // Lọc hiện đang thực hiện in-memory trên tập user hiện có.
-        String normalizedKeyword = normalize(keyword);
-        String normalizedRole = normalize(role);
-        String normalizedStatus = normalize(status);
+        String normalizedKeyword = ServiceUtils.normalize(keyword);
+        String normalizedRole = ServiceUtils.normalize(role);
+        String normalizedStatus = ServiceUtils.normalize(status);
 
         return usersRepository.findAll(Sort.by(Sort.Direction.DESC, "ngayTao")).stream()
                 .filter(user -> user.getNgayXoa() == null)
@@ -69,7 +69,7 @@ public class AdminUserService {
 
     @Transactional
     public AdminUserResponse createUser(CreateAdminUserRequest request) {
-        String accountType = normalize(request.getLoaiTaiKhoan()).toUpperCase(Locale.ROOT);
+        String accountType = ServiceUtils.normalize(request.getLoaiTaiKhoan()).toUpperCase(Locale.ROOT);
         return switch (accountType) {
             case "ADMIN" -> createStandaloneUser(request, RoleName.ADMIN);
             case "CANDIDATE" -> createStandaloneUser(request, RoleName.CANDIDATE);
@@ -80,7 +80,7 @@ public class AdminUserService {
     }
 
     private AdminUserResponse createStandaloneUser(CreateAdminUserRequest request, RoleName roleName) {
-        String normalizedEmail = normalizeEmail(request.getEmail());
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
         VaiTroHeThong role = requireSystemRole(roleName);
@@ -89,7 +89,7 @@ public class AdminUserService {
     }
 
     private AdminUserResponse createCompanyAdmin(CreateAdminUserRequest request) {
-        String normalizedEmail = normalizeEmail(request.getEmail());
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
         String companyName = requireText(request.getTenCongTy(), "Tên công ty không được để trống");
@@ -106,8 +106,8 @@ public class AdminUserService {
         CongTy company = new CongTy();
         company.setTen(companyName);
         company.setMaSoThue(taxCode);
-        company.setWebsite(trimToNull(request.getWebsite()));
-        company.setMoTa(trimToNull(request.getMoTaCongTy()));
+        company.setWebsite(ServiceUtils.trimToNull(request.getWebsite()));
+        company.setMoTa(ServiceUtils.trimToNull(request.getMoTaCongTy()));
         company.setTrangThai("APPROVED");
         company.setChuCongTy(owner);
         company = companyRepository.save(company);
@@ -138,7 +138,7 @@ public class AdminUserService {
     }
 
     private AdminUserResponse createHrUser(CreateAdminUserRequest request) {
-        String normalizedEmail = normalizeEmail(request.getEmail());
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
         CongTy company = requireCompany(request.getCongTyId());
@@ -170,7 +170,7 @@ public class AdminUserService {
 
     @Transactional
     public AdminUserResponse updateUserStatus(Long userId, UpdateUserStatusRequest request) {
-        NguoiDung user = usersRepository.findById(toIntId(userId, "userId"))
+        NguoiDung user = usersRepository.findById(ServiceUtils.toIntId(userId, "userId"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
 
         user.setDangHoatDong(request.getDangHoatDong());
@@ -181,7 +181,7 @@ public class AdminUserService {
     @Transactional
     public void deleteUser(Long userId) {
         // Xóa mềm để vẫn giữ lịch sử dữ liệu liên quan thay vì xóa cứng.
-        NguoiDung user = usersRepository.findById(toIntId(userId, "userId"))
+        NguoiDung user = usersRepository.findById(ServiceUtils.toIntId(userId, "userId"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
         user.setDangHoatDong(false);
         user.setNgayXoa(LocalDateTime.now());
@@ -194,7 +194,7 @@ public class AdminUserService {
 
         return AdminUserResponse.builder()
                 .id(ServiceUtils.toLong(user.getId()))
-                .hoTen(buildFullName(user.getHo(), user.getTen()))
+                .hoTen(ServiceUtils.buildFullName(user.getHo(), user.getTen()))
                 .email(user.getEmail())
                 .soDienThoai(user.getSoDienThoai())
                 .vaiTroHeThong(user.getVaiTroHeThong() == null ? null : user.getVaiTroHeThong().getTen())
@@ -219,10 +219,10 @@ public class AdminUserService {
             return true;
         }
 
-        String fullName = normalize(buildFullName(user.getHo(), user.getTen()));
-        return contains(fullName, keyword)
-                || contains(normalize(user.getEmail()), keyword)
-                || contains(normalize(user.getSoDienThoai()), keyword);
+        String fullName = ServiceUtils.normalize(ServiceUtils.buildFullName(user.getHo(), user.getTen()));
+        return ServiceUtils.contains(fullName, keyword)
+                || ServiceUtils.contains(ServiceUtils.normalize(user.getEmail()), keyword)
+                || ServiceUtils.contains(ServiceUtils.normalize(user.getSoDienThoai()), keyword);
     }
 
     private boolean matchesRole(NguoiDung user, String role) {
@@ -253,30 +253,13 @@ public class AdminUserService {
         return Boolean.TRUE.equals(user.getDangHoatDong()) ? "ACTIVE" : "INACTIVE";
     }
 
-    private Integer toIntId(Long id, String fieldName) {
-        return ServiceUtils.toIntId(id, fieldName);
-    }
-
-    private String buildFullName(String ho, String ten) {
-        String fullName = (StringUtils.hasText(ho) ? ho.trim() : "") + " " + (StringUtils.hasText(ten) ? ten.trim() : "");
-        return fullName.trim();
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private String normalizeEmail(String value) {
-        return ServiceUtils.normalizeEmail(value);
-    }
-
     private NguoiDung buildUser(CreateAdminUserRequest request, String normalizedEmail, VaiTroHeThong role) {
         NguoiDung user = new NguoiDung();
         user.setEmail(normalizedEmail);
         user.setMatKhauBam(passwordEncoder.encode(requireText(request.getMatKhau(), "Mật khẩu không được để trống")));
         user.setHo(requireText(request.getHo(), "Họ không được để trống"));
         user.setTen(requireText(request.getTen(), "Tên không được để trống"));
-        user.setSoDienThoai(trimToNull(request.getSoDienThoai()));
+        user.setSoDienThoai(ServiceUtils.trimToNull(request.getSoDienThoai()));
         user.setDangHoatDong(Boolean.TRUE.equals(request.getDangHoatDong()));
         user.setVaiTroHeThong(role);
         return user;
@@ -299,7 +282,7 @@ public class AdminUserService {
     }
 
     private CongTy requireCompany(Long companyId) {
-        Integer safeCompanyId = toIntId(companyId, "congTyId");
+        Integer safeCompanyId = ServiceUtils.toIntId(companyId, "congTyId");
         CongTy company = companyRepository.findById(safeCompanyId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy công ty"));
         if (company.getNgayXoa() != null) {
@@ -315,7 +298,7 @@ public class AdminUserService {
 
         List<ChiNhanhCongTy> branches = new ArrayList<>();
         for (Long branchId : branchIds.stream().distinct().toList()) {
-            ChiNhanhCongTy branch = companyBranchRepository.findById(toIntId(branchId, "chiNhanhId"))
+            ChiNhanhCongTy branch = companyBranchRepository.findById(ServiceUtils.toIntId(branchId, "chiNhanhId"))
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chi nhánh"));
             if (branch.getNgayXoa() != null
                     || branch.getCongTy() == null
@@ -338,13 +321,5 @@ public class AdminUserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
         }
         return value.trim();
-    }
-
-    private String trimToNull(String value) {
-        return ServiceUtils.trimToNull(value);
-    }
-
-    private boolean contains(String source, String keyword) {
-        return StringUtils.hasText(source) && source.contains(keyword);
     }
 }

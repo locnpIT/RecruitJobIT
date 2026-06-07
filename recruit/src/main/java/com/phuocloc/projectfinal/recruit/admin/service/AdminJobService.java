@@ -9,7 +9,7 @@ import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDun
 import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobElasticsearchIndexService;
 import java.util.List;
-import java.util.Locale;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -36,11 +36,11 @@ public class AdminJobService {
 
     @Transactional(readOnly = true)
     public List<AdminJobResponse> listJobs(String keyword, String company, String status, String industry, String location) {
-        String normalizedKeyword = normalize(keyword);
-        String normalizedCompany = normalize(company);
-        String normalizedStatus = normalize(status);
-        String normalizedIndustry = normalize(industry);
-        String normalizedLocation = normalize(location);
+        String normalizedKeyword = ServiceUtils.normalize(keyword);
+        String normalizedCompany = ServiceUtils.normalize(company);
+        String normalizedStatus = ServiceUtils.normalize(status);
+        String normalizedIndustry = ServiceUtils.normalize(industry);
+        String normalizedLocation = ServiceUtils.normalize(location);
 
         // Hiện tại lọc in-memory sau khi lấy dữ liệu chưa xóa mềm.
         // Có thể tối ưu sau bằng query spec nếu dữ liệu tăng lớn.
@@ -69,51 +69,38 @@ public class AdminJobService {
 
     @Transactional
     public AdminJobResponse approveJob(Long jobId) {
-        TinTuyenDung job = requireJob(jobId);
-        // Duyệt tin: reset lý do từ chối cũ (nếu có).
-        job.setTrangThai("APPROVED");
-        job.setLyDoTuChoi(null);
-        notificationService.createForUser(
-                job.getNguoiDang(),
+        return changeJobStatus(jobId, "APPROVED", null,
                 "Tin tuyển dụng đã được duyệt",
-                "Tin \"" + safeJobTitle(job) + "\" đã được admin duyệt.",
-                "/company-admin/jobs"
-        );
-        TinTuyenDung saved = tinTuyenDungRepository.save(job);
-        chiMucNhungTinTuyenDungService.syncOrDeactivateIndex(saved);
-        publicJobElasticsearchIndexService.syncOrDelete(saved);
-        return mapJob(saved);
+                job -> "Tin \"" + safeJobTitle(job) + "\" đã được admin duyệt.");
     }
 
     @Transactional
     public AdminJobResponse rejectJob(Long jobId, ReviewJobRequest request) {
-        TinTuyenDung job = requireJob(jobId);
-        String reason = trimToNull(request.getLyDoTuChoi());
+        String reason = ServiceUtils.trimToNull(request.getLyDoTuChoi());
         if (reason == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập lý do từ chối");
         }
-        job.setTrangThai("REJECTED");
-        job.setLyDoTuChoi(reason);
-        notificationService.createForUser(
-                job.getNguoiDang(),
+        return changeJobStatus(jobId, "REJECTED", reason,
                 "Tin tuyển dụng bị từ chối",
-                "Tin \"" + safeJobTitle(job) + "\" bị từ chối. Lý do: " + reason,
-                "/company-admin/jobs"
-        );
-        TinTuyenDung saved = tinTuyenDungRepository.save(job);
-        chiMucNhungTinTuyenDungService.syncOrDeactivateIndex(saved);
-        publicJobElasticsearchIndexService.syncOrDelete(saved);
-        return mapJob(saved);
+                job -> "Tin \"" + safeJobTitle(job) + "\" bị từ chối. Lý do: " + reason);
     }
 
     @Transactional
     public AdminJobResponse hideJob(Long jobId) {
+        return changeJobStatus(jobId, "HIDDEN", null,
+                "Tin tuyển dụng đã bị ẩn",
+                job -> "Tin \"" + safeJobTitle(job) + "\" đã bị ẩn bởi admin.");
+    }
+
+    private AdminJobResponse changeJobStatus(Long jobId, String status, String lyDoTuChoi,
+            String notificationTitle, Function<TinTuyenDung, String> notificationBody) {
         TinTuyenDung job = requireJob(jobId);
-        job.setTrangThai("HIDDEN");
+        job.setTrangThai(status);
+        job.setLyDoTuChoi(lyDoTuChoi);
         notificationService.createForUser(
                 job.getNguoiDang(),
-                "Tin tuyển dụng đã bị ẩn",
-                "Tin \"" + safeJobTitle(job) + "\" đã bị ẩn bởi admin.",
+                notificationTitle,
+                notificationBody.apply(job),
                 "/company-admin/jobs"
         );
         TinTuyenDung saved = tinTuyenDungRepository.save(job);
@@ -124,7 +111,7 @@ public class AdminJobService {
 
     private TinTuyenDung requireJob(Long jobId) {
         // Luôn loại bỏ bản ghi đã xóa mềm để tránh thao tác sai dữ liệu lịch sử.
-        return tinTuyenDungRepository.findById(toIntId(jobId, "jobId"))
+        return tinTuyenDungRepository.findById(ServiceUtils.toIntId(jobId, "jobId"))
                 .filter(job -> job.getNgayXoa() == null)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng"));
     }
@@ -133,8 +120,8 @@ public class AdminJobService {
         if (!StringUtils.hasText(keyword)) {
             return true;
         }
-        return contains(normalize(job.getTieuDe()), keyword)
-                || contains(normalize(job.getMoTa()), keyword);
+        return ServiceUtils.contains(ServiceUtils.normalize(job.getTieuDe()), keyword)
+                || ServiceUtils.contains(ServiceUtils.normalize(job.getMoTa()), keyword);
     }
 
     private boolean matchesJobCompany(TinTuyenDung job, String companyKeyword) {
@@ -144,7 +131,7 @@ public class AdminJobService {
         String companyName = job.getChiNhanh() != null && job.getChiNhanh().getCongTy() != null
                 ? job.getChiNhanh().getCongTy().getTen()
                 : null;
-        return contains(normalize(companyName), companyKeyword);
+        return ServiceUtils.contains(ServiceUtils.normalize(companyName), companyKeyword);
     }
 
     private boolean matchesJobStatus(TinTuyenDung job, String status) {
@@ -159,7 +146,7 @@ public class AdminJobService {
             return true;
         }
         String industryName = job.getNganhNghe() == null ? null : job.getNganhNghe().getTen();
-        return contains(normalize(industryName), industryKeyword);
+        return ServiceUtils.contains(ServiceUtils.normalize(industryName), industryKeyword);
     }
 
     private boolean matchesJobLocation(TinTuyenDung job, String locationKeyword) {
@@ -178,7 +165,7 @@ public class AdminJobService {
         String diaChi = (StringUtils.hasText(xaPhuong) ? xaPhuong : "")
                 + " "
                 + (StringUtils.hasText(tinhThanh) ? tinhThanh : "");
-        return contains(normalize(diaChi), locationKeyword);
+        return ServiceUtils.contains(ServiceUtils.normalize(diaChi), locationKeyword);
     }
 
     private AdminJobResponse mapJob(TinTuyenDung job) {
@@ -217,25 +204,6 @@ public class AdminJobService {
                 .denHanLuc(job.getDenHanLuc())
                 .ngayTao(job.getNgayTao())
                 .build();
-    }
-
-    private Integer toIntId(Long id, String fieldName) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không được để trống");
-        }
-        return Math.toIntExact(id);
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
-    }
-
-    private boolean contains(String source, String keyword) {
-        return StringUtils.hasText(source) && source.contains(keyword);
-    }
-
-    private String trimToNull(String value) {
-        return StringUtils.hasText(value) ? value.trim() : null;
     }
 
     private String safeJobTitle(TinTuyenDung job) {

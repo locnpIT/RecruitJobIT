@@ -51,7 +51,7 @@ public class AdminPackageService {
     @Transactional
     public AdminPackageResponse createPackage(CreatePackageRequest request) {
         // Mã gói hiện được suy ra từ số ngày hiệu lực để đồng bộ naming business.
-        String tenGoi = trimToNull(request.getTenGoi());
+        String tenGoi = ServiceUtils.trimToNull(request.getTenGoi());
         if (tenGoi == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên gói không được để trống");
         }
@@ -65,7 +65,7 @@ public class AdminPackageService {
         DanhMucGoi goi = new DanhMucGoi();
         goi.setMaGoi(maGoi);
         goi.setTenGoi(tenGoi);
-        goi.setMoTa(trimToNull(request.getMoTa()));
+        goi.setMoTa(ServiceUtils.trimToNull(request.getMoTa()));
         goi.setGiaNiemYet(request.getGiaNiemYet() == null ? null : request.getGiaNiemYet().floatValue());
         goi = danhMucGoiRepository.save(goi);
 
@@ -75,7 +75,7 @@ public class AdminPackageService {
     @Transactional
     public AdminPackageResponse updatePackage(Long packageId, UpdatePackageRequest request) {
         DanhMucGoi goi = requirePackage(packageId);
-        String tenGoi = trimToNull(request.getTenGoi());
+        String tenGoi = ServiceUtils.trimToNull(request.getTenGoi());
         if (tenGoi == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên gói không được để trống");
         }
@@ -88,7 +88,7 @@ public class AdminPackageService {
 
         goi.setMaGoi(maGoi);
         goi.setTenGoi(tenGoi);
-        goi.setMoTa(trimToNull(request.getMoTa()));
+        goi.setMoTa(ServiceUtils.trimToNull(request.getMoTa()));
         goi.setGiaNiemYet(request.getGiaNiemYet() == null ? null : request.getGiaNiemYet().floatValue());
         goi = danhMucGoiRepository.save(goi);
         return mapPackage(goi);
@@ -106,19 +106,8 @@ public class AdminPackageService {
     }
 
     private DanhMucGoi requirePackage(Long packageId) {
-        return danhMucGoiRepository.findById(toIntId(packageId, "packageId"))
+        return danhMucGoiRepository.findById(ServiceUtils.toIntId(packageId, "packageId"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy gói"));
-    }
-
-    private Integer toIntId(Long id, String fieldName) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không được để trống");
-        }
-        return Math.toIntExact(id);
-    }
-
-    private String trimToNull(String value) {
-        return StringUtils.hasText(value) ? value.trim() : null;
     }
 
     private AdminPackageResponse mapPackage(DanhMucGoi goi) {

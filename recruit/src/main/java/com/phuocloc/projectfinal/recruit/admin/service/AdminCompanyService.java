@@ -13,7 +13,6 @@ import com.phuocloc.projectfinal.recruit.domain.diadiem.entity.TinhThanh;
 import com.phuocloc.projectfinal.recruit.domain.diadiem.entity.XaPhuong;
 import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
 import java.util.List;
-import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -41,13 +40,13 @@ public class AdminCompanyService {
     @Transactional(readOnly = true)
     public List<AdminCompanyResponse> listCompanies(String status) {
         // Lọc theo trạng thái nếu frontend yêu cầu, ngược lại trả toàn bộ công ty chưa xóa mềm.
-        String normalizedStatus = normalize(status);
+        String normalizedStatus = ServiceUtils.normalize(status);
 
         return companyRepository.findAll(Sort.by(Sort.Direction.DESC, "ngayTao")).stream()
                 .filter(company -> company.getNgayXoa() == null)
                 .filter(company -> StringUtils.hasText(normalizedStatus)
                         ? normalizedStatus.equalsIgnoreCase(company.getTrangThai())
-                        : true)
+                        : Boolean.TRUE)
                 .map(this::mapCompany)
                 .toList();
     }
@@ -74,7 +73,7 @@ public class AdminCompanyService {
     public AdminCompanyResponse rejectCompany(Long companyId, ReviewCompanyRequest request) {
         // Từ chối công ty bắt buộc phải có lý do để owner biết cần chỉnh gì trước khi gửi lại.
         CongTy company = requireCompany(companyId);
-        String reason = trimToNull(request.getLyDoTuChoi());
+        String reason = ServiceUtils.trimToNull(request.getLyDoTuChoi());
         if (reason == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vui lòng nhập lý do từ chối");
         }
@@ -105,7 +104,7 @@ public class AdminCompanyService {
                 .congTy(mapCompany(company))
                 .chuCongTy(AdminCompanyDetailResponse.Owner.builder()
                         .id(company.getChuCongTy() == null ? null : ServiceUtils.toLong(company.getChuCongTy().getId()))
-                        .hoTen(buildFullName(
+                        .hoTen(ServiceUtils.buildFullName(
                                 company.getChuCongTy() == null ? null : company.getChuCongTy().getHo(),
                                 company.getChuCongTy() == null ? null : company.getChuCongTy().getTen()))
                         .email(company.getChuCongTy() == null ? null : company.getChuCongTy().getEmail())
@@ -163,7 +162,7 @@ public class AdminCompanyService {
                 .website(company.getWebsite())
                 .trangThai(company.getTrangThai())
                 .lyDoTuChoi(company.getLyDoTuChoi())
-                .chuCongTyHoTen(company.getChuCongTy() == null ? null : buildFullName(company.getChuCongTy().getHo(), company.getChuCongTy().getTen()))
+                .chuCongTyHoTen(company.getChuCongTy() == null ? null : ServiceUtils.buildFullName(company.getChuCongTy().getHo(), company.getChuCongTy().getTen()))
                 .chuCongTyEmail(company.getChuCongTy() == null ? null : company.getChuCongTy().getEmail())
                 .soChiNhanh(company.getId() == null ? 0 : companyBranchRepository.findByCongTy_Id(company.getId()).size())
                 .minhChungUrl(latestDocument == null ? null : latestDocument.getDuongDanTep())
@@ -192,28 +191,8 @@ public class AdminCompanyService {
     }
 
     private CongTy requireCompany(Long companyId) {
-        return companyRepository.findById(toIntId(companyId, "companyId"))
+        return companyRepository.findById(ServiceUtils.toIntId(companyId, "companyId"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy công ty"));
-    }
-
-    private Integer toIntId(Long id, String fieldName) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không được để trống");
-        }
-        return Math.toIntExact(id);
-    }
-
-    private String buildFullName(String ho, String ten) {
-        String fullName = (StringUtils.hasText(ho) ? ho.trim() : "") + " " + (StringUtils.hasText(ten) ? ten.trim() : "");
-        return fullName.trim();
-    }
-
-    private String trimToNull(String value) {
-        return StringUtils.hasText(value) ? value.trim() : null;
-    }
-
-    private String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
     }
 
     private String resolveTinhThanhTen(XaPhuong xaPhuong) {

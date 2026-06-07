@@ -54,7 +54,7 @@ public class AdminCatalogService {
 
         VaiTroHeThong role = VaiTroHeThong.builder()
                 .ten(ten)
-                .moTa(trimToNull(request.getMoTa()))
+                .moTa(ServiceUtils.trimToNull(request.getMoTa()))
                 .build();
         role = rolesRepository.save(role);
         return mapSystemRole(role);
@@ -62,7 +62,7 @@ public class AdminCatalogService {
 
     @Transactional
     public AdminCatalogItemResponse updateSystemRole(Long id, UpsertCatalogItemRequest request) {
-        VaiTroHeThong role = rolesRepository.findById(toIntId(id, "id"))
+        VaiTroHeThong role = rolesRepository.findById(ServiceUtils.toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy vai trò hệ thống"));
         String tenMoi = requireTen(request);
 
@@ -75,14 +75,14 @@ public class AdminCatalogService {
         }
 
         role.setTen(tenMoi);
-        role.setMoTa(trimToNull(request.getMoTa()));
+        role.setMoTa(ServiceUtils.trimToNull(request.getMoTa()));
         role = rolesRepository.save(role);
         return mapSystemRole(role);
     }
 
     @Transactional
     public void deleteSystemRole(Long id) {
-        VaiTroHeThong role = rolesRepository.findById(toIntId(id, "id"))
+        VaiTroHeThong role = rolesRepository.findById(ServiceUtils.toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy vai trò hệ thống"));
         if (isCoreSystemRole(role.getTen())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể xoá vai trò hệ thống lõi");
@@ -103,14 +103,14 @@ public class AdminCatalogService {
         if (vaiTroCongTyRepository.existsByTenIgnoreCase(ten)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên vai trò công ty đã tồn tại");
         }
-        VaiTroCongTy role = new VaiTroCongTy(null, ten, trimToNull(request.getMoTa()));
+        VaiTroCongTy role = new VaiTroCongTy(null, ten, ServiceUtils.trimToNull(request.getMoTa()));
         role = vaiTroCongTyRepository.save(role);
         return mapCompanyRole(role);
     }
 
     @Transactional
     public AdminCatalogItemResponse updateCompanyRole(Long id, UpsertCatalogItemRequest request) {
-        VaiTroCongTy role = vaiTroCongTyRepository.findById(toIntId(id, "id"))
+        VaiTroCongTy role = vaiTroCongTyRepository.findById(ServiceUtils.toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy vai trò công ty"));
         String tenMoi = requireTen(request);
 
@@ -122,14 +122,14 @@ public class AdminCatalogService {
         }
 
         role.setTen(tenMoi);
-        role.setMoTa(trimToNull(request.getMoTa()));
+        role.setMoTa(ServiceUtils.trimToNull(request.getMoTa()));
         role = vaiTroCongTyRepository.save(role);
         return mapCompanyRole(role);
     }
 
     @Transactional
     public void deleteCompanyRole(Long id) {
-        VaiTroCongTy role = vaiTroCongTyRepository.findById(toIntId(id, "id"))
+        VaiTroCongTy role = vaiTroCongTyRepository.findById(ServiceUtils.toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy vai trò công ty"));
         if (isCoreCompanyRole(role.getTen())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể xoá vai trò công ty lõi");
@@ -150,13 +150,13 @@ public class AdminCatalogService {
         if (loaiTaiLieuRepository.existsByTenIgnoreCase(ten)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên loại tài liệu đã tồn tại");
         }
-        LoaiTaiLieu item = loaiTaiLieuRepository.save(new LoaiTaiLieu(null, ten, trimToNull(request.getMoTa())));
+        LoaiTaiLieu item = loaiTaiLieuRepository.save(new LoaiTaiLieu(null, ten, ServiceUtils.trimToNull(request.getMoTa())));
         return mapProofType(item);
     }
 
     @Transactional
     public AdminCatalogItemResponse updateProofType(Long id, UpsertCatalogItemRequest request) {
-        LoaiTaiLieu item = loaiTaiLieuRepository.findById(toIntId(id, "id"))
+        LoaiTaiLieu item = loaiTaiLieuRepository.findById(ServiceUtils.toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại tài liệu"));
         String tenMoi = requireTen(request);
         if (!item.getTen().equalsIgnoreCase(tenMoi) && loaiTaiLieuRepository.existsByTenIgnoreCase(tenMoi)) {
@@ -164,14 +164,14 @@ public class AdminCatalogService {
         }
 
         item.setTen(tenMoi);
-        item.setMoTa(trimToNull(request.getMoTa()));
+        item.setMoTa(ServiceUtils.trimToNull(request.getMoTa()));
         item = loaiTaiLieuRepository.save(item);
         return mapProofType(item);
     }
 
     @Transactional
     public void deleteProofType(Long id) {
-        LoaiTaiLieu item = loaiTaiLieuRepository.findById(toIntId(id, "id"))
+        LoaiTaiLieu item = loaiTaiLieuRepository.findById(ServiceUtils.toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại tài liệu"));
         safeDelete(() -> loaiTaiLieuRepository.delete(item), "Loại tài liệu đang được sử dụng");
     }
@@ -189,13 +189,13 @@ public class AdminCatalogService {
         if (loaiChungChiRepository.existsByTenIgnoreCase(ten)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên loại chứng chỉ đã tồn tại");
         }
-        LoaiChungChi item = loaiChungChiRepository.save(new LoaiChungChi(null, ten, trimToNull(request.getMoTa())));
+        LoaiChungChi item = loaiChungChiRepository.save(new LoaiChungChi(null, ten, ServiceUtils.trimToNull(request.getMoTa())));
         return mapCertificateType(item);
     }
 
     @Transactional
     public AdminCatalogItemResponse updateCertificateType(Long id, UpsertCatalogItemRequest request) {
-        LoaiChungChi item = loaiChungChiRepository.findById(toIntId(id, "id"))
+        LoaiChungChi item = loaiChungChiRepository.findById(ServiceUtils.toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại chứng chỉ"));
         String tenMoi = requireTen(request);
 
@@ -203,14 +203,14 @@ public class AdminCatalogService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên loại chứng chỉ đã tồn tại");
         }
         item.setTen(tenMoi);
-        item.setMoTa(trimToNull(request.getMoTa()));
+        item.setMoTa(ServiceUtils.trimToNull(request.getMoTa()));
         item = loaiChungChiRepository.save(item);
         return mapCertificateType(item);
     }
 
     @Transactional
     public void deleteCertificateType(Long id) {
-        LoaiChungChi item = loaiChungChiRepository.findById(toIntId(id, "id"))
+        LoaiChungChi item = loaiChungChiRepository.findById(ServiceUtils.toIntId(id, "id"))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại chứng chỉ"));
         safeDelete(() -> loaiChungChiRepository.delete(item), "Loại chứng chỉ đang được sử dụng");
     }
@@ -224,22 +224,11 @@ public class AdminCatalogService {
     }
 
     private String requireTen(UpsertCatalogItemRequest request) {
-        String ten = trimToNull(request == null ? null : request.getTen());
+        String ten = ServiceUtils.trimToNull(request == null ? null : request.getTen());
         if (!StringUtils.hasText(ten)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên danh mục không được để trống");
         }
         return ten;
-    }
-
-    private String trimToNull(String value) {
-        return StringUtils.hasText(value) ? value.trim() : null;
-    }
-
-    private Integer toIntId(Long id, String fieldName) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không được để trống");
-        }
-        return Math.toIntExact(id);
     }
 
     private boolean isCoreSystemRole(String ten) {
@@ -259,35 +248,27 @@ public class AdminCatalogService {
                 || normalized.equals(EmployerCompanyRole.HR.name());
     }
 
-    private AdminCatalogItemResponse mapSystemRole(VaiTroHeThong item) {
+    private AdminCatalogItemResponse toCatalogResponse(Integer id, String ten, String moTa) {
         return AdminCatalogItemResponse.builder()
-                .id(ServiceUtils.toLong(item.getId()))
-                .ten(item.getTen())
-                .moTa(item.getMoTa())
+                .id(ServiceUtils.toLong(id))
+                .ten(ten)
+                .moTa(moTa)
                 .build();
+    }
+
+    private AdminCatalogItemResponse mapSystemRole(VaiTroHeThong item) {
+        return toCatalogResponse(item.getId(), item.getTen(), item.getMoTa());
     }
 
     private AdminCatalogItemResponse mapCompanyRole(VaiTroCongTy item) {
-        return AdminCatalogItemResponse.builder()
-                .id(ServiceUtils.toLong(item.getId()))
-                .ten(item.getTen())
-                .moTa(item.getMoTa())
-                .build();
+        return toCatalogResponse(item.getId(), item.getTen(), item.getMoTa());
     }
 
     private AdminCatalogItemResponse mapProofType(LoaiTaiLieu item) {
-        return AdminCatalogItemResponse.builder()
-                .id(ServiceUtils.toLong(item.getId()))
-                .ten(item.getTen())
-                .moTa(item.getMoTa())
-                .build();
+        return toCatalogResponse(item.getId(), item.getTen(), item.getMoTa());
     }
 
     private AdminCatalogItemResponse mapCertificateType(LoaiChungChi item) {
-        return AdminCatalogItemResponse.builder()
-                .id(ServiceUtils.toLong(item.getId()))
-                .ten(item.getTen())
-                .moTa(item.getMoTa())
-                .build();
+        return toCatalogResponse(item.getId(), item.getTen(), item.getMoTa());
     }
 }

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Component
@@ -26,50 +25,22 @@ public class CompanyAdminApplicationMapper {
 
     public CompanyAdminApplicationResponse mapApplication(DonUngTuyen donUngTuyen, boolean includeProfileDetail) {
         HoSoUngVien profile = donUngTuyen.getHoSoUngVien();
-        var user = profile == null ? null : profile.getNguoiDung();
 
         CompanyAdminApplicationResponse.CompanyAdminApplicationResponseBuilder builder = CompanyAdminApplicationResponse.builder()
                 .id(ServiceUtils.toLong(donUngTuyen.getId()))
                 .trangThai(donUngTuyen.getTrangThai())
                 .cvUrl(donUngTuyen.getCvUrl())
                 .thoiGianGuiThuMoi(donUngTuyen.getThoiGianGuiThuMoi())
-                .ngayTao(donUngTuyen.getNgayTao())
-                .chiNhanhId(donUngTuyen.getTinTuyenDung() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh() == null ? null : ServiceUtils.toLong(donUngTuyen.getTinTuyenDung().getChiNhanh().getId()))
-                .chiNhanhTen(donUngTuyen.getTinTuyenDung() == null || donUngTuyen.getTinTuyenDung().getChiNhanh() == null
-                        ? null
-                        : donUngTuyen.getTinTuyenDung().getChiNhanh().getTen())
-                .congTyId(donUngTuyen.getTinTuyenDung() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy() == null ? null : ServiceUtils.toLong(donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy().getId()))
-                .congTyTen(donUngTuyen.getTinTuyenDung() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy() == null
-                        ? null
-                        : donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy().getTen())
-                .tinTuyenDungId(donUngTuyen.getTinTuyenDung() == null ? null : ServiceUtils.toLong(donUngTuyen.getTinTuyenDung().getId()))
-                .tieuDeTinTuyenDung(donUngTuyen.getTinTuyenDung() == null ? null : donUngTuyen.getTinTuyenDung().getTieuDe())
-                .nguoiDungId(user == null ? null : ServiceUtils.toLong(user.getId()))
-                .ungVienHoTen(user == null
-                        ? null
-                        : buildFullName(user.getHo(), user.getTen()))
-                .ungVienEmail(user == null
-                        ? null
-                        : user.getEmail())
-                .ungVienSoDienThoai(user == null ? null : user.getSoDienThoai())
-                .ungVienAnhDaiDienUrl(user == null ? null : user.getAnhDaiDienUrl())
-                .hoSoUngVienId(profile == null ? null : ServiceUtils.toLong(profile.getId()))
-                .gioiThieuBanThan(profile == null ? null : profile.getGioiThieuBanThan())
-                .mucTieuNgheNghiep(profile == null ? null : profile.getMucTieuNgheNghiep());
+                .ngayTao(donUngTuyen.getNgayTao());
+        fillJobFields(builder, donUngTuyen.getTinTuyenDung());
+        fillProfileFields(builder, profile);
 
         if (includeProfileDetail && profile != null && profile.getId() != null) {
-            builder
-                    .hocVans(mapEducationItems(profile.getId()))
+            builder.hocVans(mapEducationItems(profile.getId()))
                     .kinhNghiems(mapWorkExperienceItems(profile.getId()))
                     .chungChis(mapCertificateItems(profile.getId()))
                     .kyNangs(mapSkillItems(profile.getId()));
         }
-
         return builder.build();
     }
 
@@ -78,51 +49,48 @@ public class CompanyAdminApplicationMapper {
             HoSoUngVien profile,
             boolean includeProfileDetail
     ) {
-        var user = profile == null ? null : profile.getNguoiDung();
-
         CompanyAdminApplicationResponse.CompanyAdminApplicationResponseBuilder builder = CompanyAdminApplicationResponse.builder()
-                .id(null)
-                .trangThai(null)
-                .cvUrl(null)
-                .thoiGianGuiThuMoi(null)
-                .ngayTao(profile == null ? null : profile.getNgayTao())
-                .chiNhanhId(tinTuyenDung == null
-                        || tinTuyenDung.getChiNhanh() == null ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getId()))
+                .id(null).trangThai(null).cvUrl(null).thoiGianGuiThuMoi(null)
+                .ngayTao(profile == null ? null : profile.getNgayTao());
+        fillJobFields(builder, tinTuyenDung);
+        fillProfileFields(builder, profile);
+
+        if (includeProfileDetail && profile != null && profile.getId() != null) {
+            builder.hocVans(mapEducationItems(profile.getId()))
+                    .kinhNghiems(mapWorkExperienceItems(profile.getId()))
+                    .chungChis(mapCertificateItems(profile.getId()))
+                    .kyNangs(mapSkillItems(profile.getId()));
+        }
+        return builder.build();
+    }
+
+    private void fillJobFields(CompanyAdminApplicationResponse.CompanyAdminApplicationResponseBuilder builder,
+            TinTuyenDung tinTuyenDung) {
+        builder.chiNhanhId(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
+                        ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getId()))
                 .chiNhanhTen(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
-                        ? null
-                        : tinTuyenDung.getChiNhanh().getTen())
-                .congTyId(tinTuyenDung == null
-                        || tinTuyenDung.getChiNhanh() == null
-                        || tinTuyenDung.getChiNhanh().getCongTy() == null ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getCongTy().getId()))
-                .congTyTen(tinTuyenDung == null
-                        || tinTuyenDung.getChiNhanh() == null
+                        ? null : tinTuyenDung.getChiNhanh().getTen())
+                .congTyId(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
                         || tinTuyenDung.getChiNhanh().getCongTy() == null
-                        ? null
-                        : tinTuyenDung.getChiNhanh().getCongTy().getTen())
+                        ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getCongTy().getId()))
+                .congTyTen(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
+                        || tinTuyenDung.getChiNhanh().getCongTy() == null
+                        ? null : tinTuyenDung.getChiNhanh().getCongTy().getTen())
                 .tinTuyenDungId(tinTuyenDung == null ? null : ServiceUtils.toLong(tinTuyenDung.getId()))
-                .tieuDeTinTuyenDung(tinTuyenDung == null ? null : tinTuyenDung.getTieuDe())
-                .nguoiDungId(user == null ? null : ServiceUtils.toLong(user.getId()))
-                .ungVienHoTen(user == null
-                        ? null
-                        : buildFullName(user.getHo(), user.getTen()))
-                .ungVienEmail(user == null
-                        ? null
-                        : user.getEmail())
+                .tieuDeTinTuyenDung(tinTuyenDung == null ? null : tinTuyenDung.getTieuDe());
+    }
+
+    private void fillProfileFields(CompanyAdminApplicationResponse.CompanyAdminApplicationResponseBuilder builder,
+            HoSoUngVien profile) {
+        var user = profile == null ? null : profile.getNguoiDung();
+        builder.nguoiDungId(user == null ? null : ServiceUtils.toLong(user.getId()))
+                .ungVienHoTen(user == null ? null : ServiceUtils.buildFullName(user.getHo(), user.getTen()))
+                .ungVienEmail(user == null ? null : user.getEmail())
                 .ungVienSoDienThoai(user == null ? null : user.getSoDienThoai())
                 .ungVienAnhDaiDienUrl(user == null ? null : user.getAnhDaiDienUrl())
                 .hoSoUngVienId(profile == null ? null : ServiceUtils.toLong(profile.getId()))
                 .gioiThieuBanThan(profile == null ? null : profile.getGioiThieuBanThan())
                 .mucTieuNgheNghiep(profile == null ? null : profile.getMucTieuNgheNghiep());
-
-        if (includeProfileDetail && profile != null && profile.getId() != null) {
-            builder
-                    .hocVans(mapEducationItems(profile.getId()))
-                    .kinhNghiems(mapWorkExperienceItems(profile.getId()))
-                    .chungChis(mapCertificateItems(profile.getId()))
-                    .kyNangs(mapSkillItems(profile.getId()));
-        }
-
-        return builder.build();
     }
 
     private List<CompanyAdminApplicationResponse.HocVanItem> mapEducationItems(Integer profileId) {
@@ -184,7 +152,4 @@ public class CompanyAdminApplicationMapper {
                 .toList();
     }
 
-    private String buildFullName(String ho, String ten) {
-        return (StringUtils.hasText(ho) ? ho.trim() : "") + " " + (StringUtils.hasText(ten) ? ten.trim() : "");
-    }
 }

@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.common.util;
 
+import java.util.Locale;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -50,5 +51,26 @@ public final class ServiceUtils {
      */
     public static Long toLong(Integer id) {
         return id == null ? null : id.longValue();
+    }
+
+    /**
+     * Trim + lowercase, trả về chuỗi rỗng nếu null. Dùng cho filter/search in-memory.
+     */
+    public static String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Ghép họ + tên, trim kết quả. Trả về chuỗi rỗng nếu cả hai đều blank.
+     */
+    public static String buildFullName(String ho, String ten) {
+        return ((StringUtils.hasText(ho) ? ho.trim() : "") + " " + (StringUtils.hasText(ten) ? ten.trim() : "")).trim();
+    }
+
+    /**
+     * Kiểm tra source có chứa keyword không (case-sensitive, null-safe).
+     */
+    public static boolean contains(String source, String keyword) {
+        return StringUtils.hasText(source) && source.contains(keyword);
     }
 }
