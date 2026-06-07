@@ -1,11 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { getApiErrorMessage } from "@/lib/api-error";
-import { adminCompaniesService } from "@/services/admin/companies.service";
-import type { AdminCompany, AdminCompanyDetailBranch, CreateAdminUserPayload } from "@/services/admin/types";
+import type { CreateAdminUserPayload } from "@/services/admin/types";
+import { cleanPayload, useCreateUserForm } from "../hooks/useCreateUserForm";
 
 type AccountType = CreateAdminUserPayload["loaiTaiKhoan"];
 
@@ -16,28 +15,6 @@ type CreateUserModalProps = {
   onSubmit: (payload: CreateAdminUserPayload) => void;
 };
 
-type FormState = CreateAdminUserPayload & {
-  chiNhanhIds: number[];
-};
-
-const initialForm: FormState = {
-  ho: "",
-  ten: "",
-  email: "",
-  soDienThoai: "",
-  matKhau: "",
-  loaiTaiKhoan: "CANDIDATE",
-  dangHoatDong: true,
-  tenCongTy: "",
-  maSoThue: "",
-  website: "",
-  moTaCongTy: "",
-  tenChiNhanh: "",
-  diaChiChiTietChiNhanh: "",
-  congTyId: undefined,
-  chiNhanhIds: [],
-};
-
 const accountTypeOptions: Array<{ value: AccountType; label: string }> = [
   { value: "CANDIDATE", label: "Ứng viên" },
   { value: "ADMIN", label: "Admin hệ thống" },
@@ -46,141 +23,23 @@ const accountTypeOptions: Array<{ value: AccountType; label: string }> = [
 ];
 
 export function CreateUserModal({ open, isLoading, onClose, onSubmit }: CreateUserModalProps) {
-  const [form, setForm] = useState<FormState>(initialForm);
-  const [companies, setCompanies] = useState<AdminCompany[]>([]);
-  const [branches, setBranches] = useState<AdminCompanyDetailBranch[]>([]);
-  const [metadataError, setMetadataError] = useState<string | null>(null);
-  const [metadataLoading, setMetadataLoading] = useState(false);
+  const {
+    form,
+    setForm,
+    companies,
+    branches,
+    selectedCompany,
+    metadataError,
+    metadataLoading,
+    updateAccountType,
+    toggleBranch,
+  } = useCreateUserForm(open);
 
-  const selectedCompany = useMemo(
-    () => companies.find((company) => company.id === form.congTyId) ?? null,
-    [companies, form.congTyId],
-  );
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    let active = true;
-    Promise.resolve().then(() => {
-      if (!active) {
-        return;
-      }
-      setForm(initialForm);
-      setMetadataError(null);
-    });
-    return () => {
-      active = false;
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || form.loaiTaiKhoan !== "HR") {
-      return;
-    }
-
-    let active = true;
-    const loadCompanies = async () => {
-      setMetadataLoading(true);
-      setMetadataError(null);
-      try {
-        const data = await adminCompaniesService.listCompanies({ status: "APPROVED" });
-        if (!active) {
-          return;
-        }
-        setCompanies(data);
-        setForm((prev) => ({
-          ...prev,
-          congTyId: prev.congTyId ?? data[0]?.id,
-        }));
-      } catch (error) {
-        if (active) {
-          setMetadataError(getApiErrorMessage(error, "Không tải được danh sách công ty."));
-        }
-      } finally {
-        if (active) {
-          setMetadataLoading(false);
-        }
-      }
-    };
-
-    void loadCompanies();
-    return () => {
-      active = false;
-    };
-  }, [open, form.loaiTaiKhoan]);
-
-  useEffect(() => {
-    if (!open || form.loaiTaiKhoan !== "HR" || !form.congTyId) {
-      let active = true;
-      Promise.resolve().then(() => {
-        if (active) {
-          setBranches([]);
-        }
-      });
-      return () => {
-        active = false;
-      };
-    }
-
-    let active = true;
-    const loadBranches = async () => {
-      setMetadataLoading(true);
-      setMetadataError(null);
-      try {
-        const detail = await adminCompaniesService.getCompanyDetail(form.congTyId as number);
-        if (!active) {
-          return;
-        }
-        const activeBranches = detail.chiNhanhs.filter((branch) => branch.id !== null && branch.trangThai !== "DELETED");
-        setBranches(activeBranches);
-        setForm((prev) => ({
-          ...prev,
-          chiNhanhIds: prev.congTyId === form.congTyId ? prev.chiNhanhIds.filter((id) => activeBranches.some((branch) => branch.id === id)) : [],
-        }));
-      } catch (error) {
-        if (active) {
-          setMetadataError(getApiErrorMessage(error, "Không tải được danh sách chi nhánh."));
-          setBranches([]);
-        }
-      } finally {
-        if (active) {
-          setMetadataLoading(false);
-        }
-      }
-    };
-
-    void loadBranches();
-    return () => {
-      active = false;
-    };
-  }, [open, form.loaiTaiKhoan, form.congTyId]);
-
-  if (!open) {
-    return null;
-  }
+  if (!open) return null;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit(cleanPayload(form));
-  };
-
-  const updateAccountType = (nextType: AccountType) => {
-    setForm((prev) => ({
-      ...prev,
-      loaiTaiKhoan: nextType,
-      congTyId: nextType === "HR" ? prev.congTyId : undefined,
-      chiNhanhIds: nextType === "HR" ? prev.chiNhanhIds : [],
-    }));
-  };
-
-  const toggleBranch = (branchId: number) => {
-    setForm((prev) => ({
-      ...prev,
-      chiNhanhIds: prev.chiNhanhIds.includes(branchId)
-        ? prev.chiNhanhIds.filter((id) => id !== branchId)
-        : [...prev.chiNhanhIds, branchId],
-    }));
   };
 
   return (
@@ -352,6 +211,8 @@ export function CreateUserModal({ open, isLoading, onClose, onSubmit }: CreateUs
   );
 }
 
+// --- Private sub-components ---
+
 type TextFieldProps = {
   label: string;
   value?: string;
@@ -377,38 +238,4 @@ function TextField({ label, value, required, type = "text", maxLength, minLength
       />
     </label>
   );
-}
-
-function cleanPayload(form: FormState): CreateAdminUserPayload {
-  const basePayload: CreateAdminUserPayload = {
-    ho: form.ho.trim(),
-    ten: form.ten.trim(),
-    email: form.email.trim(),
-    soDienThoai: form.soDienThoai?.trim() || undefined,
-    matKhau: form.matKhau.trim(),
-    loaiTaiKhoan: form.loaiTaiKhoan,
-    dangHoatDong: form.dangHoatDong,
-  };
-
-  if (form.loaiTaiKhoan === "COMPANY_ADMIN") {
-    return {
-      ...basePayload,
-      tenCongTy: form.tenCongTy?.trim(),
-      maSoThue: form.maSoThue?.trim(),
-      website: form.website?.trim() || undefined,
-      moTaCongTy: form.moTaCongTy?.trim() || undefined,
-      tenChiNhanh: form.tenChiNhanh?.trim(),
-      diaChiChiTietChiNhanh: form.diaChiChiTietChiNhanh?.trim(),
-    };
-  }
-
-  if (form.loaiTaiKhoan === "HR") {
-    return {
-      ...basePayload,
-      congTyId: form.congTyId,
-      chiNhanhIds: form.chiNhanhIds,
-    };
-  }
-
-  return basePayload;
 }

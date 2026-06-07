@@ -7,7 +7,7 @@ import type {
   CompanyAdminMeResponse,
   CompanyProofType,
 } from "@/services/company-admin/types";
-import { useCompanyProofRows } from "../components/useCompanyProofRows";
+import { useCompanyProofRows } from "./useCompanyProofRows";
 import type { CompanyInfoForm } from "../components/types";
 
 const emptyForm: CompanyInfoForm = {

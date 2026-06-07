@@ -1,64 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { SimpleChartCard } from "@/components/charts/SimpleChartCard";
 import { TREND_RANGE_OPTIONS, type TrendRangeDays } from "@/components/charts/chartTimeSeries";
-import { adminStatsService } from "@/services/admin/stats.service";
 import type { AdminReport } from "@/services/admin/types";
 import { StatsGrid } from "./StatsGrid";
 import { StatusPill } from "./StatusPill";
 import { useAdminDashboardData } from "../hooks/useAdminDashboardData";
-
-type ReportRange = "7d" | "30d" | "90d";
-
-const REPORT_RANGE_OPTIONS: Array<{ label: string; value: ReportRange }> = [
-  { label: "7 ngày", value: "7d" },
-  { label: "30 ngày", value: "30d" },
-  { label: "90 ngày", value: "90d" },
-];
-
-function buildTrendLabels(count: number): string[] {
-  const labels: string[] = [];
-  const today = new Date();
-  for (let i = count - 1; i >= 0; i--) {
-    const day = new Date(today);
-    day.setDate(today.getDate() - i);
-    labels.push(day.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }));
-  }
-  return labels;
-}
+import { useAdminReportData, REPORT_RANGE_OPTIONS } from "../hooks/useAdminReportData";
 
 export function AdminDashboardClient() {
   const dashboardData = useAdminDashboardData();
   const [trendRange, setTrendRange] = useState<TrendRangeDays>(7);
   const companyTrendChart = dashboardData.buildCompanyTrendChart(trendRange);
 
-  const [reportRange, setReportRange] = useState<ReportRange>("7d");
-  const [report, setReport] = useState<AdminReport | null>(null);
-  const [reportLoading, setReportLoading] = useState(true);
-  const [reportError, setReportError] = useState<string | null>(null);
-
-  const loadReport = useCallback(async (range: ReportRange) => {
-    setReportLoading(true);
-    setReportError(null);
-    try {
-      const data = await adminStatsService.getReport(range);
-      setReport(data);
-    } catch {
-      setReportError("Không tải được dữ liệu báo cáo.");
-    } finally {
-      setReportLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadReport(reportRange);
-  }, [reportRange, loadReport]);
-
-  const trendLabels = buildTrendLabels(report?.duLieuXuHuong.length ?? 7);
+  const { reportRange, setReportRange, report, reportLoading, reportError, trendLabels } =
+    useAdminReportData();
 
   return (
     <>

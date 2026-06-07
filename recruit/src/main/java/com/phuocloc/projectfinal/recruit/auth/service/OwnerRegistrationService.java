@@ -32,6 +32,7 @@ import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
 import com.phuocloc.projectfinal.recruit.infrastructure.cloudinary.CloudinaryStorageService;
 import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 import java.net.URI;
 import java.security.SecureRandom;
 import java.util.List;
@@ -248,14 +249,11 @@ public class OwnerRegistrationService {
     }
 
     private String normalizeEmail(String email) {
-        if (!StringUtils.hasText(email)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email không được để trống");
-        }
-        return email.trim().toLowerCase();
+        return ServiceUtils.normalizeEmail(email);
     }
 
     private String trimToNull(String value) {
-        return StringUtils.hasText(value) ? value.trim() : null;
+        return ServiceUtils.trimToNull(value);
     }
 
     private String resolveProofUrl(CreateOwnerRequest request) {
@@ -379,13 +377,7 @@ public class OwnerRegistrationService {
     }
 
     private Integer toIntId(Long id, String fieldName) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không được để trống");
-        }
-        if (id > Integer.MAX_VALUE || id < Integer.MIN_VALUE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " vượt phạm vi Integer");
-        }
-        return id.intValue();
+        return ServiceUtils.toIntId(id, fieldName);
     }
 
     private CreateOwnerResponse buildCreateOwnerResponse(

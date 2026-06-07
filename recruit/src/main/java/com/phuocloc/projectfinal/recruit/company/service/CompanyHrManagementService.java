@@ -18,6 +18,7 @@ import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.VaiTroCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -306,7 +307,7 @@ public class CompanyHrManagementService {
 
         List<Integer> normalizedIds = branchIds.stream()
                 .filter(Objects::nonNull)
-                .map(this::toIntId)
+                .map(id -> ServiceUtils.toIntId(id, "chiNhanhId"))
                 .distinct()
                 .toList();
         if (normalizedIds.isEmpty()) {
@@ -365,23 +366,10 @@ public class CompanyHrManagementService {
     }
 
     private String normalizeEmail(String email) {
-        if (!StringUtils.hasText(email)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email không được để trống");
-        }
-        return email.trim().toLowerCase(Locale.ROOT);
+        return ServiceUtils.normalizeEmail(email);
     }
 
     private String trimToNull(String value) {
-        return StringUtils.hasText(value) ? value.trim() : null;
-    }
-
-    private Integer toIntId(Long id) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID không được để trống");
-        }
-        if (id > Integer.MAX_VALUE || id < Integer.MIN_VALUE) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID vượt phạm vi Integer");
-        }
-        return id.intValue();
+        return ServiceUtils.trimToNull(value);
     }
 }

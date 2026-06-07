@@ -73,8 +73,7 @@ export function useCandidateProfileData(
           gioiThieuBanThan: cp?.gioiThieuBanThan ?? "",
           mucTieuNgheNghiep: cp?.mucTieuNgheNghiep ?? "",
         });
-      } catch (error) {
-        console.error(error);
+      } catch {
         toast.error(candidateEnabled ? "Không tải được dữ liệu hồ sơ ứng viên." : "Không tải được thông tin cá nhân.");
       }
     };

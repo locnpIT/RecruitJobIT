@@ -8,6 +8,7 @@ import com.phuocloc.projectfinal.recruit.auth.repository.RolesRepository;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -113,17 +114,11 @@ public class AuthService {
     }
 
     private String normalizeEmail(String email) {
-        if (!StringUtils.hasText(email)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email không được để trống");
-        }
-        return email.trim().toLowerCase();
+        return ServiceUtils.normalizeEmail(email);
     }
 
     private String trimToNull(String value) {
-        if (!StringUtils.hasText(value)) {
-            return null;
-        }
-        return value.trim();
+        return ServiceUtils.trimToNull(value);
     }
 
     private Integer toIntId(Long value, String fieldName) {

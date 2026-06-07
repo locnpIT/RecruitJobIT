@@ -17,6 +17,7 @@ import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.VaiTroCongTy;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -253,10 +254,7 @@ public class AdminUserService {
     }
 
     private Integer toIntId(Long id, String fieldName) {
-        if (id == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không được để trống");
-        }
-        return Math.toIntExact(id);
+        return ServiceUtils.toIntId(id, fieldName);
     }
 
     private String buildFullName(String ho, String ten) {
@@ -269,10 +267,7 @@ public class AdminUserService {
     }
 
     private String normalizeEmail(String value) {
-        if (!StringUtils.hasText(value)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email không được để trống");
-        }
-        return value.trim().toLowerCase(Locale.ROOT);
+        return ServiceUtils.normalizeEmail(value);
     }
 
     private NguoiDung buildUser(CreateAdminUserRequest request, String normalizedEmail, VaiTroHeThong role) {
@@ -346,10 +341,7 @@ public class AdminUserService {
     }
 
     private String trimToNull(String value) {
-        if (!StringUtils.hasText(value)) {
-            return null;
-        }
-        return value.trim();
+        return ServiceUtils.trimToNull(value);
     }
 
     private boolean contains(String source, String keyword) {
