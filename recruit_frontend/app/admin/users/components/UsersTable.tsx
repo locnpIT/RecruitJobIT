@@ -2,6 +2,17 @@ import { EmptyState } from "../../components/EmptyState";
 import { StatusPill } from "../../components/StatusPill";
 import type { AdminUser } from "@/services/admin/types";
 import { Button } from "@/components/ui/Button";
+import { UserRoleBadges } from "./UserRoleBadges";
+
+const actionButtonBase = "rounded-md border px-2.5 py-1 font-medium disabled:cursor-not-allowed disabled:opacity-50";
+
+function toggleButtonClass(isActive: boolean) {
+  return `${actionButtonBase} ${
+    isActive
+      ? "border-rose-300 text-rose-700 hover:bg-rose-50"
+      : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+  }`;
+}
 
 type UsersTableProps = {
   users: AdminUser[];
@@ -65,10 +76,7 @@ export function UsersTable({
                 <td className="py-2.5 font-medium text-slate-900">{user.hoTen || "--"}</td>
                 <td className="py-2.5 text-slate-700">{user.email}</td>
                 <td className="py-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{user.vaiTroHeThong || "--"}</span>
-                    {user.vaiTroCongTy ? <span className="rounded bg-sky-50 px-2 py-0.5 text-xs text-sky-700">{user.vaiTroCongTy}</span> : null}
-                  </div>
+                  <UserRoleBadges user={user} />
                 </td>
                 <td className="py-2.5">
                   <StatusPill value={user.trangThai} />
@@ -80,11 +88,7 @@ export function UsersTable({
                       type="button"
                       disabled={isMutating}
                       onClick={() => onToggle(user)}
-                      className={`rounded-md border px-2.5 py-1 font-medium ${
-                        user.dangHoatDong
-                          ? "border-rose-300 text-rose-700 hover:bg-rose-50"
-                          : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                      className={toggleButtonClass(user.dangHoatDong)}
                     >
                       {user.dangHoatDong ? "Khóa" : "Kích hoạt"}
                     </Button>
@@ -92,7 +96,7 @@ export function UsersTable({
                       type="button"
                       disabled={isMutating}
                       onClick={() => onDelete(user)}
-                      className="rounded-md border border-rose-300 px-2.5 py-1 font-medium text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className={`${actionButtonBase} border-rose-300 text-rose-700 hover:bg-rose-50`}
                     >
                       Xoá
                     </Button>

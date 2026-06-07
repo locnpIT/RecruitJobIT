@@ -44,6 +44,24 @@ export interface UpdateUserStatusPayload {
   dangHoatDong: boolean;
 }
 
+export interface CreateAdminUserPayload {
+  email: string;
+  matKhau: string;
+  ho: string;
+  ten: string;
+  soDienThoai?: string;
+  loaiTaiKhoan: "ADMIN" | "CANDIDATE" | "COMPANY_ADMIN" | "HR";
+  dangHoatDong: boolean;
+  tenCongTy?: string;
+  maSoThue?: string;
+  website?: string;
+  moTaCongTy?: string;
+  tenChiNhanh?: string;
+  diaChiChiTietChiNhanh?: string;
+  congTyId?: number;
+  chiNhanhIds?: number[];
+}
+
 export interface ReviewCompanyPayload {
   lyDoTuChoi: string;
 }

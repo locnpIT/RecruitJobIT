@@ -1,5 +1,6 @@
 package com.phuocloc.projectfinal.recruit.admin.service;
 
+import com.phuocloc.projectfinal.recruit.admin.dto.request.CreateAdminUserRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.CreatePackageRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewCompanyRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewJobRequest;
@@ -54,6 +55,11 @@ public class AdminService {
     @Transactional(readOnly = true)
     public List<AdminUserResponse> listUsers(String keyword, String role, String status) {
         return adminUserService.listUsers(keyword, role, status);
+    }
+
+    @Transactional
+    public AdminUserResponse createUser(CreateAdminUserRequest request) {
+        return adminUserService.createUser(request);
     }
 
     @Transactional

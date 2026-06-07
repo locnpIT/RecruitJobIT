@@ -1,17 +1,32 @@
 package com.phuocloc.projectfinal.recruit.admin.service;
 
+import com.phuocloc.projectfinal.recruit.admin.dto.request.CreateAdminUserRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.UpdateUserStatusRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminUserResponse;
+import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
+import com.phuocloc.projectfinal.recruit.auth.repository.RolesRepository;
+import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
+import com.phuocloc.projectfinal.recruit.company.repository.CompanyBranchRepository;
+import com.phuocloc.projectfinal.recruit.company.repository.CompanyRepository;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.ThanhVienCongTyRepository;
+import com.phuocloc.projectfinal.recruit.company.repository.VaiTroCongTyRepository;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
+import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.VaiTroCongTy;
+import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,7 +42,13 @@ import org.springframework.web.server.ResponseStatusException;
 public class AdminUserService {
 
     private final UsersRepository usersRepository;
+    private final RolesRepository rolesRepository;
+    private final CompanyRepository companyRepository;
+    private final CompanyBranchRepository companyBranchRepository;
     private final ThanhVienCongTyRepository thanhVienCongTyRepository;
+    private final VaiTroCongTyRepository vaiTroCongTyRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final HrCredentialMailService hrCredentialMailService;
 
     @Transactional(readOnly = true)
     public List<AdminUserResponse> listUsers(String keyword, String role, String status) {
@@ -43,6 +64,107 @@ public class AdminUserService {
                 .filter(user -> matchesStatus(user, normalizedStatus))
                 .map(this::mapUser)
                 .toList();
+    }
+
+    @Transactional
+    public AdminUserResponse createUser(CreateAdminUserRequest request) {
+        String accountType = normalize(request.getLoaiTaiKhoan()).toUpperCase(Locale.ROOT);
+        return switch (accountType) {
+            case "ADMIN" -> createStandaloneUser(request, RoleName.ADMIN);
+            case "CANDIDATE" -> createStandaloneUser(request, RoleName.CANDIDATE);
+            case "COMPANY_ADMIN" -> createCompanyAdmin(request);
+            case "HR" -> createHrUser(request);
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Loại tài khoản không hợp lệ");
+        };
+    }
+
+    private AdminUserResponse createStandaloneUser(CreateAdminUserRequest request, RoleName roleName) {
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        ensureEmailNotExists(normalizedEmail);
+
+        VaiTroHeThong role = requireSystemRole(roleName);
+        NguoiDung user = buildUser(request, normalizedEmail, role);
+        return mapUser(usersRepository.save(user));
+    }
+
+    private AdminUserResponse createCompanyAdmin(CreateAdminUserRequest request) {
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        ensureEmailNotExists(normalizedEmail);
+
+        String companyName = requireText(request.getTenCongTy(), "Tên công ty không được để trống");
+        String taxCode = requireText(request.getMaSoThue(), "Mã số thuế không được để trống");
+        String branchName = requireText(request.getTenChiNhanh(), "Tên chi nhánh không được để trống");
+        String branchAddress = requireText(request.getDiaChiChiTietChiNhanh(), "Địa chỉ chi nhánh không được để trống");
+
+        if (companyRepository.existsByMaSoThue(taxCode)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã số thuế đã tồn tại");
+        }
+
+        NguoiDung owner = usersRepository.save(buildUser(request, normalizedEmail, requireSystemRole(RoleName.CANDIDATE)));
+
+        CongTy company = new CongTy();
+        company.setTen(companyName);
+        company.setMaSoThue(taxCode);
+        company.setWebsite(trimToNull(request.getWebsite()));
+        company.setMoTa(trimToNull(request.getMoTaCongTy()));
+        company.setTrangThai("APPROVED");
+        company.setChuCongTy(owner);
+        company = companyRepository.save(company);
+
+        ChiNhanhCongTy branch = new ChiNhanhCongTy();
+        branch.setCongTy(company);
+        branch.setTen(branchName);
+        branch.setDiaChiChiTiet(branchAddress);
+        branch.setLaTruSoChinh(true);
+        branch = companyBranchRepository.save(branch);
+
+        ThanhVienCongTy membership = new ThanhVienCongTy();
+        membership.setNguoiDung(owner);
+        membership.setChiNhanh(branch);
+        membership.setVaiTroCongTy(requireCompanyRole(EmployerCompanyRole.OWNER));
+        membership.setTrangThai("ACTIVE");
+        thanhVienCongTyRepository.save(membership);
+
+        hrCredentialMailService.sendInitialPassword(
+                owner.getEmail(),
+                owner.getTen(),
+                owner.getHo(),
+                company.getTen(),
+                request.getMatKhau()
+        );
+
+        return mapUser(owner);
+    }
+
+    private AdminUserResponse createHrUser(CreateAdminUserRequest request) {
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        ensureEmailNotExists(normalizedEmail);
+
+        CongTy company = requireCompany(request.getCongTyId());
+        List<ChiNhanhCongTy> branches = resolveBranchesForCompany(company, request.getChiNhanhIds());
+        NguoiDung hrUser = usersRepository.save(buildUser(request, normalizedEmail, requireSystemRole(RoleName.CANDIDATE)));
+        VaiTroCongTy hrRole = requireCompanyRole(EmployerCompanyRole.HR);
+
+        List<ThanhVienCongTy> memberships = new ArrayList<>();
+        for (ChiNhanhCongTy branch : branches) {
+            ThanhVienCongTy membership = new ThanhVienCongTy();
+            membership.setNguoiDung(hrUser);
+            membership.setChiNhanh(branch);
+            membership.setVaiTroCongTy(hrRole);
+            membership.setTrangThai("ACTIVE");
+            memberships.add(membership);
+        }
+        thanhVienCongTyRepository.saveAll(memberships);
+
+        hrCredentialMailService.sendInitialPassword(
+                hrUser.getEmail(),
+                hrUser.getTen(),
+                hrUser.getHo(),
+                company.getTen(),
+                request.getMatKhau()
+        );
+
+        return mapUser(hrUser);
     }
 
     @Transactional
@@ -144,6 +266,90 @@ public class AdminUserService {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeEmail(String value) {
+        if (!StringUtils.hasText(value)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email không được để trống");
+        }
+        return value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private NguoiDung buildUser(CreateAdminUserRequest request, String normalizedEmail, VaiTroHeThong role) {
+        NguoiDung user = new NguoiDung();
+        user.setEmail(normalizedEmail);
+        user.setMatKhauBam(passwordEncoder.encode(requireText(request.getMatKhau(), "Mật khẩu không được để trống")));
+        user.setHo(requireText(request.getHo(), "Họ không được để trống"));
+        user.setTen(requireText(request.getTen(), "Tên không được để trống"));
+        user.setSoDienThoai(trimToNull(request.getSoDienThoai()));
+        user.setDangHoatDong(Boolean.TRUE.equals(request.getDangHoatDong()));
+        user.setVaiTroHeThong(role);
+        return user;
+    }
+
+    private VaiTroHeThong requireSystemRole(RoleName roleName) {
+        return rolesRepository.findByTenIgnoreCase(roleName.name())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Thiếu role trong DB: " + roleName
+                ));
+    }
+
+    private VaiTroCongTy requireCompanyRole(EmployerCompanyRole roleName) {
+        return vaiTroCongTyRepository.findByTenIgnoreCase(roleName.name())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Thiếu vai trò công ty trong DB: " + roleName
+                ));
+    }
+
+    private CongTy requireCompany(Long companyId) {
+        Integer safeCompanyId = toIntId(companyId, "congTyId");
+        CongTy company = companyRepository.findById(safeCompanyId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy công ty"));
+        if (company.getNgayXoa() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Công ty đã bị xoá");
+        }
+        return company;
+    }
+
+    private List<ChiNhanhCongTy> resolveBranchesForCompany(CongTy company, List<Long> branchIds) {
+        if (branchIds == null || branchIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cần chọn ít nhất một chi nhánh");
+        }
+
+        List<ChiNhanhCongTy> branches = new ArrayList<>();
+        for (Long branchId : branchIds.stream().distinct().toList()) {
+            ChiNhanhCongTy branch = companyBranchRepository.findById(toIntId(branchId, "chiNhanhId"))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chi nhánh"));
+            if (branch.getNgayXoa() != null
+                    || branch.getCongTy() == null
+                    || !Objects.equals(branch.getCongTy().getId(), company.getId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chi nhánh không thuộc công ty đã chọn");
+            }
+            branches.add(branch);
+        }
+        return branches;
+    }
+
+    private void ensureEmailNotExists(String email) {
+        if (usersRepository.existsByEmail(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email đã tồn tại");
+        }
+    }
+
+    private String requireText(String value, String message) {
+        if (!StringUtils.hasText(value)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+        }
+        return value.trim();
+    }
+
+    private String trimToNull(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        return value.trim();
     }
 
     private boolean contains(String source, String keyword) {

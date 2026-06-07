@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { adminUsersService } from "@/services/admin/users.service";
-import type { AdminUser } from "@/services/admin/types";
+import type { AdminUser, CreateAdminUserPayload } from "@/services/admin/types";
 
 type UseAdminUsersActionsOptions = {
   onReload: () => Promise<void>;
@@ -12,9 +12,26 @@ type UseAdminUsersActionsOptions = {
 // Dùng cho màn admin/users: thao tác khóa/kích hoạt và xoá user.
 export function useAdminUsersActions({ onReload }: UseAdminUsersActionsOptions) {
   const [isMutating, setIsMutating] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [confirmUser, setConfirmUser] = useState<AdminUser | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [mutationSuccess, setMutationSuccess] = useState<string | null>(null);
+
+  const handleCreate = async (payload: CreateAdminUserPayload) => {
+    setIsMutating(true);
+    setMutationError(null);
+    setMutationSuccess(null);
+    try {
+      await adminUsersService.createUser(payload);
+      setMutationSuccess("Đã tạo người dùng.");
+      setIsCreateOpen(false);
+      await onReload();
+    } catch (error) {
+      setMutationError(getApiErrorMessage(error, "Không thể tạo người dùng."));
+    } finally {
+      setIsMutating(false);
+    }
+  };
 
   const handleToggle = async () => {
     if (!confirmUser) {
@@ -54,12 +71,15 @@ export function useAdminUsersActions({ onReload }: UseAdminUsersActionsOptions) 
 
   return {
     isMutating,
+    isCreateOpen,
     confirmUser,
     mutationError,
     mutationSuccess,
+    setIsCreateOpen,
     setConfirmUser,
     setMutationError,
     setMutationSuccess,
+    handleCreate,
     handleToggle,
     handleDelete,
   };

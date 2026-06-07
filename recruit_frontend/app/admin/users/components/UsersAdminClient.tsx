@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { PageHeader } from "../../components/PageHeader";
 import { StatCard } from "../../components/StatCard";
+import { CreateUserModal } from "./CreateUserModal";
 import { UsersFilters } from "./UsersFilters";
 import { UsersTable } from "./UsersTable";
 import { useAdminUsersActions } from "../hooks/useAdminUsersActions";
@@ -45,6 +48,12 @@ export function UsersAdminClient() {
         eyebrow="Người dùng"
         title="Quản Lý Người Dùng"
         subtitle="Theo dõi tài khoản, phân quyền và trạng thái hoạt động của toàn bộ người dùng."
+        actions={
+          <Button type="button" variant="primary" onClick={() => actions.setIsCreateOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Thêm người dùng
+          </Button>
+        }
       />
 
       <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -86,6 +95,13 @@ export function UsersAdminClient() {
           onNext={() => data.setPage((prev) => Math.min(data.totalPages, prev + 1))}
         />
       </section>
+
+      <CreateUserModal
+        open={actions.isCreateOpen}
+        isLoading={actions.isMutating}
+        onClose={() => actions.setIsCreateOpen(false)}
+        onSubmit={(payload) => void actions.handleCreate(payload)}
+      />
 
       <ConfirmDialog
         open={Boolean(actions.confirmUser)}

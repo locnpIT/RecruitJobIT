@@ -14,6 +14,7 @@ export const adminService = {
   validateSession: adminStatsService.validateSession,
 
   listUsers: adminUsersService.listUsers,
+  createUser: adminUsersService.createUser,
   updateUserStatus: adminUsersService.updateUserStatus,
   deleteUser: adminUsersService.deleteUser,
 
