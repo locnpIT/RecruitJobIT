@@ -43,4 +43,12 @@ public final class ServiceUtils {
         }
         return id.intValue();
     }
+
+    /**
+     * Chuyển Integer → Long null-safe. Dùng thay cho boilerplate
+     * {@code id == null ? null : id.longValue()} ở khắp nơi.
+     */
+    public static Long toLong(Integer id) {
+        return id == null ? null : id.longValue();
+    }
 }

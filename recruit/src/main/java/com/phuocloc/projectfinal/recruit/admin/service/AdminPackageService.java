@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -122,7 +123,7 @@ public class AdminPackageService {
 
     private AdminPackageResponse mapPackage(DanhMucGoi goi) {
         return AdminPackageResponse.builder()
-                .id(goi.getId() == null ? null : goi.getId().longValue())
+                .id(ServiceUtils.toLong(goi.getId()))
                 .maGoi(goi.getMaGoi())
                 .tenGoi(goi.getTenGoi())
                 .moTa(goi.getMoTa())
@@ -134,7 +135,7 @@ public class AdminPackageService {
 
     private AdminPackageSubscriptionResponse mapPackageSubscription(DangKyGoiCongTy registration) {
         return AdminPackageSubscriptionResponse.builder()
-                .id(registration.getId() == null ? null : registration.getId().longValue())
+                .id(ServiceUtils.toLong(registration.getId()))
                 .congTy(registration.getCongTy() == null ? null : registration.getCongTy().getTen())
                 .goi(registration.getDanhMucGoi() == null ? null : registration.getDanhMucGoi().getTenGoi())
                 .trangThai(registration.getTrangThai())

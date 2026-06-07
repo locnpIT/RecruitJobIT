@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -260,7 +261,7 @@ public class AdminCatalogService {
 
     private AdminCatalogItemResponse mapSystemRole(VaiTroHeThong item) {
         return AdminCatalogItemResponse.builder()
-                .id(item.getId() == null ? null : item.getId().longValue())
+                .id(ServiceUtils.toLong(item.getId()))
                 .ten(item.getTen())
                 .moTa(item.getMoTa())
                 .build();
@@ -268,7 +269,7 @@ public class AdminCatalogService {
 
     private AdminCatalogItemResponse mapCompanyRole(VaiTroCongTy item) {
         return AdminCatalogItemResponse.builder()
-                .id(item.getId() == null ? null : item.getId().longValue())
+                .id(ServiceUtils.toLong(item.getId()))
                 .ten(item.getTen())
                 .moTa(item.getMoTa())
                 .build();
@@ -276,7 +277,7 @@ public class AdminCatalogService {
 
     private AdminCatalogItemResponse mapProofType(LoaiTaiLieu item) {
         return AdminCatalogItemResponse.builder()
-                .id(item.getId() == null ? null : item.getId().longValue())
+                .id(ServiceUtils.toLong(item.getId()))
                 .ten(item.getTen())
                 .moTa(item.getMoTa())
                 .build();
@@ -284,7 +285,7 @@ public class AdminCatalogService {
 
     private AdminCatalogItemResponse mapCertificateType(LoaiChungChi item) {
         return AdminCatalogItemResponse.builder()
-                .id(item.getId() == null ? null : item.getId().longValue())
+                .id(ServiceUtils.toLong(item.getId()))
                 .ten(item.getTen())
                 .moTa(item.getMoTa())
                 .build();

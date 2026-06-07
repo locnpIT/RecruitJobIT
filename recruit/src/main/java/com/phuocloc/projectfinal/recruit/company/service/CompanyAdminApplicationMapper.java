@@ -13,6 +13,7 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -28,37 +29,27 @@ public class CompanyAdminApplicationMapper {
         var user = profile == null ? null : profile.getNguoiDung();
 
         CompanyAdminApplicationResponse.CompanyAdminApplicationResponseBuilder builder = CompanyAdminApplicationResponse.builder()
-                .id(donUngTuyen.getId() == null ? null : donUngTuyen.getId().longValue())
+                .id(ServiceUtils.toLong(donUngTuyen.getId()))
                 .trangThai(donUngTuyen.getTrangThai())
                 .cvUrl(donUngTuyen.getCvUrl())
                 .thoiGianGuiThuMoi(donUngTuyen.getThoiGianGuiThuMoi())
                 .ngayTao(donUngTuyen.getNgayTao())
                 .chiNhanhId(donUngTuyen.getTinTuyenDung() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh().getId() == null
-                        ? null
-                        : donUngTuyen.getTinTuyenDung().getChiNhanh().getId().longValue())
+                        || donUngTuyen.getTinTuyenDung().getChiNhanh() == null ? null : ServiceUtils.toLong(donUngTuyen.getTinTuyenDung().getChiNhanh().getId()))
                 .chiNhanhTen(donUngTuyen.getTinTuyenDung() == null || donUngTuyen.getTinTuyenDung().getChiNhanh() == null
                         ? null
                         : donUngTuyen.getTinTuyenDung().getChiNhanh().getTen())
                 .congTyId(donUngTuyen.getTinTuyenDung() == null
                         || donUngTuyen.getTinTuyenDung().getChiNhanh() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy() == null
-                        || donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy().getId() == null
-                        ? null
-                        : donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy().getId().longValue())
+                        || donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy() == null ? null : ServiceUtils.toLong(donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy().getId()))
                 .congTyTen(donUngTuyen.getTinTuyenDung() == null
                         || donUngTuyen.getTinTuyenDung().getChiNhanh() == null
                         || donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy() == null
                         ? null
                         : donUngTuyen.getTinTuyenDung().getChiNhanh().getCongTy().getTen())
-                .tinTuyenDungId(donUngTuyen.getTinTuyenDung() == null || donUngTuyen.getTinTuyenDung().getId() == null
-                        ? null
-                        : donUngTuyen.getTinTuyenDung().getId().longValue())
+                .tinTuyenDungId(donUngTuyen.getTinTuyenDung() == null ? null : ServiceUtils.toLong(donUngTuyen.getTinTuyenDung().getId()))
                 .tieuDeTinTuyenDung(donUngTuyen.getTinTuyenDung() == null ? null : donUngTuyen.getTinTuyenDung().getTieuDe())
-                .nguoiDungId(user == null || user.getId() == null
-                        ? null
-                        : user.getId().longValue())
+                .nguoiDungId(user == null ? null : ServiceUtils.toLong(user.getId()))
                 .ungVienHoTen(user == null
                         ? null
                         : buildFullName(user.getHo(), user.getTen()))
@@ -67,7 +58,7 @@ public class CompanyAdminApplicationMapper {
                         : user.getEmail())
                 .ungVienSoDienThoai(user == null ? null : user.getSoDienThoai())
                 .ungVienAnhDaiDienUrl(user == null ? null : user.getAnhDaiDienUrl())
-                .hoSoUngVienId(profile == null || profile.getId() == null ? null : profile.getId().longValue())
+                .hoSoUngVienId(profile == null ? null : ServiceUtils.toLong(profile.getId()))
                 .gioiThieuBanThan(profile == null ? null : profile.getGioiThieuBanThan())
                 .mucTieuNgheNghiep(profile == null ? null : profile.getMucTieuNgheNghiep());
 
@@ -96,31 +87,21 @@ public class CompanyAdminApplicationMapper {
                 .thoiGianGuiThuMoi(null)
                 .ngayTao(profile == null ? null : profile.getNgayTao())
                 .chiNhanhId(tinTuyenDung == null
-                        || tinTuyenDung.getChiNhanh() == null
-                        || tinTuyenDung.getChiNhanh().getId() == null
-                        ? null
-                        : tinTuyenDung.getChiNhanh().getId().longValue())
+                        || tinTuyenDung.getChiNhanh() == null ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getId()))
                 .chiNhanhTen(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
                         ? null
                         : tinTuyenDung.getChiNhanh().getTen())
                 .congTyId(tinTuyenDung == null
                         || tinTuyenDung.getChiNhanh() == null
-                        || tinTuyenDung.getChiNhanh().getCongTy() == null
-                        || tinTuyenDung.getChiNhanh().getCongTy().getId() == null
-                        ? null
-                        : tinTuyenDung.getChiNhanh().getCongTy().getId().longValue())
+                        || tinTuyenDung.getChiNhanh().getCongTy() == null ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getCongTy().getId()))
                 .congTyTen(tinTuyenDung == null
                         || tinTuyenDung.getChiNhanh() == null
                         || tinTuyenDung.getChiNhanh().getCongTy() == null
                         ? null
                         : tinTuyenDung.getChiNhanh().getCongTy().getTen())
-                .tinTuyenDungId(tinTuyenDung == null || tinTuyenDung.getId() == null
-                        ? null
-                        : tinTuyenDung.getId().longValue())
+                .tinTuyenDungId(tinTuyenDung == null ? null : ServiceUtils.toLong(tinTuyenDung.getId()))
                 .tieuDeTinTuyenDung(tinTuyenDung == null ? null : tinTuyenDung.getTieuDe())
-                .nguoiDungId(user == null || user.getId() == null
-                        ? null
-                        : user.getId().longValue())
+                .nguoiDungId(user == null ? null : ServiceUtils.toLong(user.getId()))
                 .ungVienHoTen(user == null
                         ? null
                         : buildFullName(user.getHo(), user.getTen()))
@@ -129,7 +110,7 @@ public class CompanyAdminApplicationMapper {
                         : user.getEmail())
                 .ungVienSoDienThoai(user == null ? null : user.getSoDienThoai())
                 .ungVienAnhDaiDienUrl(user == null ? null : user.getAnhDaiDienUrl())
-                .hoSoUngVienId(profile == null || profile.getId() == null ? null : profile.getId().longValue())
+                .hoSoUngVienId(profile == null ? null : ServiceUtils.toLong(profile.getId()))
                 .gioiThieuBanThan(profile == null ? null : profile.getGioiThieuBanThan())
                 .mucTieuNgheNghiep(profile == null ? null : profile.getMucTieuNgheNghiep());
 
@@ -149,7 +130,7 @@ public class CompanyAdminApplicationMapper {
                 .map(link -> link.getHocVan())
                 .filter(Objects::nonNull)
                 .map(item -> CompanyAdminApplicationResponse.HocVanItem.builder()
-                        .id(item.getId() == null ? null : item.getId().longValue())
+                        .id(ServiceUtils.toLong(item.getId()))
                         .tenTruong(item.getTenTruong())
                         .chuyenNganh(item.getChuyenNganh())
                         .bacHoc(item.getBacHoc())
@@ -166,7 +147,7 @@ public class CompanyAdminApplicationMapper {
                 .map(link -> link.getKinhNghiem())
                 .filter(Objects::nonNull)
                 .map(item -> CompanyAdminApplicationResponse.KinhNghiemItem.builder()
-                        .id(item.getId() == null ? null : item.getId().longValue())
+                        .id(ServiceUtils.toLong(item.getId()))
                         .tenCongTy(item.getTenCongTy())
                         .chucDanh(item.getChucDanh())
                         .moTaCongViec(item.getMoTaCongViec())
@@ -181,10 +162,8 @@ public class CompanyAdminApplicationMapper {
                 .map(link -> link.getChungChi())
                 .filter(Objects::nonNull)
                 .map(item -> CompanyAdminApplicationResponse.ChungChiItem.builder()
-                        .id(item.getId() == null ? null : item.getId().longValue())
-                        .loaiChungChiId(item.getLoaiChungChi() == null || item.getLoaiChungChi().getId() == null
-                                ? null
-                                : item.getLoaiChungChi().getId().longValue())
+                        .id(ServiceUtils.toLong(item.getId()))
+                        .loaiChungChiId(item.getLoaiChungChi() == null ? null : ServiceUtils.toLong(item.getLoaiChungChi().getId()))
                         .loaiChungChiTen(item.getLoaiChungChi() == null ? null : item.getLoaiChungChi().getTen())
                         .tenChungChi(item.getTenChungChi())
                         .ngayBatDau(item.getNgayBatDau())
@@ -199,7 +178,7 @@ public class CompanyAdminApplicationMapper {
         return kyNangUngVienRepository.findByHoSoUngVien_Id(profileId).stream()
                 .filter(item -> item.getKyNang() != null)
                 .map(item -> CompanyAdminApplicationResponse.KyNangItem.builder()
-                        .id(item.getKyNang().getId() == null ? null : item.getKyNang().getId().longValue())
+                        .id(ServiceUtils.toLong(item.getKyNang().getId()))
                         .ten(item.getKyNang().getTen())
                         .build())
                 .toList();

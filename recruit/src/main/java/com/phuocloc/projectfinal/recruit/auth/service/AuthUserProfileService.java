@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @Transactional
@@ -81,7 +82,7 @@ public class AuthUserProfileService {
 
     private UserProfileResponse mapUserProfile(NguoiDung user) {
         return UserProfileResponse.builder()
-                .id(user.getId() == null ? null : user.getId().longValue())
+                .id(ServiceUtils.toLong(user.getId()))
                 .email(user.getEmail())
                 .ten(user.getTen())
                 .ho(user.getHo())
@@ -89,15 +90,10 @@ public class AuthUserProfileService {
                 .ngaySinh(user.getNgaySinh())
                 .gioiTinh(user.getGioiTinh())
                 .diaChiChiTiet(user.getDiaChiChiTiet())
-                .xaPhuongId(user.getXaPhuong() == null || user.getXaPhuong().getId() == null
-                        ? null
-                        : user.getXaPhuong().getId().longValue())
+                .xaPhuongId(user.getXaPhuong() == null ? null : ServiceUtils.toLong(user.getXaPhuong().getId()))
                 .xaPhuongTen(user.getXaPhuong() == null ? null : user.getXaPhuong().getTen())
                 .tinhThanhId(user.getXaPhuong() == null
-                        || user.getXaPhuong().getTinhThanh() == null
-                        || user.getXaPhuong().getTinhThanh().getId() == null
-                        ? null
-                        : user.getXaPhuong().getTinhThanh().getId().longValue())
+                        || user.getXaPhuong().getTinhThanh() == null ? null : ServiceUtils.toLong(user.getXaPhuong().getTinhThanh().getId()))
                 .tinhThanhTen(user.getXaPhuong() == null || user.getXaPhuong().getTinhThanh() == null
                         ? null
                         : user.getXaPhuong().getTinhThanh().getTen())

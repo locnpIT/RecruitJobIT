@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -69,11 +70,9 @@ public class CompanyAdminProfileService {
         Integer userId = principal.getUserId().intValue();
         return accessService.getAccessibleBranches(userId).stream()
                 .map(branch -> CompanyAdminMeResponse.ThongTinChiNhanh.builder()
-                        .chiNhanhId(branch.getId() == null ? null : branch.getId().longValue())
+                        .chiNhanhId(ServiceUtils.toLong(branch.getId()))
                         .chiNhanhTen(branch.getTen())
-                        .congTyId(branch.getCongTy() == null || branch.getCongTy().getId() == null
-                                ? null
-                                : branch.getCongTy().getId().longValue())
+                        .congTyId(branch.getCongTy() == null ? null : ServiceUtils.toLong(branch.getCongTy().getId()))
                         .congTyTen(branch.getCongTy() == null ? null : branch.getCongTy().getTen())
                         .vaiTroCongTy(resolveRoleForBranch(userId, branch))
                         .laTruSoChinh(branch.getLaTruSoChinh())
@@ -151,11 +150,9 @@ public class CompanyAdminProfileService {
         Integer companyId = firstMembership.getChiNhanh().getCongTy().getId();
         return companyBranchRepository.findByCongTy_Id(companyId).stream()
                 .map(branch -> CompanyAdminMeResponse.ThongTinChiNhanh.builder()
-                        .chiNhanhId(branch.getId() == null ? null : branch.getId().longValue())
+                        .chiNhanhId(ServiceUtils.toLong(branch.getId()))
                         .chiNhanhTen(branch.getTen())
-                        .congTyId(branch.getCongTy() == null || branch.getCongTy().getId() == null
-                                ? null
-                                : branch.getCongTy().getId().longValue())
+                        .congTyId(branch.getCongTy() == null ? null : ServiceUtils.toLong(branch.getCongTy().getId()))
                         .congTyTen(branch.getCongTy() == null ? null : branch.getCongTy().getTen())
                         .vaiTroCongTy(EmployerCompanyRole.OWNER.name())
                         .laTruSoChinh(branch.getLaTruSoChinh())
@@ -167,11 +164,9 @@ public class CompanyAdminProfileService {
     private CompanyAdminMeResponse.ThongTinChiNhanh mapBranchMembership(ThanhVienCongTy membership) {
         ChiNhanhCongTy branch = membership.getChiNhanh();
         return CompanyAdminMeResponse.ThongTinChiNhanh.builder()
-                .chiNhanhId(branch.getId() == null ? null : branch.getId().longValue())
+                .chiNhanhId(ServiceUtils.toLong(branch.getId()))
                 .chiNhanhTen(branch.getTen())
-                .congTyId(branch.getCongTy() == null || branch.getCongTy().getId() == null
-                        ? null
-                        : branch.getCongTy().getId().longValue())
+                .congTyId(branch.getCongTy() == null ? null : ServiceUtils.toLong(branch.getCongTy().getId()))
                 .congTyTen(branch.getCongTy() == null ? null : branch.getCongTy().getTen())
                 .vaiTroCongTy(membership.getVaiTroCongTy() == null ? null : membership.getVaiTroCongTy().getTen())
                 .laTruSoChinh(branch.getLaTruSoChinh())
@@ -214,7 +209,7 @@ public class CompanyAdminProfileService {
     private CompanyAdminMeResponse.ThongTinCongTy mapCompanyResponse(CongTy congTy) {
         DangKyGoiCongTy activePostingPackage = packageService.resolveActivePostingPackage(congTy).orElse(null);
         return CompanyAdminMeResponse.ThongTinCongTy.builder()
-                .id(congTy.getId() == null ? null : congTy.getId().longValue())
+                .id(ServiceUtils.toLong(congTy.getId()))
                 .ten(congTy.getTen())
                 .maSoThue(congTy.getMaSoThue())
                 .website(congTy.getWebsite())

@@ -193,7 +193,7 @@ public class AdminUserService {
         ThanhVienCongTy firstMembership = memberships.stream().findFirst().orElse(null);
 
         return AdminUserResponse.builder()
-                .id(user.getId() == null ? null : user.getId().longValue())
+                .id(ServiceUtils.toLong(user.getId()))
                 .hoTen(buildFullName(user.getHo(), user.getTen()))
                 .email(user.getEmail())
                 .soDienThoai(user.getSoDienThoai())

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -74,7 +75,7 @@ public class PublicCompanyService {
                 .toList();
 
         return PublicCompanyDetailResponse.builder()
-                .id(company.getId() == null ? null : company.getId().longValue())
+                .id(ServiceUtils.toLong(company.getId()))
                 .ten(company.getTen())
                 .logoUrl(company.getLogoUrl())
                 .website(company.getWebsite())
@@ -113,7 +114,7 @@ public class PublicCompanyService {
 
     private PublicCompanyDetailResponse.BranchItem mapBranch(ChiNhanhCongTy branch) {
         return PublicCompanyDetailResponse.BranchItem.builder()
-                .id(branch.getId() == null ? null : branch.getId().longValue())
+                .id(ServiceUtils.toLong(branch.getId()))
                 .ten(branch.getTen())
                 .diaChi(branch.getDiaChiChiTiet())
                 .laTruSoChinh(Boolean.TRUE.equals(branch.getLaTruSoChinh()))

@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -35,7 +36,7 @@ public class CandidateProfileResponseAssembler {
 
     public CandidateProfileListItemResponse mapListItem(HoSoUngVien profile) {
         return CandidateProfileListItemResponse.builder()
-                .id(profile.getId() == null ? null : profile.getId().longValue())
+                .id(ServiceUtils.toLong(profile.getId()))
                 .tenHoSo(profile.getTenHoSo())
                 .tieuDe(buildProfileTitle(profile))
                 .mucTieuNgheNghiep(profile.getMucTieuNgheNghiep())
@@ -87,7 +88,7 @@ public class CandidateProfileResponseAssembler {
                 .toList();
 
         return CandidateProfileResponse.builder()
-                .hoSoUngVienId(profile.getId() == null ? null : profile.getId().longValue())
+                .hoSoUngVienId(ServiceUtils.toLong(profile.getId()))
                 .tenHoSo(profile.getTenHoSo())
                 .gioiThieuBanThan(profile.getGioiThieuBanThan())
                 .mucTieuNgheNghiep(profile.getMucTieuNgheNghiep())

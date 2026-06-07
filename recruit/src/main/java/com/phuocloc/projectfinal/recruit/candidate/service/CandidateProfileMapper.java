@@ -9,6 +9,7 @@ import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HocVanUngVien;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.KinhNghiemLamViecUngVien;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.LoaiChungChi;
 import org.springframework.stereotype.Component;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 /**
  * Mapper chuyên trách chuyển entity hồ sơ ứng viên sang response DTO cho frontend.
@@ -23,7 +24,7 @@ public class CandidateProfileMapper {
      */
     public CandidateProfileMetadataResponse.OptionItem mapSkillOption(KyNang skill) {
         return CandidateProfileMetadataResponse.OptionItem.builder()
-                .id(skill.getId() == null ? null : skill.getId().longValue())
+                .id(ServiceUtils.toLong(skill.getId()))
                 .ten(skill.getTen())
                 .build();
     }
@@ -33,7 +34,7 @@ public class CandidateProfileMapper {
      */
     public CandidateProfileMetadataResponse.OptionItem mapNganhNgheOption(NganhNghe nganhNghe) {
         return CandidateProfileMetadataResponse.OptionItem.builder()
-                .id(nganhNghe.getId() == null ? null : nganhNghe.getId().longValue())
+                .id(ServiceUtils.toLong(nganhNghe.getId()))
                 .ten(nganhNghe.getTen())
                 .build();
     }
@@ -43,7 +44,7 @@ public class CandidateProfileMapper {
      */
     public CandidateProfileMetadataResponse.OptionItem mapLoaiChungChiOption(LoaiChungChi item) {
         return CandidateProfileMetadataResponse.OptionItem.builder()
-                .id(item.getId() == null ? null : item.getId().longValue())
+                .id(ServiceUtils.toLong(item.getId()))
                 .ten(item.getTen())
                 .build();
     }
@@ -57,7 +58,7 @@ public class CandidateProfileMapper {
 
     public CandidateProfileResponse.HocVanItem mapHocVan(HocVanUngVien entity, boolean duocChon) {
         return CandidateProfileResponse.HocVanItem.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .duocChon(duocChon)
                 .tenTruong(entity.getTenTruong())
                 .chuyenNganh(entity.getChuyenNganh())
@@ -78,7 +79,7 @@ public class CandidateProfileMapper {
 
     public CandidateProfileResponse.KinhNghiemItem mapKinhNghiem(KinhNghiemLamViecUngVien entity, boolean duocChon) {
         return CandidateProfileResponse.KinhNghiemItem.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .duocChon(duocChon)
                 .tenCongTy(entity.getTenCongTy())
                 .chucDanh(entity.getChucDanh())
@@ -98,10 +99,9 @@ public class CandidateProfileMapper {
 
     public CandidateProfileResponse.ChungChiItem mapChungChi(ChungChiUngVien entity, boolean duocChon) {
         return CandidateProfileResponse.ChungChiItem.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .duocChon(duocChon)
-                .loaiChungChiId(entity.getLoaiChungChi() == null || entity.getLoaiChungChi().getId() == null
-                        ? null : entity.getLoaiChungChi().getId().longValue())
+                .loaiChungChiId(entity.getLoaiChungChi() == null ? null : ServiceUtils.toLong(entity.getLoaiChungChi().getId()))
                 .loaiChungChiTen(entity.getLoaiChungChi() == null ? null : entity.getLoaiChungChi().getTen())
                 .tenChungChi(entity.getTenChungChi())
                 .ngayBatDau(entity.getNgayBatDau())
@@ -120,7 +120,7 @@ public class CandidateProfileMapper {
 
     public CandidateProfileResponse.KyNangItem mapKyNang(KyNang skill, boolean duocChon) {
         return CandidateProfileResponse.KyNangItem.builder()
-                .id(skill.getId() == null ? null : skill.getId().longValue())
+                .id(ServiceUtils.toLong(skill.getId()))
                 .duocChon(duocChon)
                 .ten(skill.getTen())
                 .build();
@@ -131,7 +131,7 @@ public class CandidateProfileMapper {
      */
     public CandidateProfileResponse.NganhNgheItem mapNganhNghe(NganhNghe nganhNghe) {
         return CandidateProfileResponse.NganhNgheItem.builder()
-                .id(nganhNghe.getId() == null ? null : nganhNghe.getId().longValue())
+                .id(ServiceUtils.toLong(nganhNghe.getId()))
                 .ten(nganhNghe.getTen())
                 .build();
     }

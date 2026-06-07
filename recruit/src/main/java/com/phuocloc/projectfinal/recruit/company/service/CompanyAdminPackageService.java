@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -117,7 +118,7 @@ public class CompanyAdminPackageService {
 
     private CompanyPackagePlanResponse mapPackagePlan(DanhMucGoi goi) {
         return CompanyPackagePlanResponse.builder()
-                .id(goi.getId() == null ? null : goi.getId().longValue())
+                .id(ServiceUtils.toLong(goi.getId()))
                 .maGoi(goi.getMaGoi())
                 .tenGoi(goi.getTenGoi())
                 .moTa(goi.getMoTa())
@@ -128,13 +129,9 @@ public class CompanyAdminPackageService {
 
     private CompanyPackageRegistrationResponse mapPackageRegistration(DangKyGoiCongTy registration) {
         return CompanyPackageRegistrationResponse.builder()
-                .id(registration.getId() == null ? null : registration.getId().longValue())
-                .congTyId(registration.getCongTy() == null || registration.getCongTy().getId() == null
-                        ? null
-                        : registration.getCongTy().getId().longValue())
-                .danhMucGoiId(registration.getDanhMucGoi() == null || registration.getDanhMucGoi().getId() == null
-                        ? null
-                        : registration.getDanhMucGoi().getId().longValue())
+                .id(ServiceUtils.toLong(registration.getId()))
+                .congTyId(registration.getCongTy() == null ? null : ServiceUtils.toLong(registration.getCongTy().getId()))
+                .danhMucGoiId(registration.getDanhMucGoi() == null ? null : ServiceUtils.toLong(registration.getDanhMucGoi().getId()))
                 .maGoi(registration.getDanhMucGoi() == null ? null : registration.getDanhMucGoi().getMaGoi())
                 .tenGoi(registration.getDanhMucGoi() == null ? null : registration.getDanhMucGoi().getTenGoi())
                 .trangThai(registration.getTrangThai())

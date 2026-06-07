@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @RestController
 @RequestMapping("/api/v1/locations")
@@ -39,7 +40,7 @@ public class LocationController {
     public ResponseEntity<SuccessResponse<List<TinhThanhResponse>>> tinhThanh() {
         List<TinhThanhResponse> data = tinhThanhRepository.findAll(Sort.by(Sort.Direction.ASC, "ten")).stream()
                 .map(item -> TinhThanhResponse.builder()
-                        .id(item.getId() == null ? null : item.getId().longValue())
+                        .id(ServiceUtils.toLong(item.getId()))
                         .ten(item.getTen())
                         .moTa(item.getMoTa())
                         .build())
@@ -55,12 +56,10 @@ public class LocationController {
     ) {
         List<XaPhuongResponse> data = xaPhuongRepository.findByTinhThanh_IdOrderByTenAsc(tinhThanhId).stream()
                 .map(item -> XaPhuongResponse.builder()
-                        .id(item.getId() == null ? null : item.getId().longValue())
+                        .id(ServiceUtils.toLong(item.getId()))
                         .ten(item.getTen())
                         .moTa(item.getMoTa())
-                        .tinhThanhId(item.getTinhThanh() == null || item.getTinhThanh().getId() == null
-                                ? null
-                                : item.getTinhThanh().getId().longValue())
+                        .tinhThanhId(item.getTinhThanh() == null ? null : ServiceUtils.toLong(item.getTinhThanh().getId()))
                         .tinhThanhTen(item.getTinhThanh() == null ? null : item.getTinhThanh().getTen())
                         .build())
                 .toList();

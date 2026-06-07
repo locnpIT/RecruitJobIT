@@ -202,7 +202,7 @@ public class CompanyHrManagementService {
                 .toList();
 
         return CompanyAdminHrResponse.builder()
-                .nguoiDungId(user.getId() == null ? null : user.getId().longValue())
+                .nguoiDungId(ServiceUtils.toLong(user.getId()))
                 .email(user.getEmail())
                 .ten(user.getTen())
                 .ho(user.getHo())
@@ -223,9 +223,7 @@ public class CompanyHrManagementService {
         }
         ThanhVienCongTy firstMembership = memberships.getFirst();
         return CompanyAdminHrResponse.builder()
-                .nguoiDungId(firstMembership.getNguoiDung() == null || firstMembership.getNguoiDung().getId() == null
-                        ? null
-                        : firstMembership.getNguoiDung().getId().longValue())
+                .nguoiDungId(firstMembership.getNguoiDung() == null ? null : ServiceUtils.toLong(firstMembership.getNguoiDung().getId()))
                 .email(firstMembership.getNguoiDung() == null ? null : firstMembership.getNguoiDung().getEmail())
                 .ten(firstMembership.getNguoiDung() == null ? null : firstMembership.getNguoiDung().getTen())
                 .ho(firstMembership.getNguoiDung() == null ? null : firstMembership.getNguoiDung().getHo())
@@ -242,7 +240,7 @@ public class CompanyHrManagementService {
     private CompanyAdminHrResponse.ThongTinChiNhanh mapHrBranch(ThanhVienCongTy membership) {
         ChiNhanhCongTy branch = membership.getChiNhanh();
         return CompanyAdminHrResponse.ThongTinChiNhanh.builder()
-                .chiNhanhId(branch == null || branch.getId() == null ? null : branch.getId().longValue())
+                .chiNhanhId(branch == null ? null : ServiceUtils.toLong(branch.getId()))
                 .chiNhanhTen(branch == null ? null : branch.getTen())
                 .laTruSoChinh(branch != null && Boolean.TRUE.equals(branch.getLaTruSoChinh()))
                 .build();

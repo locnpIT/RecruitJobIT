@@ -19,7 +19,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
@@ -40,7 +39,7 @@ public class AuthService {
     @Transactional
     public AuthResponse registerCandidate(RegisterRequest request) {
         // Chuẩn hóa email trước khi lưu để tránh trùng khác biệt chữ hoa/thường.
-        String normalizedEmail = normalizeEmail(request.getEmail());
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
         VaiTroHeThong candidateRole = requireRole(RoleName.CANDIDATE);
@@ -50,14 +49,14 @@ public class AuthService {
         user.setMatKhauBam(passwordEncoder.encode(request.getMatKhau()));
         user.setTen(request.getTen().trim());
         user.setHo(request.getHo().trim());
-        user.setSoDienThoai(trimToNull(request.getSoDienThoai()));
+        user.setSoDienThoai(ServiceUtils.trimToNull(request.getSoDienThoai()));
         // Candidate phải bấm link xác nhận email trước khi đăng nhập.
         user.setDangHoatDong(false);
         user.setVaiTroHeThong(candidateRole);
         user = usersRepository.save(user);
 
         mailService.sendCandidateEmailVerification(
-                user.getId() == null ? null : user.getId().longValue(),
+                ServiceUtils.toLong(user.getId()),
                 user.getEmail(),
                 user.getTen(),
                 user.getHo()
@@ -69,7 +68,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        String normalizedEmail = normalizeEmail(request.getEmail());
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
 
         NguoiDung user = usersRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai email hoặc mật khẩu"));
@@ -113,14 +112,6 @@ public class AuthService {
         }
     }
 
-    private String normalizeEmail(String email) {
-        return ServiceUtils.normalizeEmail(email);
-    }
-
-    private String trimToNull(String value) {
-        return ServiceUtils.trimToNull(value);
-    }
-
     private Integer toIntId(Long value, String fieldName) {
         if (value == null || value <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không hợp lệ");
@@ -134,7 +125,7 @@ public class AuthService {
 
     private AuthResponse buildAuthResponse(NguoiDung nguoiDung, String accessToken) {
         AuthResponse.ThongTinNguoiDung thongTinNguoiDung = AuthResponse.ThongTinNguoiDung.builder()
-                .id(nguoiDung.getId() == null ? null : nguoiDung.getId().longValue())
+                .id(ServiceUtils.toLong(nguoiDung.getId()))
                 .email(nguoiDung.getEmail())
                 .ten(nguoiDung.getTen())
                 .ho(nguoiDung.getHo())

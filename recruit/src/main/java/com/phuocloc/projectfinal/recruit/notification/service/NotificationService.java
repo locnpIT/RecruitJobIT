@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -117,7 +118,7 @@ public class NotificationService {
 
     private NotificationItemResponse mapItem(ThongBao entity) {
         return NotificationItemResponse.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .tieuDe(entity.getTieuDe())
                 .noiDung(entity.getNoiDung())
                 .duongDan(trimToNull(entity.getDuongDan()))

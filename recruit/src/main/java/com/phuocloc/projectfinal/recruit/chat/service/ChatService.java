@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -259,12 +260,8 @@ public class ChatService {
 
     private Set<Long> resolveParticipantIds(CuocTroChuyen conversation) {
         // Trả tập userId duy nhất để publish realtime cho cả hai phía.
-        Long candidateId = conversation.getUngVien() == null || conversation.getUngVien().getId() == null
-                ? null
-                : conversation.getUngVien().getId().longValue();
-        Long recruiterId = conversation.getNhaTuyenDung() == null || conversation.getNhaTuyenDung().getId() == null
-                ? null
-                : conversation.getNhaTuyenDung().getId().longValue();
+        Long candidateId = conversation.getUngVien() == null ? null : ServiceUtils.toLong(conversation.getUngVien().getId());
+        Long recruiterId = conversation.getNhaTuyenDung() == null ? null : ServiceUtils.toLong(conversation.getNhaTuyenDung().getId());
         java.util.Set<Long> participantIds = new java.util.HashSet<>();
         if (candidateId != null) {
             participantIds.add(candidateId);

@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -113,7 +114,7 @@ public class CompanyAdminApplicationService {
         var company = branch != null ? branch.getCongTy() : null;
 
         hrCredentialMailService.sendInterviewInvitation(
-                application.getId() == null ? applicationId : application.getId().longValue(),
+                application.getId() == null ? applicationId : ServiceUtils.toLong(application.getId()),
                 candidate.getEmail(),
                 candidate.getTen(),
                 candidate.getHo(),

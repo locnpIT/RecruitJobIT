@@ -15,6 +15,7 @@ import com.phuocloc.projectfinal.recruit.auth.dto.shared.CompanyMemberInfo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 /**
  * Thành phần bảo mật phụ trách AppUserPrinciple.
@@ -36,7 +37,7 @@ public class AppUserPrinciple implements UserDetails {
     public static AppUserPrinciple fromUser(NguoiDung user, List<CompanyMemberInfo> companyMembers) {
         RoleName roleName = parseRoleName(user.getVaiTroHeThong() == null ? null : user.getVaiTroHeThong().getTen());
         return AppUserPrinciple.builder()
-                .userId(user.getId().longValue())
+                .userId(ServiceUtils.toLong(user.getId()))
                 .email(user.getEmail())
                 .passwordHash(user.getMatKhauBam())
                 .active(user.getDangHoatDong())

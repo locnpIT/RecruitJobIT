@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -201,7 +202,7 @@ public class AdminJobService {
                 : (StringUtils.hasText(tinhThanh) ? tinhThanh : xaPhuong);
 
         return AdminJobResponse.builder()
-                .id(job.getId() == null ? null : job.getId().longValue())
+                .id(ServiceUtils.toLong(job.getId()))
                 .tieuDe(job.getTieuDe())
                 .congTyTen(companyName)
                 .congTyLogoUrl(companyLogoUrl)

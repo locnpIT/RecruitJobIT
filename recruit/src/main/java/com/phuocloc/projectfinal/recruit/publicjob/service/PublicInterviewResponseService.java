@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +51,7 @@ public class PublicInterviewResponseService {
         application.setTrangThai(nextStatus);
         donUngTuyenRepository.save(application);
 
-        return new InterviewResponseResult(application.getId() == null ? applicationId : application.getId().longValue(), nextStatus);
+        return new InterviewResponseResult(application.getId() == null ? applicationId : ServiceUtils.toLong(application.getId()), nextStatus);
     }
 
     private Long extractApplicationId(Claims claims) {

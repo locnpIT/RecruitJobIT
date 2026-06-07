@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -121,12 +122,10 @@ public class CandidateJobApplicationService {
     private CandidateJobApplicationResponse mapApplication(DonUngTuyen application) {
         TinTuyenDung job = application.getTinTuyenDung();
         return CandidateJobApplicationResponse.builder()
-                .id(application.getId() == null ? null : application.getId().longValue())
-                .tinTuyenDungId(job == null || job.getId() == null ? null : job.getId().longValue())
+                .id(ServiceUtils.toLong(application.getId()))
+                .tinTuyenDungId(job == null ? null : ServiceUtils.toLong(job.getId()))
                 .tieuDeTinTuyenDung(job == null ? null : job.getTieuDe())
-                .hoSoUngVienId(application.getHoSoUngVien() == null || application.getHoSoUngVien().getId() == null
-                        ? null
-                        : application.getHoSoUngVien().getId().longValue())
+                .hoSoUngVienId(application.getHoSoUngVien() == null ? null : ServiceUtils.toLong(application.getHoSoUngVien().getId()))
                 .trangThai(application.getTrangThai())
                 .cvUrl(application.getCvUrl())
                 .batBuocCV(job == null ? null : Boolean.TRUE.equals(job.getBatBuocCV()))

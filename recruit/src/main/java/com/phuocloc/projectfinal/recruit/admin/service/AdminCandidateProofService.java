@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -95,7 +96,7 @@ public class AdminCandidateProofService {
     private AdminCandidateProofResponse mapEducation(HocVanUngVien entity) {
         NguoiDung user = entity.getNguoiDung();
         return AdminCandidateProofResponse.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .hoSoUngVienId(null)
                 .loai(TYPE_EDUCATION)
                 .tieuDe(entity.getTenTruong())
@@ -110,7 +111,7 @@ public class AdminCandidateProofService {
     private AdminCandidateProofResponse mapCertificate(ChungChiUngVien entity) {
         NguoiDung user = entity.getNguoiDung();
         return AdminCandidateProofResponse.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .hoSoUngVienId(null)
                 .loai(TYPE_CERTIFICATE)
                 .tieuDe(entity.getTenChungChi())

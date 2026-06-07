@@ -18,6 +18,7 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 /**
  * Maps {@link TinTuyenDung} entities to public-facing DTOs and provides
@@ -42,9 +43,9 @@ public class PublicJobMapper {
                 .id(toLong(job.getId()))
                 .maTin(buildJobCode(job))
                 .tieuDe(job.getTieuDe())
-                .congTyId(resolveCompany(job) == null || resolveCompany(job).getId() == null ? null : resolveCompany(job).getId().longValue())
+                .congTyId(resolveCompany(job) == null ? null : ServiceUtils.toLong(resolveCompany(job).getId()))
                 .congTyTen(resolveCompanyName(job))
-                .chiNhanhId(job.getChiNhanh() == null || job.getChiNhanh().getId() == null ? null : job.getChiNhanh().getId().longValue())
+                .chiNhanhId(job.getChiNhanh() == null ? null : ServiceUtils.toLong(job.getChiNhanh().getId()))
                 .chiNhanhTen(job.getChiNhanh() == null ? null : job.getChiNhanh().getTen())
                 .logoUrl(companyLogoUrl)
                 .diaDiem(resolveLocation(job))
@@ -64,11 +65,11 @@ public class PublicJobMapper {
                 .id(toLong(job.getId()))
                 .maTin(buildJobCode(job))
                 .tieuDe(job.getTieuDe())
-                .congTyId(company == null || company.getId() == null ? null : company.getId().longValue())
+                .congTyId(company == null ? null : ServiceUtils.toLong(company.getId()))
                 .congTy(resolveCompanyName(job))
                 .logoUrl(companyLogoUrl)
                 .congTyDaXacMinh(isCompanyApproved(company))
-                .nhaTuyenDungId(job.getNguoiDang() == null || job.getNguoiDang().getId() == null ? null : job.getNguoiDang().getId().longValue())
+                .nhaTuyenDungId(job.getNguoiDang() == null ? null : ServiceUtils.toLong(job.getNguoiDang().getId()))
                 .nhaTuyenDungTen(resolveRecruiterName(job))
                 .nganhNghe(resolveIndustry(job))
                 .websiteCongTy(company == null ? null : company.getWebsite())
@@ -97,21 +98,21 @@ public class PublicJobMapper {
 
     public PublicJobSearchMetadataResponse.OptionItem mapOption(NganhNghe item) {
         return PublicJobSearchMetadataResponse.OptionItem.builder()
-                .id(item == null || item.getId() == null ? null : item.getId().longValue())
+                .id(item == null ? null : ServiceUtils.toLong(item.getId()))
                 .ten(item == null ? null : item.getTen())
                 .build();
     }
 
     public PublicJobSearchMetadataResponse.OptionItem mapOption(LoaiHinhLamViec item) {
         return PublicJobSearchMetadataResponse.OptionItem.builder()
-                .id(item == null || item.getId() == null ? null : item.getId().longValue())
+                .id(item == null ? null : ServiceUtils.toLong(item.getId()))
                 .ten(item == null ? null : item.getTen())
                 .build();
     }
 
     public PublicJobSearchMetadataResponse.OptionItem mapOption(CapDoKinhNghiem item) {
         return PublicJobSearchMetadataResponse.OptionItem.builder()
-                .id(item == null || item.getId() == null ? null : item.getId().longValue())
+                .id(item == null ? null : ServiceUtils.toLong(item.getId()))
                 .ten(item == null ? null : item.getTen())
                 .build();
     }

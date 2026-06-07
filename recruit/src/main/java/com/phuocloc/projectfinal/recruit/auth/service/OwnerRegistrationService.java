@@ -73,7 +73,7 @@ public class OwnerRegistrationService {
 
     @Transactional
     public CreateOwnerResponse registerOwner(CreateOwnerRequest request) {
-        String normalizedEmail = normalizeEmail(request.getEmail());
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
         VaiTroHeThong candidateRole = requireRole(RoleName.CANDIDATE);
@@ -84,7 +84,7 @@ public class OwnerRegistrationService {
         owner.setMatKhauBam(passwordEncoder.encode(request.getMatKhau()));
         owner.setTen(request.getTen().trim());
         owner.setHo(request.getHo().trim());
-        owner.setSoDienThoai(trimToNull(request.getSoDienThoai()));
+        owner.setSoDienThoai(ServiceUtils.trimToNull(request.getSoDienThoai()));
         owner.setDangHoatDong(true);
         owner.setVaiTroHeThong(candidateRole);
         owner = usersRepository.save(owner);
@@ -92,8 +92,8 @@ public class OwnerRegistrationService {
         CongTy congTy = new CongTy();
         congTy.setTen(request.getTenCongTy().trim());
         congTy.setMaSoThue(request.getMaSoThue().trim());
-        congTy.setMoTa(trimToNull(request.getMoTaCongTy()));
-        congTy.setWebsite(trimToNull(request.getWebsite()));
+        congTy.setMoTa(ServiceUtils.trimToNull(request.getMoTaCongTy()));
+        congTy.setWebsite(ServiceUtils.trimToNull(request.getWebsite()));
         congTy.setTrangThai(CompanyStatus.PENDING.name());
         congTy.setChuCongTy(owner);
         congTy = companyRepository.save(congTy);
@@ -132,7 +132,7 @@ public class OwnerRegistrationService {
     public List<CompanyProofTypeResponse> listOwnerProofTypes() {
         return loaiTaiLieuRepository.findAllByOrderByIdAsc().stream()
                 .map(loaiTaiLieu -> CompanyProofTypeResponse.builder()
-                        .id(loaiTaiLieu.getId() == null ? null : loaiTaiLieu.getId().longValue())
+                        .id(ServiceUtils.toLong(loaiTaiLieu.getId()))
                         .ten(loaiTaiLieu.getTen())
                         .moTa(loaiTaiLieu.getMoTa())
                         .build())
@@ -142,11 +142,11 @@ public class OwnerRegistrationService {
     @Transactional
     public CreateEmployerResponse createEmployerByOwner(Long ownerUserId, CreateEmployerRequest request) {
         ThanhVienCongTy ownerProfile = requireOwnerProfile(ownerUserId);
-        String normalizedEmail = normalizeEmail(request.getEmail());
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
         CongTy ownerCompany = requireOwnerCompany(ownerProfile);
-        Integer branchId = toIntId(request.getChiNhanhId(), "chiNhanhId");
+        Integer branchId = ServiceUtils.toIntId(request.getChiNhanhId(), "chiNhanhId");
         ChiNhanhCongTy branch = companyBranchRepository.findById(branchId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chi nhánh"));
 
@@ -163,7 +163,7 @@ public class OwnerRegistrationService {
         hrUser.setMatKhauBam(passwordEncoder.encode(temporaryPassword));
         hrUser.setTen(request.getTen().trim());
         hrUser.setHo(request.getHo().trim());
-        hrUser.setSoDienThoai(trimToNull(request.getSoDienThoai()));
+        hrUser.setSoDienThoai(ServiceUtils.trimToNull(request.getSoDienThoai()));
         hrUser.setDangHoatDong(true);
         hrUser.setVaiTroHeThong(candidateRole);
         hrUser = usersRepository.save(hrUser);
@@ -191,7 +191,7 @@ public class OwnerRegistrationService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Thiếu thông tin người dùng đăng nhập");
         }
 
-        Integer ownerId = toIntId(ownerUserId, "ownerUserId");
+        Integer ownerId = ServiceUtils.toIntId(ownerUserId, "ownerUserId");
         ThanhVienCongTy ownerProfile = employerProfileRepository
                 .findFirstByNguoiDung_IdAndVaiTroCongTy_TenIgnoreCase(ownerId, EmployerCompanyRole.OWNER.name())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Không tìm thấy hồ sơ OWNER"));
@@ -237,7 +237,7 @@ public class OwnerRegistrationService {
                     .findFirst()
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chưa có loại tài liệu nào trong hệ thống"));
         }
-        Integer safeId = toIntId(loaiTaiLieuId, "loaiTaiLieuId");
+        Integer safeId = ServiceUtils.toIntId(loaiTaiLieuId, "loaiTaiLieuId");
         return loaiTaiLieuRepository.findById(safeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại tài liệu"));
     }
@@ -246,14 +246,6 @@ public class OwnerRegistrationService {
         if (usersRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email đã tồn tại");
         }
-    }
-
-    private String normalizeEmail(String email) {
-        return ServiceUtils.normalizeEmail(email);
-    }
-
-    private String trimToNull(String value) {
-        return ServiceUtils.trimToNull(value);
     }
 
     private String resolveProofUrl(CreateOwnerRequest request) {
@@ -344,7 +336,7 @@ public class OwnerRegistrationService {
             return null;
         }
 
-        Integer tinhThanhId = toIntId(branchRequest.getTinhThanhId(), "tinhThanhId");
+        Integer tinhThanhId = ServiceUtils.toIntId(branchRequest.getTinhThanhId(), "tinhThanhId");
         TinhThanh tinhThanh = tinhThanhRepository.findById(tinhThanhId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tỉnh/thành"));
 
@@ -362,7 +354,7 @@ public class OwnerRegistrationService {
         if (xaPhuongId == null) {
             return null;
         }
-        Integer id = toIntId(xaPhuongId, "xaPhuongId");
+        Integer id = ServiceUtils.toIntId(xaPhuongId, "xaPhuongId");
         return xaPhuongRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy xã/phường"));
     }
@@ -376,10 +368,6 @@ public class OwnerRegistrationService {
         return sb.toString();
     }
 
-    private Integer toIntId(Long id, String fieldName) {
-        return ServiceUtils.toIntId(id, fieldName);
-    }
-
     private CreateOwnerResponse buildCreateOwnerResponse(
             NguoiDung owner,
             CongTy congTy,
@@ -388,7 +376,7 @@ public class OwnerRegistrationService {
             String accessToken
     ) {
         CreateOwnerResponse.ThongTinChuSoHuu chuSoHuu = CreateOwnerResponse.ThongTinChuSoHuu.builder()
-                .id(owner.getId() == null ? null : owner.getId().longValue())
+                .id(ServiceUtils.toLong(owner.getId()))
                 .email(owner.getEmail())
                 .ten(owner.getTen())
                 .ho(owner.getHo())
@@ -399,7 +387,7 @@ public class OwnerRegistrationService {
                 .build();
 
         CreateOwnerResponse.ThongTinCongTy thongTinCongTy = CreateOwnerResponse.ThongTinCongTy.builder()
-                .id(congTy.getId() == null ? null : congTy.getId().longValue())
+                .id(ServiceUtils.toLong(congTy.getId()))
                 .ten(congTy.getTen())
                 .maSoThue(congTy.getMaSoThue())
                 .website(congTy.getWebsite())
@@ -409,12 +397,10 @@ public class OwnerRegistrationService {
 
         List<CreateOwnerResponse.ThongTinChiNhanh> thongTinChiNhanhs = chiNhanhs.stream()
                 .map(branch -> CreateOwnerResponse.ThongTinChiNhanh.builder()
-                        .id(branch.getId() == null ? null : branch.getId().longValue())
+                        .id(ServiceUtils.toLong(branch.getId()))
                         .ten(branch.getTen())
                         .diaChiChiTiet(branch.getDiaChiChiTiet())
-                        .xaPhuongId(branch.getXaPhuong() == null || branch.getXaPhuong().getId() == null
-                                ? null
-                                : branch.getXaPhuong().getId().longValue())
+                        .xaPhuongId(branch.getXaPhuong() == null ? null : ServiceUtils.toLong(branch.getXaPhuong().getId()))
                         .xaPhuongTen(branch.getXaPhuong() == null ? null : branch.getXaPhuong().getTen())
                         .laTruSoChinh(branch.getLaTruSoChinh())
                         .build())
@@ -440,14 +426,14 @@ public class OwnerRegistrationService {
             ThanhVienCongTy hrProfile
     ) {
         return CreateEmployerResponse.builder()
-                .hoSoNhaTuyenDungId(hrUser.getId() == null ? null : hrUser.getId().longValue())
-                .nguoiDungId(hrUser.getId() == null ? null : hrUser.getId().longValue())
+                .hoSoNhaTuyenDungId(ServiceUtils.toLong(hrUser.getId()))
+                .nguoiDungId(ServiceUtils.toLong(hrUser.getId()))
                 .email(hrUser.getEmail())
                 .ten(hrUser.getTen())
                 .ho(hrUser.getHo())
                 .soDienThoai(hrUser.getSoDienThoai())
-                .congTyId(ownerCompany.getId() == null ? null : ownerCompany.getId().longValue())
-                .chiNhanhId(branch.getId() == null ? null : branch.getId().longValue())
+                .congTyId(ServiceUtils.toLong(ownerCompany.getId()))
+                .chiNhanhId(ServiceUtils.toLong(branch.getId()))
                 .vaiTroHeThong(hrUser.getVaiTroHeThong() == null ? null : hrUser.getVaiTroHeThong().getTen())
                 .vaiTroCongTy(hrProfile.getVaiTroCongTy() == null ? null : hrProfile.getVaiTroCongTy().getTen())
                 .dangHoatDong(hrUser.getDangHoatDong())

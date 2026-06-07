@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -96,7 +97,7 @@ public class CompanyAdminProofService {
 
     private CompanyAdminProofResponse mapProofDocument(TepMinhChungCongTy proofDocument) {
         return CompanyAdminProofResponse.builder()
-                .id(proofDocument.getId() == null ? null : proofDocument.getId().longValue())
+                .id(ServiceUtils.toLong(proofDocument.getId()))
                 .tenTep(proofDocument.getTenTep())
                 .duongDanTep(proofDocument.getDuongDanTep())
                 .loaiTaiLieu(proofDocument.getLoaiTaiLieu() == null ? null : proofDocument.getLoaiTaiLieu().getTen())
@@ -108,7 +109,7 @@ public class CompanyAdminProofService {
 
     private CompanyProofTypeResponse mapProofType(LoaiTaiLieu loaiTaiLieu) {
         return CompanyProofTypeResponse.builder()
-                .id(loaiTaiLieu.getId() == null ? null : loaiTaiLieu.getId().longValue())
+                .id(ServiceUtils.toLong(loaiTaiLieu.getId()))
                 .ten(loaiTaiLieu.getTen())
                 .moTa(loaiTaiLieu.getMoTa())
                 .build();

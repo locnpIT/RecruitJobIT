@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +62,7 @@ public class CandidateProfileService {
         // Homepage chỉ render "việc làm phù hợp với tôi" khi candidate đã có hồ sơ thật.
         return accessService.listProfiles(userId).stream()
                 .findFirst()
-                .map(profile -> profile.getId() == null ? null : profile.getId().longValue())
+                .map(profile -> ServiceUtils.toLong(profile.getId()))
                 .orElse(null);
     }
 

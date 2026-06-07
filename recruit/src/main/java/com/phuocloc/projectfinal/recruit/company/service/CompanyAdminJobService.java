@@ -35,6 +35,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -189,18 +190,13 @@ public class CompanyAdminJobService {
 
     private CompanyAdminJobResponse mapJob(TinTuyenDung tinTuyenDung, List<CompanyAdminJobResponse.KyNangItem> kyNangs) {
         return CompanyAdminJobResponse.builder()
-                .id(tinTuyenDung.getId() == null ? null : tinTuyenDung.getId().longValue())
+                .id(ServiceUtils.toLong(tinTuyenDung.getId()))
                 .tieuDe(tinTuyenDung.getTieuDe())
                 .trangThai(tinTuyenDung.getTrangThai())
-                .chiNhanhId(tinTuyenDung.getChiNhanh() == null || tinTuyenDung.getChiNhanh().getId() == null
-                        ? null
-                        : tinTuyenDung.getChiNhanh().getId().longValue())
+                .chiNhanhId(tinTuyenDung.getChiNhanh() == null ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getId()))
                 .chiNhanhTen(tinTuyenDung.getChiNhanh() == null ? null : tinTuyenDung.getChiNhanh().getTen())
                 .congTyId(tinTuyenDung.getChiNhanh() == null
-                        || tinTuyenDung.getChiNhanh().getCongTy() == null
-                        || tinTuyenDung.getChiNhanh().getCongTy().getId() == null
-                        ? null
-                        : tinTuyenDung.getChiNhanh().getCongTy().getId().longValue())
+                        || tinTuyenDung.getChiNhanh().getCongTy() == null ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getCongTy().getId()))
                 .congTyTen(tinTuyenDung.getChiNhanh() == null || tinTuyenDung.getChiNhanh().getCongTy() == null
                         ? null
                         : tinTuyenDung.getChiNhanh().getCongTy().getTen())
@@ -209,17 +205,11 @@ public class CompanyAdminJobService {
                 .phucLoi(tinTuyenDung.getPhucLoi())
                 .batBuocCV(tinTuyenDung.getBatBuocCV())
                 .mauCvUrl(tinTuyenDung.getMauCvUrl())
-                .nganhNgheId(tinTuyenDung.getNganhNghe() == null || tinTuyenDung.getNganhNghe().getId() == null
-                        ? null
-                        : tinTuyenDung.getNganhNghe().getId().longValue())
+                .nganhNgheId(tinTuyenDung.getNganhNghe() == null ? null : ServiceUtils.toLong(tinTuyenDung.getNganhNghe().getId()))
                 .nganhNgheTen(tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getTen())
-                .loaiHinhLamViecId(tinTuyenDung.getLoaiHinhLamViec() == null || tinTuyenDung.getLoaiHinhLamViec().getId() == null
-                        ? null
-                        : tinTuyenDung.getLoaiHinhLamViec().getId().longValue())
+                .loaiHinhLamViecId(tinTuyenDung.getLoaiHinhLamViec() == null ? null : ServiceUtils.toLong(tinTuyenDung.getLoaiHinhLamViec().getId()))
                 .loaiHinhLamViecTen(tinTuyenDung.getLoaiHinhLamViec() == null ? null : tinTuyenDung.getLoaiHinhLamViec().getTen())
-                .capDoKinhNghiemId(tinTuyenDung.getCapDoKinhNghiem() == null || tinTuyenDung.getCapDoKinhNghiem().getId() == null
-                        ? null
-                        : tinTuyenDung.getCapDoKinhNghiem().getId().longValue())
+                .capDoKinhNghiemId(tinTuyenDung.getCapDoKinhNghiem() == null ? null : ServiceUtils.toLong(tinTuyenDung.getCapDoKinhNghiem().getId()))
                 .capDoKinhNghiemTen(tinTuyenDung.getCapDoKinhNghiem() == null ? null : tinTuyenDung.getCapDoKinhNghiem().getTen())
                 .luongToiThieu(tinTuyenDung.getLuongToiThieu())
                 .luongToiDa(tinTuyenDung.getLuongToiDa())
@@ -233,28 +223,28 @@ public class CompanyAdminJobService {
 
     private CompanyJobMetadataResponse.OptionItem mapMetadataOption(NganhNghe entity) {
         return CompanyJobMetadataResponse.OptionItem.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .ten(entity.getTen())
                 .build();
     }
 
     private CompanyJobMetadataResponse.OptionItem mapMetadataOption(LoaiHinhLamViec entity) {
         return CompanyJobMetadataResponse.OptionItem.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .ten(entity.getTen())
                 .build();
     }
 
     private CompanyJobMetadataResponse.OptionItem mapMetadataOption(CapDoKinhNghiem entity) {
         return CompanyJobMetadataResponse.OptionItem.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .ten(entity.getTen())
                 .build();
     }
 
     private CompanyJobMetadataResponse.OptionItem mapMetadataOption(KyNang entity) {
         return CompanyJobMetadataResponse.OptionItem.builder()
-                .id(entity.getId() == null ? null : entity.getId().longValue())
+                .id(ServiceUtils.toLong(entity.getId()))
                 .ten(entity.getTen())
                 .build();
     }
@@ -277,7 +267,7 @@ public class CompanyAdminJobService {
             Integer jobId = link.getTinTuyenDung().getId();
             result.computeIfAbsent(jobId, ignored -> new ArrayList<>())
                     .add(CompanyAdminJobResponse.KyNangItem.builder()
-                            .id(link.getKyNang().getId() == null ? null : link.getKyNang().getId().longValue())
+                            .id(ServiceUtils.toLong(link.getKyNang().getId()))
                             .ten(link.getKyNang().getTen())
                             .build());
         }
@@ -291,7 +281,7 @@ public class CompanyAdminJobService {
         return kyNangTinTuyenDungRepository.findByTinTuyenDungIdOrderByKyNangTenAsc(jobId).stream()
                 .filter(link -> link.getKyNang() != null)
                 .map(link -> CompanyAdminJobResponse.KyNangItem.builder()
-                        .id(link.getKyNang().getId() == null ? null : link.getKyNang().getId().longValue())
+                        .id(ServiceUtils.toLong(link.getKyNang().getId()))
                         .ten(link.getKyNang().getTen())
                         .build())
                 .toList();
