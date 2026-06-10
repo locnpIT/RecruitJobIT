@@ -1,5 +1,3 @@
-import { Button } from "@/components/ui/Button";
-
 type UsersFiltersProps = {
   keyword: string;
   role: string;
@@ -9,7 +7,6 @@ type UsersFiltersProps = {
   onKeywordChange: (value: string) => void;
   onRoleChange: (value: string) => void;
   onStatusChange: (value: string) => void;
-  onApply: () => void;
 };
 
 // Bộ lọc tìm kiếm user theo keyword, role và status.
@@ -22,10 +19,9 @@ export function UsersFilters({
   onKeywordChange,
   onRoleChange,
   onStatusChange,
-  onApply,
 }: UsersFiltersProps) {
   return (
-    <div className="mb-4 grid gap-2 md:grid-cols-[1fr_170px_170px_auto]">
+    <div className="mb-4 grid gap-2 md:grid-cols-[1fr_170px_170px]">
       <input
         type="text"
         placeholder="Tìm theo tên, email, số điện thoại..."
@@ -47,13 +43,6 @@ export function UsersFilters({
           </option>
         ))}
       </select>
-      <Button variant="unstyled"
-        type="button"
-        onClick={onApply}
-        className="h-10 rounded-md border border-slate-300 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50"
-      >
-        Áp dụng
-      </Button>
     </div>
   );
 }

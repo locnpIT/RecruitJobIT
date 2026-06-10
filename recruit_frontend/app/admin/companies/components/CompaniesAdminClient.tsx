@@ -3,6 +3,7 @@
 import { PageHeader } from "../../components/PageHeader";
 import { CompanyDetailModal } from "./CompanyDetailModal";
 import { CompanyFilters } from "./CompanyFilters";
+import { CompanyFormModal } from "./CompanyFormModal";
 import { CompanyStatsCards } from "./CompanyStatsCards";
 import { CompanyTable } from "./CompanyTable";
 import { useAdminCompaniesActions } from "../hooks/useAdminCompaniesActions";
@@ -18,46 +19,68 @@ export function CompaniesAdminClient() {
     <>
       <PageHeader
         eyebrow="Doanh nghiệp"
-        title="Duyệt Hồ Sơ Công Ty"
-        subtitle="Xử lý luồng phê duyệt doanh nghiệp theo trạng thái và kiểm tra minh chứng pháp lý."
+        title="Quản lý Công ty"
+        subtitle="Thêm, sửa, xoá công ty và xử lý luồng phê duyệt hồ sơ doanh nghiệp."
       />
 
       <CompanyStatsCards items={data.statsCards} />
 
       <section className="mt-4 rounded-md border border-slate-200 bg-white p-4">
-        <CompanyFilters status={data.status} onStatusChange={data.setStatus} onReload={() => void data.loadData()} />
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <CompanyFilters
+            status={data.status}
+            keyword={data.keyword}
+            onStatusChange={data.setStatus}
+            onKeywordChange={data.setKeyword}
+          />
+          <Button variant="primary" size="sm" type="button" onClick={actions.handleOpenCreate}>
+            + Thêm công ty
+          </Button>
+        </div>
         <CompanyTable
           companies={data.companies}
+          status={data.status}
           isLoading={data.isLoading}
           isMutating={actions.isMutating}
           isDetailLoading={actions.isDetailLoading}
           onViewDetail={(company) => void actions.handleViewDetail(company)}
           onApprove={(company) => void actions.handleApprove(company)}
           onReject={actions.setRejectingCompany}
+          onEdit={actions.handleOpenEdit}
+          onDelete={(company) => void actions.handleDelete(company)}
         />
       </section>
 
       {actions.selectedCompany ? (
         <CompanyDetailModal
           company={actions.selectedCompany}
+          showReviewActions={data.status !== ""}
           isMutating={actions.isMutating}
           onClose={() => actions.setSelectedCompany(null)}
+          onCreateBranch={(payload) => actions.handleCreateBranch(actions.selectedCompany!.congTy.id, payload)}
+          onUpdateBranch={(branchId, payload) => actions.handleUpdateBranch(actions.selectedCompany!.congTy.id, branchId, payload)}
+          onDeleteBranch={(branchId) => actions.handleDeleteBranch(actions.selectedCompany!.congTy.id, branchId)}
           onApprove={async () => {
             const selected = actions.selectedCompany;
-            if (!selected) {
-              return;
-            }
+            if (!selected) return;
             await actions.handleApprove(selected.congTy);
             actions.setSelectedCompany(null);
           }}
           onReject={async () => {
             const selected = actions.selectedCompany;
-            if (!selected) {
-              return;
-            }
+            if (!selected) return;
             actions.setRejectingCompany(selected.congTy);
             actions.setSelectedCompany(null);
           }}
+        />
+      ) : null}
+
+      {actions.isFormOpen ? (
+        <CompanyFormModal
+          editingCompany={actions.editingCompany}
+          submitting={actions.isMutating}
+          onClose={actions.handleCloseForm}
+          onSubmit={(form) => void actions.handleSubmitForm(form)}
         />
       ) : null}
 

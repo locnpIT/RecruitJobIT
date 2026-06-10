@@ -114,14 +114,6 @@ export function AdminDashboardClient() {
           </div>
         ) : null}
       </section>
-
-      <section className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
-        <RecentCompaniesTable rows={dashboardData.recentCompanies} />
-        <div className="space-y-4">
-          <ActivityList items={dashboardData.systemActivity} />
-          <QuickLinks />
-        </div>
-      </section>
     </>
   );
 }
@@ -142,86 +134,6 @@ function SelectRange({ value, onChange }: { value: TrendRangeDays; onChange: (v:
         ))}
       </select>
     </label>
-  );
-}
-
-function RecentCompaniesTable({ rows }: { rows: Array<{ ten: string; congTy: string; trangThai: string; ngay: string }> }) {
-  return (
-    <article className="rounded-md border border-slate-200 bg-white p-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Công ty gần đây</h3>
-      {rows.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-400">Chưa có dữ liệu.</p>
-      ) : (
-        <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="pb-2 pr-4">Công ty</th>
-                <th className="pb-2 pr-4">Chủ</th>
-                <th className="pb-2 pr-4">Trạng thái</th>
-                <th className="pb-2">Ngày</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} className="border-b border-slate-50 last:border-b-0">
-                  <td className="py-2 pr-4 font-medium text-slate-900">{row.ten}</td>
-                  <td className="py-2 pr-4 text-slate-600">{row.congTy}</td>
-                  <td className="py-2 pr-4"><StatusPill value={row.trangThai} /></td>
-                  <td className="py-2 text-slate-500">{row.ngay}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </article>
-  );
-}
-
-function ActivityList({ items }: { items: string[] }) {
-  return (
-    <article className="rounded-md border border-slate-200 bg-white p-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Hoạt động hệ thống</h3>
-      <ul className="mt-3 space-y-2">
-        {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
-            {item}
-          </li>
-        ))}
-      </ul>
-    </article>
-  );
-}
-
-function QuickLinks() {
-  const links = [
-    { label: "Duyệt công ty", href: "/admin/companies", hint: "Xử lý doanh nghiệp đang chờ duyệt" },
-    { label: "Duyệt tin tuyển dụng", href: "/admin/jobs", hint: "Rà soát tin mới được gửi" },
-    { label: "Quản lý người dùng", href: "/admin/users", hint: "Xem và khoá tài khoản hệ thống" },
-  ];
-
-  return (
-    <article className="rounded-md border border-slate-200 bg-white p-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Truy cập nhanh</h3>
-      <ul className="mt-3 space-y-2">
-        {links.map((link) => (
-          <li key={link.href}>
-            <Link
-              href={link.href}
-              className="flex items-start gap-2 rounded-md px-2 py-2 text-sm text-slate-700 hover:bg-slate-50"
-            >
-              <span className="mt-0.5 h-4 w-4 shrink-0 rounded-sm bg-slate-900 text-center text-[10px] leading-4 text-white">→</span>
-              <span>
-                <span className="font-medium">{link.label}</span>
-                <span className="ml-1.5 text-xs text-slate-500">{link.hint}</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </article>
   );
 }
 

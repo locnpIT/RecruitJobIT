@@ -43,12 +43,7 @@ export function cleanPayload(form: FormState): CreateAdminUserPayload {
   if (form.loaiTaiKhoan === "COMPANY_ADMIN") {
     return {
       ...basePayload,
-      tenCongTy: form.tenCongTy?.trim(),
-      maSoThue: form.maSoThue?.trim(),
-      website: form.website?.trim() || undefined,
-      moTaCongTy: form.moTaCongTy?.trim() || undefined,
-      tenChiNhanh: form.tenChiNhanh?.trim(),
-      diaChiChiTietChiNhanh: form.diaChiChiTietChiNhanh?.trim(),
+      congTyId: form.congTyId,
     };
   }
 
@@ -88,15 +83,15 @@ export function useCreateUserForm(open: boolean) {
     return () => { active = false; };
   }, [open]);
 
-  // Load danh sách công ty khi type = HR
+  // Load danh sách công ty khi type = HR hoặc COMPANY_ADMIN
   useEffect(() => {
-    if (!open || form.loaiTaiKhoan !== "HR") return;
+    if (!open || (form.loaiTaiKhoan !== "HR" && form.loaiTaiKhoan !== "COMPANY_ADMIN")) return;
     let active = true;
     const loadCompanies = async () => {
       setMetadataLoading(true);
       setMetadataError(null);
       try {
-        const data = await adminCompaniesService.listCompanies({ status: "APPROVED" });
+        const data = await adminCompaniesService.listCompanies();
         if (!active) return;
         setCompanies(data);
         setForm((prev) => ({ ...prev, congTyId: prev.congTyId ?? data[0]?.id }));
@@ -110,7 +105,7 @@ export function useCreateUserForm(open: boolean) {
     return () => { active = false; };
   }, [open, form.loaiTaiKhoan]);
 
-  // Load chi nhánh khi đã chọn công ty
+  // Load chi nhánh khi đã chọn công ty cho tài khoản HR
   useEffect(() => {
     if (!open || form.loaiTaiKhoan !== "HR" || !form.congTyId) {
       let active = true;
@@ -152,7 +147,7 @@ export function useCreateUserForm(open: boolean) {
     setForm((prev) => ({
       ...prev,
       loaiTaiKhoan: nextType,
-      congTyId: nextType === "HR" ? prev.congTyId : undefined,
+      congTyId: nextType === "HR" || nextType === "COMPANY_ADMIN" ? prev.congTyId : undefined,
       chiNhanhIds: nextType === "HR" ? prev.chiNhanhIds : [],
     }));
   };

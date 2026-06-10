@@ -97,33 +97,38 @@ export function CreateUserModal({ open, isLoading, onClose, onSubmit }: CreateUs
 
           {form.loaiTaiKhoan === "COMPANY_ADMIN" ? (
             <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
-              <h3 className="text-sm font-semibold text-slate-900">Thông tin công ty</h3>
+              <h3 className="text-sm font-semibold text-slate-900">Chỉ định công ty quản lý</h3>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <TextField label="Tên công ty" required maxLength={150} value={form.tenCongTy} onChange={(value) => setForm((prev) => ({ ...prev, tenCongTy: value }))} />
-                <TextField label="Mã số thuế" required maxLength={50} value={form.maSoThue} onChange={(value) => setForm((prev) => ({ ...prev, maSoThue: value }))} />
+                <label className="space-y-1.5 text-sm font-medium text-slate-700">
+                  <span>Công ty</span>
+                  <select
+                    required
+                    value={form.congTyId ?? ""}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        congTyId: event.target.value ? Number(event.target.value) : undefined,
+                      }))
+                    }
+                    className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none ring-slate-200 focus:ring"
+                  >
+                    <option value="">Chọn công ty</option>
+                    {companies.map((company) => (
+                      <option key={company.id} value={company.id}>
+                        {company.ten}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+                  <p className="font-medium text-slate-800">{selectedCompany?.ten ?? "Chưa chọn công ty"}</p>
+                  <p className="mt-1 text-xs">
+                    Tài khoản này sẽ được gán làm admin công ty trên doanh nghiệp đã chọn.
+                  </p>
+                </div>
               </div>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <TextField label="Website" maxLength={255} value={form.website} onChange={(value) => setForm((prev) => ({ ...prev, website: value }))} />
-                <TextField label="Tên chi nhánh chính" required maxLength={150} value={form.tenChiNhanh} onChange={(value) => setForm((prev) => ({ ...prev, tenChiNhanh: value }))} />
-              </div>
-              <div className="mt-3">
-                <TextField
-                  label="Địa chỉ chi nhánh chính"
-                  required
-                  maxLength={255}
-                  value={form.diaChiChiTietChiNhanh}
-                  onChange={(value) => setForm((prev) => ({ ...prev, diaChiChiTietChiNhanh: value }))}
-                />
-              </div>
-              <label className="mt-3 block space-y-1.5 text-sm font-medium text-slate-700">
-                <span>Mô tả công ty</span>
-                <textarea
-                  maxLength={5000}
-                  value={form.moTaCongTy}
-                  onChange={(event) => setForm((prev) => ({ ...prev, moTaCongTy: event.target.value }))}
-                  className="min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-slate-200 focus:ring"
-                />
-              </label>
+
+              {metadataError ? <p className="mt-3 text-sm text-rose-600">{metadataError}</p> : null}
             </section>
           ) : null}
 

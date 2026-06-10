@@ -11,14 +11,27 @@ export function useAdminCompaniesData() {
   const [stats, setStats] = useState<AdminStatsResponse | null>(null);
   const [companies, setCompanies] = useState<AdminCompany[]>([]);
   const [status, setStatus] = useState("PENDING");
+  const [keyword, setKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedKeyword(keyword.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [keyword]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [statsResponse, companiesResponse] = await Promise.all([
         adminStatsService.getStats(),
-        adminCompaniesService.listCompanies({ status: status || undefined }),
+        adminCompaniesService.listCompanies({
+          status: status || undefined,
+          keyword: debouncedKeyword || undefined,
+        }),
       ]);
       setStats(statsResponse);
       setCompanies(companiesResponse);
@@ -27,7 +40,7 @@ export function useAdminCompaniesData() {
     } finally {
       setIsLoading(false);
     }
-  }, [status]);
+  }, [debouncedKeyword, status]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -50,7 +63,9 @@ export function useAdminCompaniesData() {
   return {
     companies,
     status,
+    keyword,
     isLoading,
+    setKeyword,
     setStatus,
     loadData,
     statsCards,

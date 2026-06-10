@@ -92,32 +92,11 @@ public class AdminUserService {
         String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
-        String companyName = requireText(request.getTenCongTy(), "Tên công ty không được để trống");
-        String taxCode = requireText(request.getMaSoThue(), "Mã số thuế không được để trống");
-        String branchName = requireText(request.getTenChiNhanh(), "Tên chi nhánh không được để trống");
-        String branchAddress = requireText(request.getDiaChiChiTietChiNhanh(), "Địa chỉ chi nhánh không được để trống");
-
-        if (companyRepository.existsByMaSoThue(taxCode)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã số thuế đã tồn tại");
-        }
-
         NguoiDung owner = usersRepository.save(buildUser(request, normalizedEmail, requireSystemRole(RoleName.USER)));
-
-        CongTy company = new CongTy();
-        company.setTen(companyName);
-        company.setMaSoThue(taxCode);
-        company.setWebsite(ServiceUtils.trimToNull(request.getWebsite()));
-        company.setMoTa(ServiceUtils.trimToNull(request.getMoTaCongTy()));
-        company.setTrangThai("APPROVED");
+        CongTy company = requireCompany(request.getCongTyId());
+        ChiNhanhCongTy branch = requirePrimaryBranch(company);
         company.setChuCongTy(owner);
-        company = companyRepository.save(company);
-
-        ChiNhanhCongTy branch = new ChiNhanhCongTy();
-        branch.setCongTy(company);
-        branch.setTen(branchName);
-        branch.setDiaChiChiTiet(branchAddress);
-        branch.setLaTruSoChinh(true);
-        branch = companyBranchRepository.save(branch);
+        companyRepository.save(company);
 
         ThanhVienCongTy membership = new ThanhVienCongTy();
         membership.setNguoiDung(owner);
@@ -229,7 +208,32 @@ public class AdminUserService {
         if (!StringUtils.hasText(role)) {
             return true;
         }
-        return user.getVaiTroHeThong() != null && role.equalsIgnoreCase(user.getVaiTroHeThong().getTen());
+
+        List<ThanhVienCongTy> memberships = thanhVienCongTyRepository.findActiveMembershipsByUserId(user.getId());
+        boolean hasCompanyRole = memberships.stream()
+                .map(ThanhVienCongTy::getVaiTroCongTy)
+                .filter(Objects::nonNull)
+                .map(VaiTroCongTy::getTen)
+                .filter(StringUtils::hasText)
+                .anyMatch(companyRole -> EmployerCompanyRole.OWNER.name().equalsIgnoreCase(companyRole)
+                        || EmployerCompanyRole.HR.name().equalsIgnoreCase(companyRole));
+
+        if ("USER".equalsIgnoreCase(role)) {
+            return user.getVaiTroHeThong() != null
+                    && role.equalsIgnoreCase(user.getVaiTroHeThong().getTen())
+                    && !hasCompanyRole;
+        }
+
+        if (user.getVaiTroHeThong() != null && role.equalsIgnoreCase(user.getVaiTroHeThong().getTen())) {
+            return true;
+        }
+
+        return memberships.stream()
+                .map(ThanhVienCongTy::getVaiTroCongTy)
+                .filter(Objects::nonNull)
+                .map(VaiTroCongTy::getTen)
+                .filter(StringUtils::hasText)
+                .anyMatch(role::equalsIgnoreCase);
     }
 
     private boolean matchesStatus(NguoiDung user, String status) {
@@ -308,6 +312,25 @@ public class AdminUserService {
             branches.add(branch);
         }
         return branches;
+    }
+
+    private ChiNhanhCongTy requirePrimaryBranch(CongTy company) {
+        return companyBranchRepository.findByCongTy_Id(company.getId()).stream()
+                .filter(branch -> branch.getNgayXoa() == null)
+                .filter(branch -> branch.getId() != null)
+                .sorted((left, right) -> {
+                    boolean leftPrimary = Boolean.TRUE.equals(left.getLaTruSoChinh());
+                    boolean rightPrimary = Boolean.TRUE.equals(right.getLaTruSoChinh());
+                    if (leftPrimary == rightPrimary) {
+                        return Integer.compare(left.getId(), right.getId());
+                    }
+                    return leftPrimary ? -1 : 1;
+                })
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Công ty chưa có chi nhánh hoạt động để gán admin công ty"
+                ));
     }
 
     private void ensureEmailNotExists(String email) {

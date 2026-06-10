@@ -39,4 +39,12 @@ public interface EmployerProfileRepository extends JpaRepository<ThanhVienCongTy
               AND t.nguoiDung.dangHoatDong = TRUE
             """)
     List<ThanhVienCongTy> findByChiNhanh_CongTy_IdAndNguoiDung_DangHoatDongTrue(Integer congTyId);
+
+    @Query("""
+            SELECT t FROM ThanhVienCongTy t
+            WHERE t.chiNhanh.id = :chiNhanhId
+              AND t.ngayXoa IS NULL
+              AND t.nguoiDung.dangHoatDong = TRUE
+            """)
+    List<ThanhVienCongTy> findByChiNhanh_IdAndNgayXoaIsNullAndNguoiDung_DangHoatDongTrue(Integer chiNhanhId);
 }

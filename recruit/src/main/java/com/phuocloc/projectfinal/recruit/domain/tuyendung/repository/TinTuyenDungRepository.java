@@ -28,6 +28,13 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
     List<TinTuyenDung> findByNgayXoaIsNull(Sort sort);
 
     @Query("""
+            SELECT COUNT(t.id) > 0 FROM TinTuyenDung t
+            WHERE t.chiNhanh.id = :chiNhanhId
+              AND t.ngayXoa IS NULL
+            """)
+    boolean existsByChiNhanh_IdAndNgayXoaIsNull(Integer chiNhanhId);
+
+    @Query("""
             SELECT t FROM TinTuyenDung t
             LEFT JOIN FETCH t.chiNhanh cn
             LEFT JOIN FETCH cn.congTy ct

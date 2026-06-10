@@ -21,4 +21,11 @@ public interface CompanyBranchRepository extends JpaRepository<ChiNhanhCongTy, I
               AND c.laTruSoChinh = TRUE
             """)
     Optional<ChiNhanhCongTy> findByCongTy_IdAndLaTruSoChinhTrue(Integer congTyId);
+
+    @Query("""
+            SELECT c FROM ChiNhanhCongTy c
+            WHERE c.id = :branchId
+              AND c.congTy.id = :congTyId
+            """)
+    Optional<ChiNhanhCongTy> findByIdAndCongTy_Id(Integer branchId, Integer congTyId);
 }

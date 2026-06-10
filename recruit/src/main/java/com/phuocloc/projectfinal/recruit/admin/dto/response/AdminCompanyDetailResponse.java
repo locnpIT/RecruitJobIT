@@ -34,7 +34,9 @@ public class AdminCompanyDetailResponse {
         private Long id;
         private String ten;
         private String diaChiChiTiet;
+        private Long xaPhuongId;
         private String xaPhuongTen;
+        private Long tinhThanhId;
         private String tinhThanhTen;
         private Boolean laTruSoChinh;
         private String trangThai;

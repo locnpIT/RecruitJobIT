@@ -66,11 +66,41 @@ export interface ReviewCompanyPayload {
   lyDoTuChoi: string;
 }
 
+export interface CreateAdminCompanyBranchPayload {
+  ten: string;
+  diaChiChiTiet: string;
+  xaPhuongId?: number;
+  laTruSoChinh: boolean;
+}
+
+export interface CreateAdminCompanyPayload {
+  ten: string;
+  maSoThue: string;
+  website?: string;
+  moTa?: string;
+  chiNhanhs: CreateAdminCompanyBranchPayload[];
+}
+
+export interface UpdateAdminCompanyPayload {
+  ten: string;
+  website?: string;
+  moTa?: string;
+}
+
+export interface UpdateAdminCompanyBranchPayload {
+  ten: string;
+  diaChiChiTiet: string;
+  xaPhuongId?: number;
+  laTruSoChinh: boolean;
+}
+
 export interface AdminCompanyDetailBranch {
   id: number | null;
   ten: string | null;
   diaChiChiTiet: string | null;
+  xaPhuongId: number | null;
   xaPhuongTen: string | null;
+  tinhThanhId: number | null;
   tinhThanhTen: string | null;
   laTruSoChinh: boolean | null;
   trangThai: string | null;

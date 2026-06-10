@@ -13,7 +13,7 @@ import { UsersTable } from "./UsersTable";
 import { useAdminUsersActions } from "../hooks/useAdminUsersActions";
 import { useAdminUsersData } from "../hooks/useAdminUsersData";
 
-const roleOptions = ["", "ADMIN", "USER"];
+const roleOptions = ["", "ADMIN", "USER", "OWNER", "HR"];
 const statusOptions = ["", "ACTIVE", "INACTIVE", "DELETED"];
 
 // Client container cho trang /admin/users.
@@ -72,7 +72,6 @@ export function UsersAdminClient() {
           onKeywordChange={data.setKeyword}
           onRoleChange={data.setRole}
           onStatusChange={data.setStatus}
-          onApply={() => void data.loadData()}
         />
 
         <UsersTable

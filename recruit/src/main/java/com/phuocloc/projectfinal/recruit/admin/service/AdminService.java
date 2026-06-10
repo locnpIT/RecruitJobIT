@@ -1,5 +1,8 @@
 package com.phuocloc.projectfinal.recruit.admin.service;
 
+import com.phuocloc.projectfinal.recruit.admin.dto.request.AdminCreateCompanyRequest;
+import com.phuocloc.projectfinal.recruit.admin.dto.request.AdminUpdateCompanyBranchRequest;
+import com.phuocloc.projectfinal.recruit.admin.dto.request.AdminUpdateCompanyRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.CreateAdminUserRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.CreatePackageRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewCompanyRequest;
@@ -73,8 +76,38 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public List<AdminCompanyResponse> listCompanies(String status) {
-        return adminCompanyService.listCompanies(status);
+    public List<AdminCompanyResponse> listCompanies(String status, String keyword) {
+        return adminCompanyService.listCompanies(status, keyword);
+    }
+
+    @Transactional
+    public AdminCompanyResponse createCompany(AdminCreateCompanyRequest request) {
+        return adminCompanyService.createCompany(request);
+    }
+
+    @Transactional
+    public AdminCompanyDetailResponse createCompanyBranch(Long companyId, AdminUpdateCompanyBranchRequest request) {
+        return adminCompanyService.createCompanyBranch(companyId, request);
+    }
+
+    @Transactional
+    public AdminCompanyResponse updateCompany(Long companyId, AdminUpdateCompanyRequest request) {
+        return adminCompanyService.updateCompany(companyId, request);
+    }
+
+    @Transactional
+    public AdminCompanyDetailResponse updateCompanyBranch(Long companyId, Long branchId, AdminUpdateCompanyBranchRequest request) {
+        return adminCompanyService.updateCompanyBranch(companyId, branchId, request);
+    }
+
+    @Transactional
+    public void deleteCompany(Long companyId) {
+        adminCompanyService.deleteCompany(companyId);
+    }
+
+    @Transactional
+    public AdminCompanyDetailResponse deleteCompanyBranch(Long companyId, Long branchId) {
+        return adminCompanyService.deleteCompanyBranch(companyId, branchId);
     }
 
     @Transactional

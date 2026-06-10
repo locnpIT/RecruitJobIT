@@ -4,17 +4,18 @@ const statusOptions = [
   { value: "PENDING", label: "Chờ duyệt" },
   { value: "APPROVED", label: "Đã duyệt" },
   { value: "REJECTED", label: "Từ chối" },
-  { value: "SUSPENDED", label: "Bị khóa" },
+  { value: "DELETED", label: "Đã xoá" },
   { value: "", label: "Tất cả" },
 ];
 
 type CompanyFiltersProps = {
   status: string;
+  keyword: string;
   onStatusChange: (value: string) => void;
-  onReload: () => void;
+  onKeywordChange: (value: string) => void;
 };
 
-export function CompanyFilters({ status, onStatusChange, onReload }: CompanyFiltersProps) {
+export function CompanyFilters({ status, keyword, onStatusChange, onKeywordChange }: CompanyFiltersProps) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap gap-2">
@@ -34,13 +35,13 @@ export function CompanyFilters({ status, onStatusChange, onReload }: CompanyFilt
           );
         })}
       </div>
-      <Button variant="unstyled"
-        type="button"
-        onClick={onReload}
-        className="h-9 rounded-md border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
-      >
-        Tải lại
-      </Button>
+
+      <input
+        value={keyword}
+        onChange={(event) => onKeywordChange(event.target.value)}
+        placeholder="Tìm theo tên công ty..."
+        className="h-9 w-full max-w-sm rounded-md border border-slate-300 px-3 text-sm text-slate-700 outline-none focus:border-slate-500"
+      />
     </div>
   );
 }
