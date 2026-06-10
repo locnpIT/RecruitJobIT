@@ -1,7 +1,7 @@
 import type { AdminUser } from "@/services/admin/types";
 
 function shouldShowSystemRole(user: AdminUser) {
-  return !user.vaiTroCongTy || user.vaiTroHeThong?.toUpperCase() !== "CANDIDATE";
+  return !user.vaiTroCongTy || user.vaiTroHeThong?.toUpperCase() !== "USER";
 }
 
 export function UserRoleBadges({ user }: { user: AdminUser }) {

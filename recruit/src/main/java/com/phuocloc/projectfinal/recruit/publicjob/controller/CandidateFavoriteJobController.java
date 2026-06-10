@@ -25,7 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * API danh sách yêu thích của ứng viên.
  *
- * <p>Chỉ role CANDIDATE được thao tác. Bảng lưu trữ là
+ * <p>Chỉ role hệ thống USER được thao tác. Bảng lưu trữ là
  * {@code NguoiDungTinTuyenDung}, đúng với quyết định PM: quan hệ user-job này
  * đại diện cho "tin tuyển dụng yêu thích".</p>
  */
@@ -85,7 +85,7 @@ public class CandidateFavoriteJobController {
     }
 
     private void requireCandidate(AppUserPrinciple principal) {
-        if (principal == null || principal.getRole() != RoleName.CANDIDATE) {
+        if (principal == null || principal.getRole() != RoleName.USER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ ứng viên được dùng chức năng yêu thích");
         }
     }

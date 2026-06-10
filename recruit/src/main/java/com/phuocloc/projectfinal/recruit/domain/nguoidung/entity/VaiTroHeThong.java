@@ -26,7 +26,7 @@ import lombok.Setter;
 @Table(
         name = "VaiTroHeThong",
         uniqueConstraints = {
-                // Tên vai trò hệ thống (ADMIN/CANDIDATE/...) không được trùng.
+                // Tên vai trò hệ thống (ADMIN/USER/...) không được trùng.
                 @UniqueConstraint(name = "uk_vai_tro_he_thong_ten", columnNames = "ten")
         }
 )

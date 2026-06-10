@@ -87,7 +87,7 @@ public class CandidateJobApplicationController {
     }
 
     private void requireCandidate(AppUserPrinciple principal) {
-        if (principal == null || principal.getRole() != RoleName.CANDIDATE) {
+        if (principal == null || principal.getRole() != RoleName.USER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ ứng viên được thực hiện thao tác này");
         }
     }

@@ -236,7 +236,7 @@ public class AdminCatalogService {
             return false;
         }
         String normalized = ten.trim().toUpperCase(Locale.ROOT);
-        return normalized.equals(RoleName.ADMIN.name()) || normalized.equals(RoleName.CANDIDATE.name());
+        return normalized.equals(RoleName.ADMIN.name()) || normalized.equals(RoleName.USER.name());
     }
 
     private boolean isCoreCompanyRole(String ten) {

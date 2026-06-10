@@ -50,6 +50,7 @@ export function CompanyAdminApplicationsClient() {
         jobs={data.jobs}
         selectedBranchId={data.selectedBranchId}
         filters={data.filters}
+        dateRangeError={data.dateRangeError}
         onBranchChange={data.setSelectedBranchId}
         onFiltersChange={data.setFilters}
       />

@@ -14,7 +14,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class UpdateCompanyJobRequest {
+public class UpdateCompanyJobRequest implements JobPayloadRequest {
 
     @NotBlank(message = "Tiêu đề không được để trống")
     @Size(max = 255, message = "Tiêu đề không được vượt quá 255 ký tự")

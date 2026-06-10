@@ -103,7 +103,7 @@ public class JwtService {
         try {
             return RoleName.valueOf(role);
         } catch (IllegalArgumentException ex) {
-            return RoleName.CANDIDATE;
+            return RoleName.USER;
         }
     }
 

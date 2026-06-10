@@ -6,7 +6,7 @@ import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 
 type LocalUser = { id: number; vaiTro: string };
 
-// Kiểm tra token + role CANDIDATE, redirect nếu không hợp lệ.
+// Kiểm tra token + system role USER, redirect nếu không hợp lệ.
 // Trả về ready=true và currentUserId khi auth thành công.
 export function useMessagesAuthGuard() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export function useMessagesAuthGuard() {
         const expiresAt = token ? getJwtExpiryMs(token) : null;
         const rawUser = localStorage.getItem("user");
         const user = rawUser ? (JSON.parse(rawUser) as LocalUser) : null;
-        const isCandidate = user?.vaiTro?.toUpperCase() === "CANDIDATE";
+        const isCandidate = user?.vaiTro?.toUpperCase() === "USER";
 
         if (!token || (expiresAt !== null && expiresAt <= Date.now()) || !isCandidate) {
           clearAdminSession();

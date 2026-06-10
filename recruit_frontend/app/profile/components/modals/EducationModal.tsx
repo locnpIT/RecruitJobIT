@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import type { CandidateEducationItem } from "@/services/candidate/candidate-profile.service";
+import { useProfileCrudState } from "../../hooks/useProfileCrudState";
+import { ProfilePickListCard, ProfilePickListWrapper } from "../ProfilePickListCard";
 import { ProfileModal } from "./ProfileModal";
-import { ProfileModalTabs, type ProfileModalTab } from "./ProfileModalTabs";
+import { ProfileModalTabs } from "./ProfileModalTabs";
 import { ProofUploadBox } from "./ProofUploadBox";
 import type { EducationFormState } from "./profileFormTypes";
 import { ProofStatusPill } from "../ProofStatusPill";
@@ -45,8 +47,10 @@ export function EducationModal({
   onDelete: (item: CandidateEducationItem) => void;
   onToggleSelection: (item: CandidateEducationItem) => void;
 }) {
-  const [tab, setTab] = useState<ProfileModalTab>("create");
-  const [query, setQuery] = useState("");
+  const { tab, setTab, query, setQuery, filteredItems } = useProfileCrudState(
+    items,
+    (item, q) => `${item.tenTruong} ${item.bacHoc ?? ""} ${item.chuyenNganh ?? ""}`.toLowerCase().includes(q)
+  );
   const [proofError, setProofError] = useState("");
 
   const initialForm = useMemo<EducationFormState>(() => {
@@ -61,14 +65,6 @@ export function EducationModal({
     };
   }, [editingItem]);
   const [form, setForm] = useState<EducationFormState>(initialForm);
-
-  const filteredItems = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return items;
-    return items.filter((item) =>
-      `${item.tenTruong} ${item.bacHoc ?? ""} ${item.chuyenNganh ?? ""}`.toLowerCase().includes(normalized)
-    );
-  }, [items, query]);
 
   const title = editingItem ? "Sửa học vấn" : "Thêm học vấn";
   const description = editingItem
@@ -137,42 +133,26 @@ function EducationPickList({
   onToggleSelection: (item: CandidateEducationItem) => void;
 }) {
   return (
-    <div className="mt-5 space-y-2">
-      {items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-          Không tìm thấy học vấn phù hợp.
-        </div>
-      ) : null}
+    <ProfilePickListWrapper isEmpty={items.length === 0} emptyMessage="Không tìm thấy học vấn phù hợp.">
       {items.map((item) => {
         const dateRange = [item.thoiGianBatDau, item.thoiGianKetThuc].filter(Boolean).join(" - ");
         return (
-          <div key={item.id} className="rounded-md border border-slate-200 bg-white p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-950">{item.tenTruong}</p>
-                <p className="mt-0.5 text-xs text-slate-600">
-                  {[item.bacHoc, item.chuyenNganh].filter(Boolean).join(" • ") || "Chưa cập nhật"}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                  {dateRange ? <span>{dateRange}</span> : null}
-                  <ProofStatusPill value={item.trangThai} />
-                  {item.duongDanTep ? (
-                    <a href={item.duongDanTep} target="_blank" rel="noreferrer" className="underline">Xem minh chứng</a>
-                  ) : null}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <ProfileActionButton type="button" variant="muted" onClick={() => onEdit(item)} className="px-3 py-2 text-xs">Sửa</ProfileActionButton>
-                <ProfileActionButton type="button" variant={item.duocChon ? "muted" : "primary"} onClick={() => onToggleSelection(item)} className="px-3 py-2 text-xs">
-                  {item.duocChon ? "Ẩn khỏi hồ sơ" : "Thêm vào hồ sơ"}
-                </ProfileActionButton>
-                <ProfileActionButton type="button" variant="danger" onClick={() => onDelete(item)} className="px-3 py-2 text-xs">Xoá</ProfileActionButton>
-              </div>
+          <ProfilePickListCard key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} onToggleSelection={onToggleSelection}>
+            <p className="text-sm font-semibold text-slate-950">{item.tenTruong}</p>
+            <p className="mt-0.5 text-xs text-slate-600">
+              {[item.bacHoc, item.chuyenNganh].filter(Boolean).join(" • ") || "Chưa cập nhật"}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+              {dateRange ? <span>{dateRange}</span> : null}
+              <ProofStatusPill value={item.trangThai} />
+              {item.duongDanTep ? (
+                <a href={item.duongDanTep} target="_blank" rel="noreferrer" className="underline">Xem minh chứng</a>
+              ) : null}
             </div>
-          </div>
+          </ProfilePickListCard>
         );
       })}
-    </div>
+    </ProfilePickListWrapper>
   );
 }
 
@@ -209,11 +189,23 @@ function EducationForm({
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label className="text-xs font-medium text-slate-600">Từ ngày</label>
-          <input type="date" value={form.thoiGianBatDau} onChange={(e) => onChange((p) => ({ ...p, thoiGianBatDau: e.target.value }))} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+          <input
+            type="date"
+            value={form.thoiGianBatDau}
+            max={form.thoiGianKetThuc || undefined}
+            onChange={(e) => onChange((p) => ({ ...p, thoiGianBatDau: e.target.value }))}
+            className="h-10 rounded-md border border-slate-300 px-3 text-sm"
+          />
         </div>
         <div className="grid gap-1">
           <label className="text-xs font-medium text-slate-600">Đến ngày</label>
-          <input type="date" value={form.thoiGianKetThuc} onChange={(e) => onChange((p) => ({ ...p, thoiGianKetThuc: e.target.value }))} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+          <input
+            type="date"
+            value={form.thoiGianKetThuc}
+            min={form.thoiGianBatDau || undefined}
+            onChange={(e) => onChange((p) => ({ ...p, thoiGianKetThuc: e.target.value }))}
+            className="h-10 rounded-md border border-slate-300 px-3 text-sm"
+          />
         </div>
       </div>
       <ProofUploadBox

@@ -32,7 +32,7 @@ export function useFavoriteJobs() {
         const rawUser = localStorage.getItem("user");
         const user = rawUser ? (JSON.parse(rawUser) as LocalUser) : null;
 
-        if (!token || (expiresAt !== null && expiresAt <= Date.now()) || user?.vaiTro?.toUpperCase() !== "CANDIDATE") {
+        if (!token || (expiresAt !== null && expiresAt <= Date.now()) || user?.vaiTro?.toUpperCase() !== "USER") {
           clearAdminSession();
           router.replace("/auth/login");
           return;

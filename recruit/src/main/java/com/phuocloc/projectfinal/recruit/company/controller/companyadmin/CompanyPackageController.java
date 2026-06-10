@@ -28,7 +28,7 @@ public class CompanyPackageController {
     private final CompanyAdminService companyAdminService;
 
     @GetMapping("/packages")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyPackageOverviewResponse>> getPackages(
             @AuthenticationPrincipal AppUserPrinciple principal
     ) {
@@ -37,7 +37,7 @@ public class CompanyPackageController {
     }
 
     @PostMapping("/packages")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyPackageRegistrationResponse>> registerPackage(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @jakarta.validation.Valid @RequestBody RegisterCompanyPackageRequest request

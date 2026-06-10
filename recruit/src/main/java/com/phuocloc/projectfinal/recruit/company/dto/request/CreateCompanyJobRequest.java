@@ -14,7 +14,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class CreateCompanyJobRequest {
+public class CreateCompanyJobRequest implements JobPayloadRequest {
 
     @NotNull(message = "chiNhanhId không được để trống")
     private Integer chiNhanhId;

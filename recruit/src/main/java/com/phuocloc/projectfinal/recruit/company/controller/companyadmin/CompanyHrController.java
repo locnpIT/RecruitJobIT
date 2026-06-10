@@ -32,7 +32,7 @@ public class CompanyHrController {
     private final CompanyHrManagementService companyHrManagementService;
 
     @GetMapping("/hrs")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<List<CompanyAdminHrResponse>>> getHrs(
             @AuthenticationPrincipal AppUserPrinciple principal
     ) {
@@ -41,7 +41,7 @@ public class CompanyHrController {
     }
 
     @PostMapping("/hrs")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminHrResponse>> createHr(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @jakarta.validation.Valid @RequestBody CreateCompanyHrRequest request
@@ -52,7 +52,7 @@ public class CompanyHrController {
     }
 
     @PatchMapping("/hrs/{hrUserId}")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminHrResponse>> updateHr(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long hrUserId,
@@ -63,7 +63,7 @@ public class CompanyHrController {
     }
 
     @DeleteMapping("/hrs/{hrUserId}")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<Void>> deleteHr(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long hrUserId

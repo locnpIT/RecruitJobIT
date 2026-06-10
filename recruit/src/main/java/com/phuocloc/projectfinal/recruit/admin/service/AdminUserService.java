@@ -72,7 +72,7 @@ public class AdminUserService {
         String accountType = ServiceUtils.normalize(request.getLoaiTaiKhoan()).toUpperCase(Locale.ROOT);
         return switch (accountType) {
             case "ADMIN" -> createStandaloneUser(request, RoleName.ADMIN);
-            case "CANDIDATE" -> createStandaloneUser(request, RoleName.CANDIDATE);
+            case "CANDIDATE" -> createStandaloneUser(request, RoleName.USER);
             case "COMPANY_ADMIN" -> createCompanyAdmin(request);
             case "HR" -> createHrUser(request);
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Loại tài khoản không hợp lệ");
@@ -101,7 +101,7 @@ public class AdminUserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã số thuế đã tồn tại");
         }
 
-        NguoiDung owner = usersRepository.save(buildUser(request, normalizedEmail, requireSystemRole(RoleName.CANDIDATE)));
+        NguoiDung owner = usersRepository.save(buildUser(request, normalizedEmail, requireSystemRole(RoleName.USER)));
 
         CongTy company = new CongTy();
         company.setTen(companyName);
@@ -143,7 +143,7 @@ public class AdminUserService {
 
         CongTy company = requireCompany(request.getCongTyId());
         List<ChiNhanhCongTy> branches = resolveBranchesForCompany(company, request.getChiNhanhIds());
-        NguoiDung hrUser = usersRepository.save(buildUser(request, normalizedEmail, requireSystemRole(RoleName.CANDIDATE)));
+        NguoiDung hrUser = usersRepository.save(buildUser(request, normalizedEmail, requireSystemRole(RoleName.USER)));
         VaiTroCongTy hrRole = requireCompanyRole(EmployerCompanyRole.HR);
 
         List<ThanhVienCongTy> memberships = new ArrayList<>();

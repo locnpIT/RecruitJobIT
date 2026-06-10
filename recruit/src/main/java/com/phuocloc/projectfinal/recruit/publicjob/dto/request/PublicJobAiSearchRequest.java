@@ -14,4 +14,6 @@ public class PublicJobAiSearchRequest {
     private String prompt;
 
     private Integer gioiHan;
+
+    private Integer trang;
 }

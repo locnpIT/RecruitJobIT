@@ -52,12 +52,12 @@ public class AppUserPrinciple implements UserDetails {
 
     private static RoleName parseRoleName(String rawRole) {
         if (rawRole == null) {
-            return RoleName.CANDIDATE;
+            return RoleName.USER;
         }
         try {
             return RoleName.valueOf(rawRole.toUpperCase());
         } catch (IllegalArgumentException ex) {
-            return RoleName.CANDIDATE;
+            return RoleName.USER;
         }
     }
 

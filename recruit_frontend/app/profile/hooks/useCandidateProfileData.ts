@@ -17,7 +17,7 @@ export type SummaryFormState = {
   mucTieuNgheNghiep: string;
 };
 
-// Luôn nạp thông tin tài khoản; dữ liệu hồ sơ ứng viên chỉ nạp cho role CANDIDATE.
+// Luôn nạp thông tin tài khoản; dữ liệu hồ sơ ứng viên chỉ nạp cho system role USER phù hợp.
 export function useCandidateProfileData(
   user: LocalUser | null,
   candidateEnabled: boolean,

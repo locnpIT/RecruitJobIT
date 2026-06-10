@@ -92,7 +92,7 @@ public class CompanyHrManagementService {
         ensureEmailNotExists(email);
 
         List<ChiNhanhCongTy> branches = resolveBranchesForCompany(company, request.getChiNhanhIds());
-        VaiTroHeThong candidateRole = requireRole(RoleName.CANDIDATE);
+        VaiTroHeThong userRole = requireRole(RoleName.USER);
         VaiTroCongTy hrRole = requireCompanyRole(EmployerCompanyRole.HR);
 
         NguoiDung hrUser = new NguoiDung();
@@ -102,7 +102,7 @@ public class CompanyHrManagementService {
         hrUser.setHo(request.getHo().trim());
         hrUser.setSoDienThoai(trimToNull(request.getSoDienThoai()));
         hrUser.setDangHoatDong(true);
-        hrUser.setVaiTroHeThong(candidateRole);
+        hrUser.setVaiTroHeThong(userRole);
         hrUser = usersRepository.save(hrUser);
 
         List<ThanhVienCongTy> memberships = new ArrayList<>();

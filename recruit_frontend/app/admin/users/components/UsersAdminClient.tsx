@@ -13,7 +13,7 @@ import { UsersTable } from "./UsersTable";
 import { useAdminUsersActions } from "../hooks/useAdminUsersActions";
 import { useAdminUsersData } from "../hooks/useAdminUsersData";
 
-const roleOptions = ["", "ADMIN", "CANDIDATE"];
+const roleOptions = ["", "ADMIN", "USER"];
 const statusOptions = ["", "ACTIVE", "INACTIVE", "DELETED"];
 
 // Client container cho trang /admin/users.

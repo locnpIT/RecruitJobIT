@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import type { CandidateWorkExperienceItem } from "@/services/candidate/candidate-profile.service";
+import { useProfileCrudState } from "../../hooks/useProfileCrudState";
+import { ProfilePickListCard, ProfilePickListWrapper } from "../ProfilePickListCard";
 import { ProfileModal } from "./ProfileModal";
-import { ProfileModalTabs, type ProfileModalTab } from "./ProfileModalTabs";
+import { ProfileModalTabs } from "./ProfileModalTabs";
 import type { WorkExperienceFormState } from "./profileFormTypes";
 import { ProfileActionButton } from "../ProfileActionButton";
 
@@ -38,8 +40,10 @@ export function WorkExperienceModal({
   onDelete: (item: CandidateWorkExperienceItem) => void;
   onToggleSelection: (item: CandidateWorkExperienceItem) => void;
 }) {
-  const [tab, setTab] = useState<ProfileModalTab>("create");
-  const [query, setQuery] = useState("");
+  const { tab, setTab, query, setQuery, filteredItems } = useProfileCrudState(
+    items,
+    (item, q) => `${item.tenCongTy} ${item.chucDanh ?? ""}`.toLowerCase().includes(q)
+  );
 
   const initialForm = useMemo<WorkExperienceFormState>(() => {
     if (!editingItem) return EMPTY_FORM;
@@ -52,14 +56,6 @@ export function WorkExperienceModal({
     };
   }, [editingItem]);
   const [form, setForm] = useState<WorkExperienceFormState>(initialForm);
-
-  const filteredItems = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return items;
-    return items.filter((item) =>
-      `${item.tenCongTy} ${item.chucDanh ?? ""}`.toLowerCase().includes(normalized)
-    );
-  }, [items, query]);
 
   const title = editingItem ? "Sửa kinh nghiệm làm việc" : "Thêm kinh nghiệm làm việc";
   const description = editingItem
@@ -124,38 +120,22 @@ function WorkExperiencePickList({
   onToggleSelection: (item: CandidateWorkExperienceItem) => void;
 }) {
   return (
-    <div className="mt-5 space-y-2">
-      {items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-          Không tìm thấy kinh nghiệm phù hợp.
-        </div>
-      ) : null}
+    <ProfilePickListWrapper isEmpty={items.length === 0} emptyMessage="Không tìm thấy kinh nghiệm phù hợp.">
       {items.map((item) => {
         const dateRange = [item.thoiGianBatDau, item.thoiGianKetThuc].filter(Boolean).join(" - ");
         return (
-          <div key={item.id} className="rounded-md border border-slate-200 bg-white p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-950">{item.tenCongTy}</p>
-                <p className="mt-0.5 text-xs text-slate-600">{item.chucDanh || "Chưa cập nhật chức danh"}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                  {dateRange ? <span>{dateRange}</span> : null}
-                  {item.moTaCongViec ? <span className="text-slate-500">•</span> : null}
-                  {item.moTaCongViec ? <span className="line-clamp-1 max-w-[32rem]">{item.moTaCongViec}</span> : null}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <ProfileActionButton type="button" variant="muted" onClick={() => onEdit(item)} className="px-3 py-2 text-xs">Sửa</ProfileActionButton>
-                <ProfileActionButton type="button" variant={item.duocChon ? "muted" : "primary"} onClick={() => onToggleSelection(item)} className="px-3 py-2 text-xs">
-                  {item.duocChon ? "Ẩn khỏi hồ sơ" : "Thêm vào hồ sơ"}
-                </ProfileActionButton>
-                <ProfileActionButton type="button" variant="danger" onClick={() => onDelete(item)} className="px-3 py-2 text-xs">Xoá</ProfileActionButton>
-              </div>
+          <ProfilePickListCard key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} onToggleSelection={onToggleSelection}>
+            <p className="text-sm font-semibold text-slate-950">{item.tenCongTy}</p>
+            <p className="mt-0.5 text-xs text-slate-600">{item.chucDanh || "Chưa cập nhật chức danh"}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+              {dateRange ? <span>{dateRange}</span> : null}
+              {item.moTaCongViec ? <span className="text-slate-500">•</span> : null}
+              {item.moTaCongViec ? <span className="line-clamp-1 max-w-lg">{item.moTaCongViec}</span> : null}
             </div>
-          </div>
+          </ProfilePickListCard>
         );
       })}
-    </div>
+    </ProfilePickListWrapper>
   );
 }
 
@@ -185,11 +165,23 @@ function WorkExperienceForm({
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label className="text-xs font-medium text-slate-600">Từ ngày</label>
-          <input type="date" value={form.thoiGianBatDau} onChange={(e) => onChange({ ...form, thoiGianBatDau: e.target.value })} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+          <input
+            type="date"
+            value={form.thoiGianBatDau}
+            max={form.thoiGianKetThuc || undefined}
+            onChange={(e) => onChange({ ...form, thoiGianBatDau: e.target.value })}
+            className="h-10 rounded-md border border-slate-300 px-3 text-sm"
+          />
         </div>
         <div className="grid gap-1">
           <label className="text-xs font-medium text-slate-600">Đến ngày</label>
-          <input type="date" value={form.thoiGianKetThuc} onChange={(e) => onChange({ ...form, thoiGianKetThuc: e.target.value })} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+          <input
+            type="date"
+            value={form.thoiGianKetThuc}
+            min={form.thoiGianBatDau || undefined}
+            onChange={(e) => onChange({ ...form, thoiGianKetThuc: e.target.value })}
+            className="h-10 rounded-md border border-slate-300 px-3 text-sm"
+          />
         </div>
       </div>
 

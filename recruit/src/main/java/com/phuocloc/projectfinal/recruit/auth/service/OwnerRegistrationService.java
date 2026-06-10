@@ -6,9 +6,7 @@ import com.phuocloc.projectfinal.recruit.auth.dto.response.CreateOwnerResponse;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
 import com.phuocloc.projectfinal.recruit.auth.repository.RolesRepository;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
-import com.phuocloc.projectfinal.recruit.company.dto.request.CreateEmployerRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyProofTypeResponse;
-import com.phuocloc.projectfinal.recruit.company.dto.response.CreateEmployerResponse;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyProofDocumentStatus;
 import com.phuocloc.projectfinal.recruit.company.enums.CompanyStatus;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
@@ -31,10 +29,8 @@ import com.phuocloc.projectfinal.recruit.domain.diadiem.repository.XaPhuongRepos
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.VaiTroHeThong;
 import com.phuocloc.projectfinal.recruit.infrastructure.cloudinary.CloudinaryStorageService;
-import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailService;
 import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 import java.net.URI;
-import java.security.SecureRandom;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -48,13 +44,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 /**
- * Luồng đăng ký owner công ty và tạo nhân sự từ owner.
+ * Luồng đăng ký owner công ty.
  */
 public class OwnerRegistrationService {
-
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    private static final String TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#$%";
-    private static final int HR_TEMP_PASSWORD_LENGTH = 12;
 
     private final UsersRepository usersRepository;
     private final RolesRepository rolesRepository;
@@ -69,14 +61,13 @@ public class OwnerRegistrationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final CloudinaryStorageService cloudinaryStorageService;
-    private final HrCredentialMailService hrCredentialMailService;
 
     @Transactional
     public CreateOwnerResponse registerOwner(CreateOwnerRequest request) {
         String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
-        VaiTroHeThong candidateRole = requireRole(RoleName.CANDIDATE);
+        VaiTroHeThong userRole = requireRole(RoleName.USER);
         List<ResolvedOwnerProofInput> resolvedProofInputs = resolveOwnerProofInputs(request);
 
         NguoiDung owner = new NguoiDung();
@@ -86,7 +77,7 @@ public class OwnerRegistrationService {
         owner.setHo(request.getHo().trim());
         owner.setSoDienThoai(ServiceUtils.trimToNull(request.getSoDienThoai()));
         owner.setDangHoatDong(true);
-        owner.setVaiTroHeThong(candidateRole);
+        owner.setVaiTroHeThong(userRole);
         owner = usersRepository.save(owner);
 
         CongTy congTy = new CongTy();
@@ -139,53 +130,6 @@ public class OwnerRegistrationService {
                 .toList();
     }
 
-    @Transactional
-    public CreateEmployerResponse createEmployerByOwner(Long ownerUserId, CreateEmployerRequest request) {
-        ThanhVienCongTy ownerProfile = requireOwnerProfile(ownerUserId);
-        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
-        ensureEmailNotExists(normalizedEmail);
-
-        CongTy ownerCompany = requireOwnerCompany(ownerProfile);
-        Integer branchId = ServiceUtils.toIntId(request.getChiNhanhId(), "chiNhanhId");
-        ChiNhanhCongTy branch = companyBranchRepository.findById(branchId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy chi nhánh"));
-
-        if (!branch.getCongTy().getId().equals(ownerCompany.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chi nhánh không thuộc công ty của OWNER");
-        }
-
-        VaiTroHeThong candidateRole = requireRole(RoleName.CANDIDATE);
-        VaiTroCongTy vaiTroCongTy = requireCompanyRole(parseCompanyRole(request.getVaiTroCongTy()));
-        String temporaryPassword = generateTemporaryPassword(HR_TEMP_PASSWORD_LENGTH);
-
-        NguoiDung hrUser = new NguoiDung();
-        hrUser.setEmail(normalizedEmail);
-        hrUser.setMatKhauBam(passwordEncoder.encode(temporaryPassword));
-        hrUser.setTen(request.getTen().trim());
-        hrUser.setHo(request.getHo().trim());
-        hrUser.setSoDienThoai(ServiceUtils.trimToNull(request.getSoDienThoai()));
-        hrUser.setDangHoatDong(true);
-        hrUser.setVaiTroHeThong(candidateRole);
-        hrUser = usersRepository.save(hrUser);
-
-        ThanhVienCongTy hrProfile = new ThanhVienCongTy();
-        hrProfile.setNguoiDung(hrUser);
-        hrProfile.setChiNhanh(branch);
-        hrProfile.setVaiTroCongTy(vaiTroCongTy);
-        hrProfile.setTrangThai("ACTIVE");
-        hrProfile = employerProfileRepository.save(hrProfile);
-
-        hrCredentialMailService.sendInitialPassword(
-                hrUser.getEmail(),
-                hrUser.getTen(),
-                hrUser.getHo(),
-                ownerCompany.getTen(),
-                temporaryPassword
-        );
-
-        return buildCreateEmployerResponse(hrUser, ownerCompany, branch, hrProfile);
-    }
-
     private ThanhVienCongTy requireOwnerProfile(Long ownerUserId) {
         if (ownerUserId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Thiếu thông tin người dùng đăng nhập");
@@ -217,18 +161,6 @@ public class OwnerRegistrationService {
     private VaiTroCongTy requireCompanyRole(EmployerCompanyRole companyRole) {
         return vaiTroCongTyRepository.findByTenIgnoreCase(companyRole.name())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Thiếu vai trò công ty trong DB: " + companyRole));
-    }
-
-    private EmployerCompanyRole parseCompanyRole(String rawRole) {
-        if (!StringUtils.hasText(rawRole)) {
-            return EmployerCompanyRole.HR;
-        }
-
-        try {
-            return EmployerCompanyRole.valueOf(rawRole.trim().toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vai trò công ty không hợp lệ: " + rawRole);
-        }
     }
 
     private LoaiTaiLieu resolveLoaiTaiLieuOwnerProof(Long loaiTaiLieuId) {
@@ -359,15 +291,6 @@ public class OwnerRegistrationService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy xã/phường"));
     }
 
-    private String generateTemporaryPassword(int length) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            int index = SECURE_RANDOM.nextInt(TEMP_PASSWORD_ALPHABET.length());
-            sb.append(TEMP_PASSWORD_ALPHABET.charAt(index));
-        }
-        return sb.toString();
-    }
-
     private CreateOwnerResponse buildCreateOwnerResponse(
             NguoiDung owner,
             CongTy congTy,
@@ -416,27 +339,6 @@ public class OwnerRegistrationService {
                 .congTy(thongTinCongTy)
                 .chiNhanhs(thongTinChiNhanhs)
                 .phienDangNhap(phienDangNhap)
-                .build();
-    }
-
-    private CreateEmployerResponse buildCreateEmployerResponse(
-            NguoiDung hrUser,
-            CongTy ownerCompany,
-            ChiNhanhCongTy branch,
-            ThanhVienCongTy hrProfile
-    ) {
-        return CreateEmployerResponse.builder()
-                .hoSoNhaTuyenDungId(ServiceUtils.toLong(hrUser.getId()))
-                .nguoiDungId(ServiceUtils.toLong(hrUser.getId()))
-                .email(hrUser.getEmail())
-                .ten(hrUser.getTen())
-                .ho(hrUser.getHo())
-                .soDienThoai(hrUser.getSoDienThoai())
-                .congTyId(ServiceUtils.toLong(ownerCompany.getId()))
-                .chiNhanhId(ServiceUtils.toLong(branch.getId()))
-                .vaiTroHeThong(hrUser.getVaiTroHeThong() == null ? null : hrUser.getVaiTroHeThong().getTen())
-                .vaiTroCongTy(hrProfile.getVaiTroCongTy() == null ? null : hrProfile.getVaiTroCongTy().getTen())
-                .dangHoatDong(hrUser.getDangHoatDong())
                 .build();
     }
 

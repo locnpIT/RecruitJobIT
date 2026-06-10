@@ -113,23 +113,25 @@ public class PublicJobService {
             Boolean remote,
             Boolean khongYeuCauKinhNghiem,
             String tuKhoaLoaiTru,
-            Integer kichThuoc
+            Integer kichThuoc,
+            Integer trang
     ) {
         int safeSize = publicJobElasticsearchSearchService.normalizeSize(kichThuoc == null ? DEFAULT_SIZE : kichThuoc);
+        int safePage = publicJobElasticsearchSearchService.normalizePage(trang);
 
         if (publicJobElasticsearchSearchService.isEnabled()) {
             var esResult = publicJobElasticsearchSearchService.searchJobIdsForAi(
                     tuKhoa, diaDiem, luongToiThieuMongMuon, luongToiDaMongMuon,
                     capDoKinhNghiemText, loaiHinhLamViecText, remote, khongYeuCauKinhNghiem,
-                    tuKhoaLoaiTru, DEFAULT_PAGE, safeSize);
+                    tuKhoaLoaiTru, safePage, safeSize);
             List<PublicJobSummaryResponse> data = mapSummaryFromSearchDocumentIds(esResult.getDocumentIds());
             long total = esResult.getTotal();
             return PublicJobSearchResponse.builder()
                     .danhSach(data)
                     .tongSo(total)
-                    .trang(DEFAULT_PAGE)
+                    .trang(safePage)
                     .kichThuoc(safeSize)
-                    .conTrangSau(safeSize < total)
+                    .conTrangSau((safePage + 1L) * safeSize < total)
                     .build();
         }
 
@@ -141,11 +143,21 @@ public class PublicJobService {
                 .filter(job -> mapper.matchesNoExperienceRequired(job, khongYeuCauKinhNghiem))
                 .filter(job -> !mapper.matchesExcludedKeywords(job, tuKhoaLoaiTru))
                 .toList();
-        int to = Math.min(safeSize, all.size());
+        int from = safePage * safeSize;
+        if (from >= all.size()) {
+            return PublicJobSearchResponse.builder()
+                    .danhSach(List.of())
+                    .tongSo(all.size())
+                    .trang(safePage)
+                    .kichThuoc(safeSize)
+                    .conTrangSau(false)
+                    .build();
+        }
+        int to = Math.min(from + safeSize, all.size());
         return PublicJobSearchResponse.builder()
-                .danhSach(all.subList(0, to).stream().map(mapper::mapSummary).toList())
+                .danhSach(all.subList(from, to).stream().map(mapper::mapSummary).toList())
                 .tongSo(all.size())
-                .trang(DEFAULT_PAGE)
+                .trang(safePage)
                 .kichThuoc(safeSize)
                 .conTrangSau(to < all.size())
                 .build();

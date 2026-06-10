@@ -31,7 +31,7 @@ public class CompanyApplicationController {
     private final CompanyAdminService companyAdminService;
 
     @GetMapping("/applications")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<List<CompanyAdminApplicationResponse>>> getApplications(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @RequestParam Integer chiNhanhId
@@ -41,7 +41,7 @@ public class CompanyApplicationController {
     }
 
     @GetMapping("/applications/{applicationId}")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminApplicationResponse>> getApplicationDetail(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long applicationId
@@ -51,7 +51,7 @@ public class CompanyApplicationController {
     }
 
     @PatchMapping("/applications/{applicationId}/status")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminApplicationResponse>> updateApplicationStatus(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long applicationId,
@@ -62,7 +62,7 @@ public class CompanyApplicationController {
     }
 
     @PostMapping("/applications/{applicationId}/interview-email")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminApplicationResponse>> sendInterviewEmail(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long applicationId,

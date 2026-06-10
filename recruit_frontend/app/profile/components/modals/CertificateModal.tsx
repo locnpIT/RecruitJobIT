@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import type { CandidateCertificateItem, CandidateProfileMetadata } from "@/services/candidate/candidate-profile.service";
+import { useProfileCrudState } from "../../hooks/useProfileCrudState";
+import { ProfilePickListCard, ProfilePickListWrapper } from "../ProfilePickListCard";
 import { ProfileModal } from "./ProfileModal";
-import { ProfileModalTabs, type ProfileModalTab } from "./ProfileModalTabs";
+import { ProfileModalTabs } from "./ProfileModalTabs";
 import { ProofUploadBox } from "./ProofUploadBox";
 import type { CertificateFormState } from "./profileFormTypes";
 import { ProofStatusPill } from "../ProofStatusPill";
@@ -46,8 +48,10 @@ export function CertificateModal({
   onDelete: (item: CandidateCertificateItem) => void;
   onToggleSelection: (item: CandidateCertificateItem) => void;
 }) {
-  const [tab, setTab] = useState<ProfileModalTab>("create");
-  const [query, setQuery] = useState("");
+  const { tab, setTab, query, setQuery, filteredItems } = useProfileCrudState(
+    items,
+    (item, q) => `${item.tenChungChi} ${item.loaiChungChiTen ?? ""}`.toLowerCase().includes(q)
+  );
   const [proofError, setProofError] = useState("");
 
   const initialForm = useMemo<CertificateFormState>(() => {
@@ -61,14 +65,6 @@ export function CertificateModal({
     };
   }, [editingItem]);
   const [form, setForm] = useState<CertificateFormState>(initialForm);
-
-  const filteredItems = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return items;
-    return items.filter((item) =>
-      `${item.tenChungChi} ${item.loaiChungChiTen ?? ""}`.toLowerCase().includes(normalized)
-    );
-  }, [items, query]);
 
   const title = editingItem ? "Sửa chứng chỉ" : "Thêm chứng chỉ";
   const description = editingItem
@@ -138,40 +134,24 @@ function CertificatePickList({
   onToggleSelection: (item: CandidateCertificateItem) => void;
 }) {
   return (
-    <div className="mt-5 space-y-2">
-      {items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-          Không tìm thấy chứng chỉ phù hợp.
-        </div>
-      ) : null}
+    <ProfilePickListWrapper isEmpty={items.length === 0} emptyMessage="Không tìm thấy chứng chỉ phù hợp.">
       {items.map((item) => {
         const dateRange = [item.ngayBatDau, item.ngayHetHan].filter(Boolean).join(" - ");
         return (
-          <div key={item.id} className="rounded-md border border-slate-200 bg-white p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-950">{item.tenChungChi}</p>
-                <p className="mt-0.5 text-xs text-slate-600">{item.loaiChungChiTen ?? "Không rõ loại"}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                  {dateRange ? <span>{dateRange}</span> : null}
-                  <ProofStatusPill value={item.trangThai} />
-                  {item.duongDanTep ? (
-                    <a href={item.duongDanTep} target="_blank" rel="noreferrer" className="underline">Xem minh chứng</a>
-                  ) : null}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <ProfileActionButton type="button" variant="muted" onClick={() => onEdit(item)} className="px-3 py-2 text-xs">Sửa</ProfileActionButton>
-                <ProfileActionButton type="button" variant={item.duocChon ? "muted" : "primary"} onClick={() => onToggleSelection(item)} className="px-3 py-2 text-xs">
-                  {item.duocChon ? "Ẩn khỏi hồ sơ" : "Thêm vào hồ sơ"}
-                </ProfileActionButton>
-                <ProfileActionButton type="button" variant="danger" onClick={() => onDelete(item)} className="px-3 py-2 text-xs">Xoá</ProfileActionButton>
-              </div>
+          <ProfilePickListCard key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} onToggleSelection={onToggleSelection}>
+            <p className="text-sm font-semibold text-slate-950">{item.tenChungChi}</p>
+            <p className="mt-0.5 text-xs text-slate-600">{item.loaiChungChiTen ?? "Không rõ loại"}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+              {dateRange ? <span>{dateRange}</span> : null}
+              <ProofStatusPill value={item.trangThai} />
+              {item.duongDanTep ? (
+                <a href={item.duongDanTep} target="_blank" rel="noreferrer" className="underline">Xem minh chứng</a>
+              ) : null}
             </div>
-          </div>
+          </ProfilePickListCard>
         );
       })}
-    </div>
+    </ProfilePickListWrapper>
   );
 }
 
@@ -214,11 +194,23 @@ function CertificateForm({
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label className="text-xs font-medium text-slate-600">Ngày cấp</label>
-          <input type="date" value={form.ngayBatDau} onChange={(e) => onChange({ ...form, ngayBatDau: e.target.value })} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+          <input
+            type="date"
+            value={form.ngayBatDau}
+            max={form.ngayHetHan || undefined}
+            onChange={(e) => onChange({ ...form, ngayBatDau: e.target.value })}
+            className="h-10 rounded-md border border-slate-300 px-3 text-sm"
+          />
         </div>
         <div className="grid gap-1">
           <label className="text-xs font-medium text-slate-600">Ngày hết hạn</label>
-          <input type="date" value={form.ngayHetHan} onChange={(e) => onChange({ ...form, ngayHetHan: e.target.value })} className="h-10 rounded-md border border-slate-300 px-3 text-sm" />
+          <input
+            type="date"
+            value={form.ngayHetHan}
+            min={form.ngayBatDau || undefined}
+            onChange={(e) => onChange({ ...form, ngayHetHan: e.target.value })}
+            className="h-10 rounded-md border border-slate-300 px-3 text-sm"
+          />
         </div>
       </div>
       <ProofUploadBox

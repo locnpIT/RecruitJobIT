@@ -22,7 +22,7 @@ const CATALOGS: CatalogConfig[] = [
     key: "systemRoles",
     label: "Vai trò hệ thống",
     description: "Quản lý bảng VaiTroHeThong.",
-    ruleNote: "Role lõi ADMIN và CANDIDATE không được đổi tên hoặc xoá.",
+    ruleNote: "Role lõi ADMIN và USER không được đổi tên hoặc xoá.",
   },
   {
     key: "companyRoles",

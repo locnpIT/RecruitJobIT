@@ -99,7 +99,7 @@ public class PublicJobController {
     ) {
         return ResponseEntity.ok(new SuccessResponse<>(
                 "Tìm kiếm tin tuyển dụng bằng AI thành công",
-                publicJobAiSearchService.searchByPrompt(request.getPrompt(), request.getGioiHan())
+                publicJobAiSearchService.searchByPrompt(request.getPrompt(), request.getGioiHan(), request.getTrang())
         ));
     }
 }

@@ -34,7 +34,7 @@ public class CompanyProfileController {
     private final CompanyAdminService companyAdminService;
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminMeResponse>> getMe(
             @AuthenticationPrincipal AppUserPrinciple principal
     ) {
@@ -43,7 +43,7 @@ public class CompanyProfileController {
     }
 
     @GetMapping("/branches")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<List<CompanyAdminMeResponse.ThongTinChiNhanh>>> getBranches(
             @AuthenticationPrincipal AppUserPrinciple principal
     ) {
@@ -52,7 +52,7 @@ public class CompanyProfileController {
     }
 
     @PatchMapping("/company/logo")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminMeResponse.ThongTinCongTy>> updateCompanyLogo(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @RequestBody UpdateCompanyLogoRequest request
@@ -62,7 +62,7 @@ public class CompanyProfileController {
     }
 
     @PatchMapping("/company/info")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminMeResponse.ThongTinCongTy>> updateCompanyInfo(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @jakarta.validation.Valid @RequestBody UpdateCompanyInfoRequest request
@@ -72,7 +72,7 @@ public class CompanyProfileController {
     }
 
     @PostMapping("/company/proofs")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminProofResponse>> uploadCompanyProof(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @jakarta.validation.Valid @RequestBody UpdateCompanyProofRequest request
@@ -83,7 +83,7 @@ public class CompanyProfileController {
     }
 
     @PostMapping("/company/proofs/batch")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<List<CompanyAdminProofResponse>>> uploadCompanyProofBatch(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @jakarta.validation.Valid @RequestBody CompanyProofUploadBatchRequest request
@@ -94,14 +94,14 @@ public class CompanyProfileController {
     }
 
     @GetMapping("/company/proof-types")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<List<CompanyProofTypeResponse>>> getCompanyProofTypes() {
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách loại tài liệu thành công",
                 companyAdminService.listProofTypes()));
     }
 
     @PatchMapping("/company/resubmit")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminMeResponse.ThongTinCongTy>> resubmitCompany(
             @AuthenticationPrincipal AppUserPrinciple principal
     ) {

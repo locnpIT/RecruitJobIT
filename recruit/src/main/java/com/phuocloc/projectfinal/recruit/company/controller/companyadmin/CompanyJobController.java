@@ -38,7 +38,7 @@ public class CompanyJobController {
     private final SemanticMatchingService semanticMatchingService;
 
     @GetMapping("/jobs")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<List<CompanyAdminJobResponse>>> getJobs(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @RequestParam Integer chiNhanhId
@@ -48,14 +48,14 @@ public class CompanyJobController {
     }
 
     @GetMapping("/jobs/metadata")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyJobMetadataResponse>> getJobMetadata() {
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh mục tạo tin tuyển dụng thành công",
                 companyAdminService.getJobMetadata()));
     }
 
     @PostMapping("/jobs")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminJobResponse>> createJob(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @jakarta.validation.Valid @RequestBody CreateCompanyJobRequest request
@@ -66,7 +66,7 @@ public class CompanyJobController {
     }
 
     @PatchMapping("/jobs/{jobId}")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminJobResponse>> updateJob(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long jobId,
@@ -77,7 +77,7 @@ public class CompanyJobController {
     }
 
     @DeleteMapping("/jobs/{jobId}")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<Void>> deleteJob(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long jobId
@@ -87,7 +87,7 @@ public class CompanyJobController {
     }
 
     @GetMapping("/jobs/{jobId}/candidate-matches")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<List<CandidateSemanticMatchResponse>>> getCandidateMatchesForJob(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long jobId,
@@ -98,7 +98,7 @@ public class CompanyJobController {
     }
 
     @GetMapping("/jobs/{jobId}/application-matches")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<List<CandidateSemanticMatchResponse>>> getApplicationMatchesForJob(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long jobId,
@@ -109,7 +109,7 @@ public class CompanyJobController {
     }
 
     @GetMapping("/jobs/{jobId}/candidate-profiles/{profileId}")
-    @PreAuthorize("hasRole('CANDIDATE')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<SuccessResponse<CompanyAdminApplicationResponse>> getCandidateProfileForJob(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @PathVariable Long jobId,

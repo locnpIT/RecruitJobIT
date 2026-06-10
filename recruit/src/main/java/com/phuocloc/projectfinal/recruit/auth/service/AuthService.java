@@ -42,7 +42,7 @@ public class AuthService {
         String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
         ensureEmailNotExists(normalizedEmail);
 
-        VaiTroHeThong candidateRole = requireRole(RoleName.CANDIDATE);
+        VaiTroHeThong userRole = requireRole(RoleName.USER);
 
         NguoiDung user = new NguoiDung();
         user.setEmail(normalizedEmail);
@@ -52,7 +52,7 @@ public class AuthService {
         user.setSoDienThoai(ServiceUtils.trimToNull(request.getSoDienThoai()));
         // Candidate phải bấm link xác nhận email trước khi đăng nhập.
         user.setDangHoatDong(false);
-        user.setVaiTroHeThong(candidateRole);
+        user.setVaiTroHeThong(userRole);
         user = usersRepository.save(user);
 
         mailService.sendCandidateEmailVerification(

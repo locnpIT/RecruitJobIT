@@ -35,7 +35,7 @@ export function useSessionUser() {
   }, []);
 
   const role = user?.vaiTro?.toUpperCase() ?? null;
-  const isCandidate = role === "CANDIDATE";
+  const isCandidate = role === "USER";
 
   const fullName = useMemo(() => {
     if (!user) return "";

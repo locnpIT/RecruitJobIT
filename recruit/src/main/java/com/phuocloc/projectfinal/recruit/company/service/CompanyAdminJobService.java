@@ -3,6 +3,7 @@ package com.phuocloc.projectfinal.recruit.company.service;
 import com.phuocloc.projectfinal.recruit.ai.service.JobEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.auth.security.AppUserPrinciple;
 import com.phuocloc.projectfinal.recruit.company.dto.request.CreateCompanyJobRequest;
+import com.phuocloc.projectfinal.recruit.company.dto.request.JobPayloadRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.request.UpdateCompanyJobRequest;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminJobResponse;
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyJobMetadataResponse;
@@ -61,10 +62,10 @@ public class CompanyAdminJobService {
     public CompanyJobMetadataResponse getJobMetadata() {
         // Metadata cho form tạo/sửa tin tuyển dụng, bao gồm kỹ năng để lưu bảng mapping.
         return CompanyJobMetadataResponse.builder()
-                .nganhNghes(nganhNgheRepository.findAll().stream().map(this::mapMetadataOption).toList())
-                .loaiHinhLamViecs(loaiHinhLamViecRepository.findAll().stream().map(this::mapMetadataOption).toList())
-                .capDoKinhNghiems(capDoKinhNghiemRepository.findAll().stream().map(this::mapMetadataOption).toList())
-                .kyNangs(kyNangRepository.findAllByOrderByTenAsc().stream().map(this::mapMetadataOption).toList())
+                .nganhNghes(nganhNgheRepository.findAll().stream().map(e -> mapMetadataOption(e.getId(), e.getTen())).toList())
+                .loaiHinhLamViecs(loaiHinhLamViecRepository.findAll().stream().map(e -> mapMetadataOption(e.getId(), e.getTen())).toList())
+                .capDoKinhNghiems(capDoKinhNghiemRepository.findAll().stream().map(e -> mapMetadataOption(e.getId(), e.getTen())).toList())
+                .kyNangs(kyNangRepository.findAllByOrderByTenAsc().stream().map(e -> mapMetadataOption(e.getId(), e.getTen())).toList())
                 .build();
     }
 
@@ -136,33 +137,7 @@ public class CompanyAdminJobService {
         return tinTuyenDung;
     }
 
-    private void applyJobPayload(TinTuyenDung tinTuyenDung, CreateCompanyJobRequest request) {
-        if (request == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu tin tuyển dụng không hợp lệ");
-        }
-        NganhNghe nganhNghe = nganhNgheRepository.findById(request.getNganhNgheId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ngành nghề"));
-        LoaiHinhLamViec loaiHinhLamViec = loaiHinhLamViecRepository.findById(request.getLoaiHinhLamViecId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại hình làm việc"));
-        CapDoKinhNghiem capDoKinhNghiem = capDoKinhNghiemRepository.findById(request.getCapDoKinhNghiemId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy cấp độ kinh nghiệm"));
-
-        tinTuyenDung.setTieuDe(request.getTieuDe().trim());
-        tinTuyenDung.setNganhNghe(nganhNghe);
-        tinTuyenDung.setMoTa(request.getMoTa().trim());
-        tinTuyenDung.setYeuCau(request.getYeuCau().trim());
-        tinTuyenDung.setPhucLoi(trimToNull(request.getPhucLoi()));
-        tinTuyenDung.setBatBuocCV(Boolean.TRUE.equals(request.getBatBuocCV()));
-        tinTuyenDung.setMauCvUrl(trimToNull(request.getMauCvUrl()));
-        tinTuyenDung.setLoaiHinhLamViec(loaiHinhLamViec);
-        tinTuyenDung.setCapDoKinhNghiem(capDoKinhNghiem);
-        tinTuyenDung.setLuongToiThieu(request.getLuongToiThieu());
-        tinTuyenDung.setLuongToiDa(request.getLuongToiDa());
-        tinTuyenDung.setSoLuongTuyen(request.getSoLuongTuyen());
-        tinTuyenDung.setDenHanLuc(request.getDenHanLuc());
-    }
-
-    private void applyJobPayload(TinTuyenDung tinTuyenDung, UpdateCompanyJobRequest request) {
+    private void applyJobPayload(TinTuyenDung tinTuyenDung, JobPayloadRequest request) {
         if (request == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu tin tuyển dụng không hợp lệ");
         }
@@ -221,31 +196,10 @@ public class CompanyAdminJobService {
                 .build();
     }
 
-    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(NganhNghe entity) {
+    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(Integer id, String ten) {
         return CompanyJobMetadataResponse.OptionItem.builder()
-                .id(ServiceUtils.toLong(entity.getId()))
-                .ten(entity.getTen())
-                .build();
-    }
-
-    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(LoaiHinhLamViec entity) {
-        return CompanyJobMetadataResponse.OptionItem.builder()
-                .id(ServiceUtils.toLong(entity.getId()))
-                .ten(entity.getTen())
-                .build();
-    }
-
-    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(CapDoKinhNghiem entity) {
-        return CompanyJobMetadataResponse.OptionItem.builder()
-                .id(ServiceUtils.toLong(entity.getId()))
-                .ten(entity.getTen())
-                .build();
-    }
-
-    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(KyNang entity) {
-        return CompanyJobMetadataResponse.OptionItem.builder()
-                .id(ServiceUtils.toLong(entity.getId()))
-                .ten(entity.getTen())
+                .id(ServiceUtils.toLong(id))
+                .ten(ten)
                 .build();
     }
 

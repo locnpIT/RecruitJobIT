@@ -63,7 +63,7 @@ export function useCandidateProfileSession() {
 
     let isMounted = true;
     const resolveAccountType = async () => {
-      if (user.vaiTro?.toUpperCase() !== "CANDIDATE") {
+      if (user.vaiTro?.toUpperCase() !== "USER") {
         if (isMounted) {
           setIsCandidateAccount(false);
           setAccountTypeChecked(true);
@@ -74,7 +74,7 @@ export function useCandidateProfileSession() {
       try {
         await companyAdminSettingsService.getMe();
         if (isMounted) {
-          // Owner và HR dùng chung system role CANDIDATE nhưng có membership công ty.
+          // Candidate, owner và HR dùng chung system role USER; membership phân biệt tài khoản công ty.
           setIsCandidateAccount(false);
         }
       } catch (error) {

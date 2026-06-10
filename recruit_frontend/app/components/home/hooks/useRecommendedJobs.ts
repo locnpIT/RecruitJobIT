@@ -24,7 +24,7 @@ function readCandidateSession(): boolean {
 
     const rawUser = localStorage.getItem("user");
     const user = rawUser ? (JSON.parse(rawUser) as LocalUser) : null;
-    return user?.vaiTro?.toUpperCase() === "CANDIDATE";
+    return user?.vaiTro?.toUpperCase() === "USER";
   } catch {
     clearAdminSession();
     return false;

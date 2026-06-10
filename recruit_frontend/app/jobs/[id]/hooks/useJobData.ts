@@ -38,7 +38,7 @@ export function useJobData(jobId: string) {
         }
         const raw = localStorage.getItem("user");
         const user = raw ? (JSON.parse(raw) as LocalUser) : null;
-        setIsCandidate(user?.vaiTro?.toUpperCase() === "CANDIDATE");
+        setIsCandidate(user?.vaiTro?.toUpperCase() === "USER");
       } catch {
         clearAdminSession();
         setIsCandidate(false);

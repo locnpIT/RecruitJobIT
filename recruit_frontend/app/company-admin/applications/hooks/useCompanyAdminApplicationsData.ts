@@ -147,7 +147,18 @@ export function useCompanyAdminApplicationsData() {
     [branches, selectedBranchId]
   );
 
+  const dateRangeError = useMemo(() => {
+    if (!filters.fromDate || !filters.toDate) {
+      return "";
+    }
+    return filters.fromDate > filters.toDate ? "Từ ngày không được lớn hơn đến ngày." : "";
+  }, [filters.fromDate, filters.toDate]);
+
   const filteredApplications = useMemo(() => {
+    if (dateRangeError) {
+      return [];
+    }
+
     return applications.filter((application) => {
       const statusMatches = !filters.status || application.trangThai?.toUpperCase() === filters.status;
       const jobMatches = !filters.jobId || String(application.tinTuyenDungId) === filters.jobId;
@@ -157,7 +168,7 @@ export function useCompanyAdminApplicationsData() {
 
       return statusMatches && jobMatches && fromMatches && toMatches;
     });
-  }, [applications, filters]);
+  }, [applications, dateRangeError, filters]);
 
   return {
     branches,
@@ -175,5 +186,6 @@ export function useCompanyAdminApplicationsData() {
     setError,
     selectedBranch,
     filteredApplications,
+    dateRangeError,
   };
 }

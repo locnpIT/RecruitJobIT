@@ -12,6 +12,7 @@ type ApplicationFiltersProps = {
   jobs: CompanyAdminJob[];
   selectedBranchId: number | null;
   filters: ApplicationFiltersValue;
+  dateRangeError?: string;
   onBranchChange: (branchId: number) => void;
   onFiltersChange: (filters: ApplicationFiltersValue) => void;
 };
@@ -31,6 +32,7 @@ export function ApplicationFilters({
   jobs,
   selectedBranchId,
   filters,
+  dateRangeError,
   onBranchChange,
   onFiltersChange,
 }: ApplicationFiltersProps) {
@@ -92,8 +94,11 @@ export function ApplicationFilters({
           <input
             type="date"
             value={filters.fromDate}
+            max={filters.toDate || undefined}
             onChange={(event) => onFiltersChange({ ...filters, fromDate: event.target.value })}
-            className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
+            className={`mt-2 h-10 w-full rounded-md bg-white px-3 text-sm text-slate-900 ${
+              dateRangeError ? "border border-red-300" : "border border-slate-300"
+            }`}
           />
         </label>
 
@@ -102,11 +107,16 @@ export function ApplicationFilters({
           <input
             type="date"
             value={filters.toDate}
+            min={filters.fromDate || undefined}
             onChange={(event) => onFiltersChange({ ...filters, toDate: event.target.value })}
-            className="mt-2 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900"
+            className={`mt-2 h-10 w-full rounded-md bg-white px-3 text-sm text-slate-900 ${
+              dateRangeError ? "border border-red-300" : "border border-slate-300"
+            }`}
           />
         </label>
       </div>
+
+      {dateRangeError ? <p className="mt-3 text-sm text-red-600">{dateRangeError}</p> : null}
     </section>
   );
 }

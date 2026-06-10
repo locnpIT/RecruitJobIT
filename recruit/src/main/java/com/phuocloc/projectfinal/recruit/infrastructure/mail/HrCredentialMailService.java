@@ -31,8 +31,7 @@ public class HrCredentialMailService {
     /**
      * Gửi mật khẩu khởi tạo cho HR sau khi owner tạo tài khoản mới.
      *
-     * <p>Nếu cấu hình mail bị tắt hoặc thiếu biến môi trường, service sẽ fallback sang log
-     * để flow tạo tài khoản không bị gãy.</p>
+     * <p>Nếu mail chưa sẵn sàng, chỉ ghi cảnh báo kỹ thuật và không log thông tin nhạy cảm.</p>
      */
     @Async("mailTaskExecutor")
     public void sendInitialPassword(
@@ -43,28 +42,13 @@ public class HrCredentialMailService {
             String password
     ) {
         if (!mailProperties.isEnabled()) {
-            log.info(
-                    "[HR-CREDENTIALS][MAIL_DISABLED] to={}, fullName={} {}, company={}, password={}",
-                    toEmail,
-                    lastName,
-                    firstName,
-                    companyName,
-                    password
-            );
+            log.warn("[HR-CREDENTIALS][MAIL_DISABLED] Mail disabled, credential email was not sent to {}", toEmail);
             return;
         }
 
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
         if (mailSender == null) {
-            log.warn("[HR-CREDENTIALS][MAIL_NOT_CONFIGURED] Missing JavaMailSender bean, fallback to log-only.");
-            log.info(
-                    "[HR-CREDENTIALS] to={}, fullName={} {}, company={}, password={}",
-                    toEmail,
-                    lastName,
-                    firstName,
-                    companyName,
-                    password
-            );
+            log.warn("[HR-CREDENTIALS][MAIL_NOT_CONFIGURED] Missing JavaMailSender bean, credential email was not sent to {}", toEmail);
             return;
         }
 
