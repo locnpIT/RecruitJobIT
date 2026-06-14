@@ -32,6 +32,7 @@ public class CandidateEducationController {
 
     private final CandidateProfileService candidateProfileService;
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PostMapping("/educations")
     public ResponseEntity<SuccessResponse<CandidateProfileResponse.HocVanItem>> createEducation(
             @AuthenticationPrincipal AppUserPrinciple principal,
@@ -53,6 +54,7 @@ public class CandidateEducationController {
         return ResponseEntity.ok(new SuccessResponse<>("Tạo học vấn thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PatchMapping("/educations/{educationId}")
     public ResponseEntity<SuccessResponse<CandidateProfileResponse.HocVanItem>> updateEducation(
             @AuthenticationPrincipal AppUserPrinciple principal,
@@ -76,6 +78,7 @@ public class CandidateEducationController {
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật học vấn thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @DeleteMapping("/educations/{educationId}")
     public ResponseEntity<SuccessResponse<Void>> deleteEducation(
             @AuthenticationPrincipal AppUserPrinciple principal,

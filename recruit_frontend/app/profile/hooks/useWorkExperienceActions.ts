@@ -37,12 +37,14 @@ export function useWorkExperienceActions({ activeProfileId, setCandidateData, ma
       toast.error("Thời gian làm việc: từ ngày không được lớn hơn đến ngày.");
       return null;
     }
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi thêm kinh nghiệm làm việc.");
+      return null;
+    }
     try {
       setSubmittingExp(true);
       const body = normalizePayload(payload);
-      const created = activeProfileId
-        ? await candidateProfileService.createWorkExperienceByProfile(activeProfileId, body)
-        : await candidateProfileService.createWorkExperience(body);
+      const created = await candidateProfileService.createWorkExperienceByProfile(activeProfileId, body);
       setCandidateData((prev) => (prev ? { ...prev, kinhNghiems: [created, ...prev.kinhNghiems] } : prev));
       markProfileIndexDirty();
       toast.success("Đã thêm kinh nghiệm làm việc.");
@@ -64,12 +66,14 @@ export function useWorkExperienceActions({ activeProfileId, setCandidateData, ma
       toast.error("Thời gian làm việc: từ ngày không được lớn hơn đến ngày.");
       return null;
     }
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi cập nhật kinh nghiệm làm việc.");
+      return null;
+    }
     try {
       setSubmittingExp(true);
       const body = normalizePayload(payload);
-      const updated = activeProfileId
-        ? await candidateProfileService.updateWorkExperienceByProfile(activeProfileId, experienceId, body)
-        : await candidateProfileService.updateWorkExperience(experienceId, body);
+      const updated = await candidateProfileService.updateWorkExperienceByProfile(activeProfileId, experienceId, body);
       setCandidateData((prev) =>
         prev ? { ...prev, kinhNghiems: prev.kinhNghiems.map((x) => (x.id === updated.id ? updated : x)) } : prev,
       );
@@ -85,12 +89,12 @@ export function useWorkExperienceActions({ activeProfileId, setCandidateData, ma
   };
 
   const handleDeleteWorkExperience = async (item: CandidateWorkExperienceItem) => {
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi xoá kinh nghiệm làm việc.");
+      return;
+    }
     try {
-      if (activeProfileId) {
-        await candidateProfileService.deleteWorkExperienceByProfile(activeProfileId, item.id);
-      } else {
-        await candidateProfileService.deleteWorkExperience(item.id);
-      }
+      await candidateProfileService.deleteWorkExperienceByProfile(activeProfileId, item.id);
       setCandidateData((prev) =>
         prev ? { ...prev, kinhNghiems: prev.kinhNghiems.filter((x) => x.id !== item.id) } : prev,
       );

@@ -20,6 +20,7 @@ import { useCandidateProfileData } from "./hooks/useCandidateProfileData";
 import { useCandidateProfileSession } from "./hooks/useCandidateProfileSession";
 import { useProfileLocationForm } from "./hooks/useProfileLocationForm";
 import { useCandidateProfileActions } from "./hooks/useCandidateProfileActions";
+import { ProfileJobMatchesSection } from "./components/ProfileJobMatchesSection";
 
 // Trang profile ứng viên: page giữ vai trò orchestration + layout,
 // toàn bộ state dữ liệu/mutation đã tách xuống hooks.
@@ -213,6 +214,7 @@ export default function ProfilePage() {
               />
             </section>
 
+
             <section className="mt-8 flex justify-end">
               <ProfileActionButton
                 type="button"
@@ -221,6 +223,10 @@ export default function ProfilePage() {
               >
                 {actions.savingProfileIndex ? "Đang lưu hồ sơ..." : "Lưu hồ sơ"}
               </ProfileActionButton>
+            </section>
+
+             <section className="mt-6">
+              <ProfileJobMatchesSection activeProfileId={activeProfileId!} />
             </section>
             </>
           )

@@ -37,12 +37,14 @@ export function useCertificateActions({ activeProfileId, setCandidateData, markP
       toast.error("Thời hạn chứng chỉ: ngày cấp không được lớn hơn ngày hết hạn.");
       return null;
     }
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi thêm chứng chỉ.");
+      return null;
+    }
     try {
       setSubmittingCert(true);
       const body = normalizePayload(payload);
-      const created = activeProfileId
-        ? await candidateProfileService.createCertificateByProfile(activeProfileId, body)
-        : await candidateProfileService.createCertificate(body);
+      const created = await candidateProfileService.createCertificateByProfile(activeProfileId, body);
       setCandidateData((prev) => (prev ? { ...prev, chungChis: [created, ...prev.chungChis] } : prev));
       markProfileIndexDirty();
       toast.success("Đã thêm chứng chỉ.");
@@ -64,9 +66,13 @@ export function useCertificateActions({ activeProfileId, setCandidateData, markP
       toast.error("Thời hạn chứng chỉ: ngày cấp không được lớn hơn ngày hết hạn.");
       return null;
     }
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi cập nhật chứng chỉ.");
+      return null;
+    }
     try {
       setSubmittingCert(true);
-      const updated = await candidateProfileService.updateCertificate(certificateId, normalizePayload(payload));
+      const updated = await candidateProfileService.updateCertificateByProfile(activeProfileId, certificateId, normalizePayload(payload));
       setCandidateData((prev) =>
         prev ? { ...prev, chungChis: prev.chungChis.map((x) => (x.id === updated.id ? updated : x)) } : prev,
       );
@@ -82,12 +88,12 @@ export function useCertificateActions({ activeProfileId, setCandidateData, markP
   };
 
   const handleDeleteCertificate = async (item: CandidateCertificateItem) => {
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi xoá chứng chỉ.");
+      return;
+    }
     try {
-      if (activeProfileId) {
-        await candidateProfileService.deleteCertificateByProfile(activeProfileId, item.id);
-      } else {
-        await candidateProfileService.deleteCertificate(item.id);
-      }
+      await candidateProfileService.deleteCertificateByProfile(activeProfileId, item.id);
       setCandidateData((prev) => (prev ? { ...prev, chungChis: prev.chungChis.filter((x) => x.id !== item.id) } : prev));
       markProfileIndexDirty();
       toast.success("Đã xoá chứng chỉ.");

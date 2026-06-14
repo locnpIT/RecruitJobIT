@@ -12,16 +12,16 @@ import org.springframework.data.jpa.repository.Query;
  */
 public interface CandidateProfileRepository extends JpaRepository<HoSoUngVien, Integer> {
 
-    @Query("SELECT h FROM HoSoUngVien h WHERE h.nguoiDung.id = :nguoiDungId ORDER BY h.ngayCapNhat desc")
+    @Query("SELECT h FROM HoSoUngVien h WHERE h.nguoiDung.id = :nguoiDungId AND h.ngayXoa IS NULL ORDER BY h.ngayCapNhat desc")
     Optional<HoSoUngVien> findFirstByNguoiDung_IdOrderByNgayCapNhatDesc(Integer nguoiDungId);
 
-    @Query("SELECT h FROM HoSoUngVien h WHERE h.nguoiDung.id = :nguoiDungId ORDER BY h.ngayCapNhat desc")
+    @Query("SELECT h FROM HoSoUngVien h WHERE h.nguoiDung.id = :nguoiDungId AND h.ngayXoa IS NULL ORDER BY h.ngayCapNhat desc")
     List<HoSoUngVien> findAllByNguoiDung_IdOrderByNgayCapNhatDesc(Integer nguoiDungId);
 
     @Query("SELECT h FROM HoSoUngVien h WHERE h.id IN :ids AND h.ngayXoa IS NULL")
     List<HoSoUngVien> findByIdInAndNgayXoaIsNull(List<Integer> ids);
 
-    @Query("SELECT h FROM HoSoUngVien h WHERE h.id = :id AND h.nguoiDung.id = :nguoiDungId")
+    @Query("SELECT h FROM HoSoUngVien h WHERE h.id = :id AND h.nguoiDung.id = :nguoiDungId AND h.ngayXoa IS NULL")
     Optional<HoSoUngVien> findByIdAndNguoiDung_Id(Integer id, Integer nguoiDungId);
 
     @Query("""

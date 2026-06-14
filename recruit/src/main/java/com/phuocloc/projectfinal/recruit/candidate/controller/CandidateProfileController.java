@@ -131,6 +131,7 @@ public class CandidateProfileController {
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh mục hồ sơ ứng viên thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PutMapping("/skills")
     public ResponseEntity<SuccessResponse<List<CandidateProfileResponse.KyNangItem>>> updateSkills(
             @AuthenticationPrincipal AppUserPrinciple principal,
@@ -152,6 +153,7 @@ public class CandidateProfileController {
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật kỹ năng thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PutMapping("/industries")
     public ResponseEntity<SuccessResponse<List<CandidateProfileResponse.NganhNgheItem>>> updateIndustries(
             @AuthenticationPrincipal AppUserPrinciple principal,
@@ -173,6 +175,7 @@ public class CandidateProfileController {
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật ngành nghề thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PatchMapping("/summary")
     public ResponseEntity<SuccessResponse<CandidateProfileResponse>> updateSummary(
             @AuthenticationPrincipal AppUserPrinciple principal,

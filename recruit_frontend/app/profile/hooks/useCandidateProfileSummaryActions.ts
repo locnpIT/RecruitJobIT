@@ -62,11 +62,13 @@ export function useCandidateProfileSummaryActions({
   };
 
   const handleSaveSummary = async () => {
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi lưu phần giới thiệu.");
+      return;
+    }
     try {
       setSavingSummary(true);
-      const updated = activeProfileId
-        ? await candidateProfileService.updateSummaryByProfile(activeProfileId, summaryForm)
-        : await candidateProfileService.updateSummary(summaryForm);
+      const updated = await candidateProfileService.updateSummaryByProfile(activeProfileId, summaryForm);
       setCandidateData((prev) =>
         prev
           ? {

@@ -32,6 +32,7 @@ public class CandidateCertificateController {
 
     private final CandidateProfileService candidateProfileService;
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PostMapping("/certificates")
     public ResponseEntity<SuccessResponse<CandidateProfileResponse.ChungChiItem>> createCertificate(
             @AuthenticationPrincipal AppUserPrinciple principal,
@@ -53,6 +54,7 @@ public class CandidateCertificateController {
         return ResponseEntity.ok(new SuccessResponse<>("Tạo chứng chỉ thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PatchMapping("/certificates/{certificateId}")
     public ResponseEntity<SuccessResponse<CandidateProfileResponse.ChungChiItem>> updateCertificate(
             @AuthenticationPrincipal AppUserPrinciple principal,
@@ -76,6 +78,7 @@ public class CandidateCertificateController {
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật chứng chỉ thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @DeleteMapping("/certificates/{certificateId}")
     public ResponseEntity<SuccessResponse<Void>> deleteCertificate(
             @AuthenticationPrincipal AppUserPrinciple principal,

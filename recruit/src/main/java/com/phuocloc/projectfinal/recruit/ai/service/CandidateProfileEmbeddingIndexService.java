@@ -175,6 +175,13 @@ public class CandidateProfileEmbeddingIndexService {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("hoSoUngVienId", hoSoUngVien.getId());
         payload.put("nguoiDungId", hoSoUngVien.getNguoiDung() == null ? null : hoSoUngVien.getNguoiDung().getId());
+        List<Integer> nganhNgheIds = nganhNgheRepository.findByHoSoUngVien_Id(hoSoUngVien.getId()).stream()
+                .filter(item -> item.getNganhNghe() != null)
+                .map(item -> item.getNganhNghe().getId())
+                .toList();
+        if (!nganhNgheIds.isEmpty()) {
+            payload.put("nganhNgheIds", nganhNgheIds);
+        }
         payload.put("ngayCapNhat", hoSoUngVien.getNgayCapNhat() == null ? null : hoSoUngVien.getNgayCapNhat().toString());
         return payload;
     }

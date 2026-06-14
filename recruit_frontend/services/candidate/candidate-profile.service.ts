@@ -147,6 +147,14 @@ export const candidateProfileService = {
     return response.data.data as CandidateRecommendedJob[];
   },
 
+  listJobMatchesByProfile: async (profileId: number, limit = 10): Promise<CandidateRecommendedJob[]> => {
+    const safeProfileId = requirePathParam(profileId, "profileId");
+    const response = await apiClient.get(`/candidate/profile/${safeProfileId}/job-matches`, {
+      params: { limit },
+    });
+    return response.data.data as CandidateRecommendedJob[];
+  },
+
   createProfile: async (payload?: {
     tenHoSo?: string;
     gioiThieuBanThan?: string;
@@ -174,26 +182,17 @@ export const candidateProfileService = {
     return response.data.data as CandidateProfileMetadata;
   },
 
-  createEducation: async (payload: UpsertEducationPayload): Promise<CandidateEducationItem> => {
-    const response = await apiClient.post("/candidate/profile/educations", payload);
-    return response.data.data as CandidateEducationItem;
-  },
-
   createEducationByProfile: async (profileId: number, payload: UpsertEducationPayload): Promise<CandidateEducationItem> => {
     const safeProfileId = requirePathParam(profileId, "profileId");
     const response = await apiClient.post(`/candidate/profile/${safeProfileId}/educations`, payload);
     return response.data.data as CandidateEducationItem;
   },
 
-  updateEducation: async (educationId: number, payload: UpsertEducationPayload): Promise<CandidateEducationItem> => {
+  updateEducationByProfile: async (profileId: number, educationId: number, payload: UpsertEducationPayload): Promise<CandidateEducationItem> => {
+    const safeProfileId = requirePathParam(profileId, "profileId");
     const safeEducationId = requirePathParam(educationId, "educationId");
-    const response = await apiClient.patch(`/candidate/profile/educations/${safeEducationId}`, payload);
+    const response = await apiClient.patch(`/candidate/profile/${safeProfileId}/educations/${safeEducationId}`, payload);
     return response.data.data as CandidateEducationItem;
-  },
-
-  deleteEducation: async (educationId: number): Promise<void> => {
-    const safeEducationId = requirePathParam(educationId, "educationId");
-    await apiClient.delete(`/candidate/profile/educations/${safeEducationId}`);
   },
 
   deleteEducationByProfile: async (profileId: number, educationId: number): Promise<void> => {
@@ -202,26 +201,12 @@ export const candidateProfileService = {
     await apiClient.delete(`/candidate/profile/${safeProfileId}/educations/${safeEducationId}`);
   },
 
-  createWorkExperience: async (payload: UpsertWorkExperiencePayload): Promise<CandidateWorkExperienceItem> => {
-    const response = await apiClient.post("/candidate/profile/experiences", payload);
-    return response.data.data as CandidateWorkExperienceItem;
-  },
-
   createWorkExperienceByProfile: async (
     profileId: number,
     payload: UpsertWorkExperiencePayload
   ): Promise<CandidateWorkExperienceItem> => {
     const safeProfileId = requirePathParam(profileId, "profileId");
     const response = await apiClient.post(`/candidate/profile/${safeProfileId}/experiences`, payload);
-    return response.data.data as CandidateWorkExperienceItem;
-  },
-
-  updateWorkExperience: async (
-    experienceId: number,
-    payload: UpsertWorkExperiencePayload
-  ): Promise<CandidateWorkExperienceItem> => {
-    const safeExperienceId = requirePathParam(experienceId, "experienceId");
-    const response = await apiClient.patch(`/candidate/profile/experiences/${safeExperienceId}`, payload);
     return response.data.data as CandidateWorkExperienceItem;
   },
 
@@ -236,20 +221,10 @@ export const candidateProfileService = {
     return response.data.data as CandidateWorkExperienceItem;
   },
 
-  deleteWorkExperience: async (experienceId: number): Promise<void> => {
-    const safeExperienceId = requirePathParam(experienceId, "experienceId");
-    await apiClient.delete(`/candidate/profile/experiences/${safeExperienceId}`);
-  },
-
   deleteWorkExperienceByProfile: async (profileId: number, experienceId: number): Promise<void> => {
     const safeProfileId = requirePathParam(profileId, "profileId");
     const safeExperienceId = requirePathParam(experienceId, "experienceId");
     await apiClient.delete(`/candidate/profile/${safeProfileId}/experiences/${safeExperienceId}`);
-  },
-
-  createCertificate: async (payload: UpsertCertificatePayload): Promise<CandidateCertificateItem> => {
-    const response = await apiClient.post("/candidate/profile/certificates", payload);
-    return response.data.data as CandidateCertificateItem;
   },
 
   createCertificateByProfile: async (profileId: number, payload: UpsertCertificatePayload): Promise<CandidateCertificateItem> => {
@@ -258,15 +233,11 @@ export const candidateProfileService = {
     return response.data.data as CandidateCertificateItem;
   },
 
-  updateCertificate: async (certificateId: number, payload: UpsertCertificatePayload): Promise<CandidateCertificateItem> => {
+  updateCertificateByProfile: async (profileId: number, certificateId: number, payload: UpsertCertificatePayload): Promise<CandidateCertificateItem> => {
+    const safeProfileId = requirePathParam(profileId, "profileId");
     const safeCertificateId = requirePathParam(certificateId, "certificateId");
-    const response = await apiClient.patch(`/candidate/profile/certificates/${safeCertificateId}`, payload);
+    const response = await apiClient.patch(`/candidate/profile/${safeProfileId}/certificates/${safeCertificateId}`, payload);
     return response.data.data as CandidateCertificateItem;
-  },
-
-  deleteCertificate: async (certificateId: number): Promise<void> => {
-    const safeCertificateId = requirePathParam(certificateId, "certificateId");
-    await apiClient.delete(`/candidate/profile/certificates/${safeCertificateId}`);
   },
 
   deleteCertificateByProfile: async (profileId: number, certificateId: number): Promise<void> => {
@@ -275,35 +246,16 @@ export const candidateProfileService = {
     await apiClient.delete(`/candidate/profile/${safeProfileId}/certificates/${safeCertificateId}`);
   },
 
-  updateSkills: async (kyNangIds: number[]): Promise<CandidateSkillItem[]> => {
-    const response = await apiClient.put("/candidate/profile/skills", { kyNangIds });
-    return response.data.data as CandidateSkillItem[];
-  },
-
   updateSkillsByProfile: async (profileId: number, kyNangIds: number[]): Promise<CandidateSkillItem[]> => {
     const safeProfileId = requirePathParam(profileId, "profileId");
     const response = await apiClient.put(`/candidate/profile/${safeProfileId}/skills`, { kyNangIds });
     return response.data.data as CandidateSkillItem[];
   },
 
-  updateIndustries: async (nganhNgheIds: number[]): Promise<CandidateIndustryItem[]> => {
-    const response = await apiClient.put("/candidate/profile/industries", { nganhNgheIds });
-    return response.data.data as CandidateIndustryItem[];
-  },
-
   updateIndustriesByProfile: async (profileId: number, nganhNgheIds: number[]): Promise<CandidateIndustryItem[]> => {
     const safeProfileId = requirePathParam(profileId, "profileId");
     const response = await apiClient.put(`/candidate/profile/${safeProfileId}/industries`, { nganhNgheIds });
     return response.data.data as CandidateIndustryItem[];
-  },
-
-  updateSummary: async (payload: {
-    tenHoSo?: string;
-    gioiThieuBanThan?: string;
-    mucTieuNgheNghiep?: string;
-  }): Promise<CandidateProfile> => {
-    const response = await apiClient.patch("/candidate/profile/summary", payload);
-    return response.data.data as CandidateProfile;
   },
 
   updateSummaryByProfile: async (profileId: number, payload: {

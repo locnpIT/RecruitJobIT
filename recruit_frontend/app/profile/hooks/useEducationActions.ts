@@ -38,12 +38,14 @@ export function useEducationActions({ activeProfileId, setCandidateData, markPro
       toast.error("Thời gian học: từ ngày không được lớn hơn đến ngày.");
       return null;
     }
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi thêm học vấn.");
+      return null;
+    }
     try {
       setSubmittingEdu(true);
       const body = normalizePayload(payload);
-      const created = activeProfileId
-        ? await candidateProfileService.createEducationByProfile(activeProfileId, body)
-        : await candidateProfileService.createEducation(body);
+      const created = await candidateProfileService.createEducationByProfile(activeProfileId, body);
       setCandidateData((prev) => (prev ? { ...prev, hocVans: [created, ...prev.hocVans] } : prev));
       markProfileIndexDirty();
       toast.success("Đã thêm học vấn.");
@@ -65,9 +67,13 @@ export function useEducationActions({ activeProfileId, setCandidateData, markPro
       toast.error("Thời gian học: từ ngày không được lớn hơn đến ngày.");
       return null;
     }
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi cập nhật học vấn.");
+      return null;
+    }
     try {
       setSubmittingEdu(true);
-      const updated = await candidateProfileService.updateEducation(educationId, normalizePayload(payload));
+      const updated = await candidateProfileService.updateEducationByProfile(activeProfileId, educationId, normalizePayload(payload));
       setCandidateData((prev) =>
         prev ? { ...prev, hocVans: prev.hocVans.map((x) => (x.id === updated.id ? updated : x)) } : prev,
       );
@@ -83,12 +89,12 @@ export function useEducationActions({ activeProfileId, setCandidateData, markPro
   };
 
   const handleDeleteEducation = async (item: CandidateEducationItem) => {
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi xoá học vấn.");
+      return;
+    }
     try {
-      if (activeProfileId) {
-        await candidateProfileService.deleteEducationByProfile(activeProfileId, item.id);
-      } else {
-        await candidateProfileService.deleteEducation(item.id);
-      }
+      await candidateProfileService.deleteEducationByProfile(activeProfileId, item.id);
       setCandidateData((prev) => (prev ? { ...prev, hocVans: prev.hocVans.filter((x) => x.id !== item.id) } : prev));
       markProfileIndexDirty();
       toast.success("Đã xoá học vấn.");

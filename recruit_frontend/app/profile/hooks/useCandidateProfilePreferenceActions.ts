@@ -34,11 +34,13 @@ export function useCandidateProfilePreferenceActions({
   };
 
   const handleSaveSkills = async (nextSkillIds = selectedSkillIds) => {
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi cập nhật kỹ năng.");
+      return false;
+    }
     try {
       setSavingSkills(true);
-      const updated = activeProfileId
-        ? await candidateProfileService.updateSkillsByProfile(activeProfileId, nextSkillIds)
-        : await candidateProfileService.updateSkills(nextSkillIds);
+      const updated = await candidateProfileService.updateSkillsByProfile(activeProfileId, nextSkillIds);
       setSelectedSkillIds(updated.map((item) => item.id));
       setCandidateData((prev) => {
         if (!prev) {
@@ -67,11 +69,13 @@ export function useCandidateProfilePreferenceActions({
   };
 
   const handleSaveIndustries = async (nextIndustryIds = selectedIndustryIds) => {
+    if (!activeProfileId) {
+      toast.error("Bạn cần chọn hồ sơ trước khi cập nhật ngành nghề.");
+      return false;
+    }
     try {
       setSavingIndustries(true);
-      const updated = activeProfileId
-        ? await candidateProfileService.updateIndustriesByProfile(activeProfileId, nextIndustryIds)
-        : await candidateProfileService.updateIndustries(nextIndustryIds);
+      const updated = await candidateProfileService.updateIndustriesByProfile(activeProfileId, nextIndustryIds);
       setSelectedIndustryIds(updated.map((item) => item.id));
       setCandidateData((prev) => (prev ? { ...prev, nganhNghes: updated } : prev));
       markProfileIndexDirty();

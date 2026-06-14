@@ -61,8 +61,13 @@ public class JobEmbeddingIndexService {
     /**
      * Đồng bộ hoặc tạm dừng index cho một tin tuyển dụng.
      *
-     * <p>Chỉ index các tin đang được phép hiển thị public (`APPROVED`, chưa xóa mềm).
-     * Các tin còn lại sẽ bị rút khỏi vector store để tránh xuất hiện trong kết quả semantic.</p>
+     * <p>Chỉ index tin thỏa đồng thời 3 điều kiện:
+     * <ul>
+     *   <li>Chưa bị xóa mềm ({@code ngayXoa == null})</li>
+     *   <li>Đã được duyệt ({@code trangThai == APPROVED})</li>
+     *   <li>Chưa hết hạn nộp ({@code denHanLuc == null} hoặc {@code denHanLuc > now})</li>
+     * </ul>
+     * Tin không thỏa sẽ bị xóa khỏi vector store để kết quả semantic matching sạch.</p>
      */
     @Transactional
     public void syncOrDeactivateIndex(TinTuyenDung tinTuyenDung) {
@@ -100,9 +105,14 @@ public class JobEmbeddingIndexService {
 
     /**
      * Rule active của semantic search job.
+     * Tin hết hạn (denHanLuc < now) bị loại khỏi index dù vẫn APPROVED,
+     * vì ứng viên không còn apply được nữa.
      */
     private boolean isActiveForSearch(TinTuyenDung tinTuyenDung) {
-        return tinTuyenDung.getNgayXoa() == null && "APPROVED".equalsIgnoreCase(tinTuyenDung.getTrangThai());
+        return tinTuyenDung.getNgayXoa() == null
+                && "APPROVED".equalsIgnoreCase(tinTuyenDung.getTrangThai())
+                && (tinTuyenDung.getDenHanLuc() == null
+                        || tinTuyenDung.getDenHanLuc().isAfter(LocalDateTime.now()));
     }
 
     /**
@@ -182,17 +192,27 @@ public class JobEmbeddingIndexService {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("tinTuyenDungId", tinTuyenDung.getId());
         payload.put("trangThai", tinTuyenDung.getTrangThai());
+        payload.put("nganhNgheId", tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getId());
         payload.put("nganhNghe", tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getTen());
         payload.put("congTy", tinTuyenDung.getChiNhanh() == null || tinTuyenDung.getChiNhanh().getCongTy() == null
                 ? null
                 : tinTuyenDung.getChiNhanh().getCongTy().getTen());
+        if (tinTuyenDung.getChiNhanh() != null && tinTuyenDung.getChiNhanh().getXaPhuong() != null
+                && tinTuyenDung.getChiNhanh().getXaPhuong().getTinhThanh() != null) {
+            payload.put("tinhThanhId", tinTuyenDung.getChiNhanh().getXaPhuong().getTinhThanh().getId());
+        }
+        payload.put("luongToiThieu", tinTuyenDung.getLuongToiThieu());
+        payload.put("luongToiDa", tinTuyenDung.getLuongToiDa());
+        payload.put("denHanLuc", tinTuyenDung.getDenHanLuc() == null ? null : tinTuyenDung.getDenHanLuc().toString());
         payload.put("ngayCapNhat", tinTuyenDung.getNgayCapNhat() == null ? null : tinTuyenDung.getNgayCapNhat().toString());
         return payload;
     }
 
     /**
-     * Gom toàn bộ thông tin job thành text ngữ nghĩa:
-     * mô tả/yêu cầu/phúc lợi, metadata nghề nghiệp, địa điểm, kỹ năng.
+     * Gom toàn bộ thông tin ngữ nghĩa của job thành text trước khi embedding.
+     * Chỉ bao gồm nội dung mô tả (mô tả, yêu cầu, phúc lợi, kỹ năng, cấp độ).
+     * Dữ liệu cấu trúc (lương, địa điểm, số lượng tuyển) được lưu trong payload Qdrant
+     * để dùng cho pre-filter thay vì làm nhiễu vector ngữ nghĩa.
      */
     private String buildEmbeddingContent(TinTuyenDung tinTuyenDung) {
         StringBuilder sb = new StringBuilder(1024);
@@ -206,18 +226,6 @@ public class JobEmbeddingIndexService {
         append(sb, "Cong ty", tinTuyenDung.getChiNhanh() == null || tinTuyenDung.getChiNhanh().getCongTy() == null
                 ? null
                 : tinTuyenDung.getChiNhanh().getCongTy().getTen());
-        append(sb, "Chi nhanh", tinTuyenDung.getChiNhanh() == null ? null : tinTuyenDung.getChiNhanh().getTen());
-        append(sb, "Dia chi chi tiet", tinTuyenDung.getChiNhanh() == null ? null : tinTuyenDung.getChiNhanh().getDiaChiChiTiet());
-        if (tinTuyenDung.getChiNhanh() != null && tinTuyenDung.getChiNhanh().getXaPhuong() != null) {
-            append(sb, "Xa phuong", tinTuyenDung.getChiNhanh().getXaPhuong().getTen());
-            if (tinTuyenDung.getChiNhanh().getXaPhuong().getTinhThanh() != null) {
-                append(sb, "Tinh thanh", tinTuyenDung.getChiNhanh().getXaPhuong().getTinhThanh().getTen());
-            }
-        }
-        append(sb, "Luong toi thieu", tinTuyenDung.getLuongToiThieu() == null ? null : tinTuyenDung.getLuongToiThieu().toString());
-        append(sb, "Luong toi da", tinTuyenDung.getLuongToiDa() == null ? null : tinTuyenDung.getLuongToiDa().toString());
-        append(sb, "So luong tuyen", tinTuyenDung.getSoLuongTuyen() == null ? null : tinTuyenDung.getSoLuongTuyen().toString());
-        append(sb, "Bat buoc cv", Boolean.TRUE.equals(tinTuyenDung.getBatBuocCV()) ? "co" : "khong");
 
         kyNangTinTuyenDungRepository.findByTinTuyenDungIdOrderByKyNangTenAsc(tinTuyenDung.getId()).forEach(item -> {
             if (item.getKyNang() != null) {

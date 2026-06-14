@@ -79,7 +79,8 @@ public class SemanticMatchScoringService {
 
     private double skillCoverage(List<String> requiredSkills, List<String> matchedSkills) {
         if (requiredSkills == null || requiredSkills.isEmpty()) {
-            return 60.0;
+            // Không có yêu cầu kỹ năng → điểm trung tính, không ưu tiên cũng không phạt.
+            return 50.0;
         }
         if (matchedSkills == null || matchedSkills.isEmpty()) {
             return 0.0;
@@ -95,7 +96,7 @@ public class SemanticMatchScoringService {
                 .distinct()
                 .count();
         if (requiredCount == 0) {
-            return 60.0;
+            return 50.0;
         }
         return Math.min(100.0, (matchedCount * 100.0) / requiredCount);
     }

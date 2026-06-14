@@ -10,7 +10,7 @@ export type AdminNavItem = {
 export const adminNavItems: AdminNavItem[] = [
   { label: "Tổng quan", href: "/admin" },
   { label: "Quản lý người dùng", href: "/admin/users" },
-  { label: "Duyệt công ty", href: "/admin/companies" },
+  { label: "Quản lý công ty", href: "/admin/companies" },
   { label: "Duyệt tin tuyển dụng", href: "/admin/jobs" },
   { label: "Duyệt hồ sơ ứng viên", href: "/admin/candidate-proofs" },
   { label: "Gói dịch vụ", href: "/admin/plans" },

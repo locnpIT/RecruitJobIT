@@ -32,6 +32,7 @@ public class CandidateExperienceController {
 
     private final CandidateProfileService candidateProfileService;
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PostMapping("/experiences")
     public ResponseEntity<SuccessResponse<CandidateProfileResponse.KinhNghiemItem>> createExperience(
             @AuthenticationPrincipal AppUserPrinciple principal,
@@ -53,6 +54,7 @@ public class CandidateExperienceController {
         return ResponseEntity.ok(new SuccessResponse<>("Tạo kinh nghiệm làm việc thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @PatchMapping("/experiences/{experienceId}")
     public ResponseEntity<SuccessResponse<CandidateProfileResponse.KinhNghiemItem>> updateExperience(
             @AuthenticationPrincipal AppUserPrinciple principal,
@@ -76,6 +78,7 @@ public class CandidateExperienceController {
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật kinh nghiệm làm việc thành công", data));
     }
 
+    @Deprecated(since = "2026-06", forRemoval = false)
     @DeleteMapping("/experiences/{experienceId}")
     public ResponseEntity<SuccessResponse<Void>> deleteExperience(
             @AuthenticationPrincipal AppUserPrinciple principal,
