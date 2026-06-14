@@ -14,6 +14,7 @@ import com.phuocloc.projectfinal.recruit.domain.chat.entity.CuocTroChuyen;
 import com.phuocloc.projectfinal.recruit.domain.chat.entity.TinNhan;
 import com.phuocloc.projectfinal.recruit.domain.chat.repository.CuocTroChuyenRepository;
 import com.phuocloc.projectfinal.recruit.domain.chat.repository.TinNhanRepository;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nguoidung.entity.NguoiDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
@@ -96,12 +97,12 @@ public class ChatService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đơn ứng tuyển"));
 
         TinTuyenDung job = application.getTinTuyenDung();
-        if (job == null || job.getChiNhanh() == null || job.getChiNhanh().getId() == null) {
+        if (job == null || job.getChiNhanhs() == null || job.getChiNhanhs().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đơn ứng tuyển chưa gắn chi nhánh hợp lệ");
         }
 
         // Chỉ owner/hr của chi nhánh quản lý đơn mới được mở chat từ màn ứng viên.
-        companyAdminAccessService.requireMembership(viewerId, job.getChiNhanh().getId(), COMPANY_CHAT_ROLES);
+        requireMembershipForAnyJobBranch(viewerId, job);
 
         Integer candidateId = application.getHoSoUngVien() != null && application.getHoSoUngVien().getNguoiDung() != null
                 ? application.getHoSoUngVien().getNguoiDung().getId()
@@ -131,12 +132,12 @@ public class ChatService {
         TinTuyenDung job = tinTuyenDungRepository.findById(safeJobId)
                 .filter(item -> item.getNgayXoa() == null)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng"));
-        if (job.getChiNhanh() == null || job.getChiNhanh().getId() == null) {
+        if (job.getChiNhanhs() == null || job.getChiNhanhs().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tin tuyển dụng chưa gắn chi nhánh hợp lệ");
         }
 
         // Chỉ owner/hr của chi nhánh quản lý tin mới được chủ động mở chat với ứng viên.
-        companyAdminAccessService.requireMembership(viewerId, job.getChiNhanh().getId(), COMPANY_CHAT_ROLES);
+        requireMembershipForAnyJobBranch(viewerId, job);
 
         HoSoUngVien profile = candidateProfileRepository.findById(safeProfileId)
                 .filter(item -> item.getNgayXoa() == null)
@@ -270,6 +271,25 @@ public class ChatService {
             participantIds.add(recruiterId);
         }
         return participantIds;
+    }
+
+    private void requireMembershipForAnyJobBranch(Integer viewerId, TinTuyenDung job) {
+        ResponseStatusException lastFailure = null;
+        for (ChiNhanhCongTy branch : job.getChiNhanhs()) {
+            if (branch == null || branch.getId() == null) {
+                continue;
+            }
+            try {
+                companyAdminAccessService.requireMembership(viewerId, branch.getId(), COMPANY_CHAT_ROLES);
+                return;
+            } catch (ResponseStatusException ex) {
+                lastFailure = ex;
+            }
+        }
+        if (lastFailure != null) {
+            throw lastFailure;
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tin tuyển dụng chưa gắn chi nhánh hợp lệ");
     }
 
     private Integer toIntId(Long value, String fieldName) {

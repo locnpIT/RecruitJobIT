@@ -10,8 +10,8 @@ import { JobSkillsMultiSelect } from "./JobSkillsMultiSelect";
 
 // Modal tạo/cập nhật tin tuyển dụng của công ty.
 // Nhận state từ page container và chỉ đảm nhiệm phần nhập liệu + phát submit event.
-type JobFormValues = {
-  chiNhanhId: number;
+export type JobFormValues = {
+  chiNhanhIds: number[];
   tieuDe: string;
   nganhNgheId: number;
   moTa: string;
@@ -19,7 +19,7 @@ type JobFormValues = {
   phucLoi?: string;
   batBuocCV?: boolean;
   mauCvUrl?: string;
-  loaiHinhLamViecId: number;
+  loaiHinhLamViecIds: number[];
   capDoKinhNghiemId: number;
   luongToiThieu?: number;
   luongToiDa?: number;
@@ -32,14 +32,15 @@ type JobFormModalProps = {
   open: boolean;
   editingJobId: number | null;
   branches: CompanyAdminBranch[];
-  selectedBranchId: number | null;
-  chiNhanhField: UseFormRegisterReturn<"chiNhanhId">;
+  selectedChiNhanhIds: number[];
+  onToggleBranch: (branchId: number) => void;
   register: (name: keyof JobFormValues, options?: Record<string, unknown>) => UseFormRegisterReturn;
-  onBranchChange: (value: number) => void;
   onSubmit: (event?: BaseSyntheticEvent) => void;
   onClose: () => void;
   nganhNgheOptions: CompanyJobMetadataOption[];
   loaiHinhOptions: CompanyJobMetadataOption[];
+  selectedLoaiHinhLamViecIds: number[];
+  onToggleWorkType: (workTypeId: number) => void;
   capDoOptions: CompanyJobMetadataOption[];
   kyNangOptions: CompanyJobMetadataOption[];
   selectedKyNangIds: number[];
@@ -63,14 +64,15 @@ export function JobFormModal({
   open,
   editingJobId,
   branches,
-  selectedBranchId,
-  chiNhanhField,
+  selectedChiNhanhIds,
+  onToggleBranch,
   register,
-  onBranchChange,
   onSubmit,
   onClose,
   nganhNgheOptions,
   loaiHinhOptions,
+  selectedLoaiHinhLamViecIds,
+  onToggleWorkType,
   capDoOptions,
   kyNangOptions,
   selectedKyNangIds,
@@ -136,12 +138,13 @@ export function JobFormModal({
         <form className="space-y-4" onSubmit={onSubmit}>
           <JobFormSelectFields
             branches={branches}
-            selectedBranchId={selectedBranchId}
-            chiNhanhField={chiNhanhField}
-            onBranchChange={onBranchChange}
+            selectedChiNhanhIds={selectedChiNhanhIds}
+            onToggleBranch={onToggleBranch}
             register={register}
             nganhNgheOptions={nganhNgheOptions}
             loaiHinhOptions={loaiHinhOptions}
+            selectedLoaiHinhLamViecIds={selectedLoaiHinhLamViecIds}
+            onToggleWorkType={onToggleWorkType}
             capDoOptions={capDoOptions}
             kyNangOptions={kyNangOptions}
             selectedKyNangIds={selectedKyNangIds}
@@ -194,12 +197,13 @@ export function JobFormModal({
 
 type JobFormSelectFieldsProps = {
   branches: CompanyAdminBranch[];
-  selectedBranchId: number | null;
-  chiNhanhField: UseFormRegisterReturn<"chiNhanhId">;
-  onBranchChange: (value: number) => void;
+  selectedChiNhanhIds: number[];
+  onToggleBranch: (branchId: number) => void;
   register: (name: keyof JobFormValues, options?: Record<string, unknown>) => UseFormRegisterReturn;
   nganhNgheOptions: CompanyJobMetadataOption[];
   loaiHinhOptions: CompanyJobMetadataOption[];
+  selectedLoaiHinhLamViecIds: number[];
+  onToggleWorkType: (workTypeId: number) => void;
   capDoOptions: CompanyJobMetadataOption[];
   kyNangOptions: CompanyJobMetadataOption[];
   selectedKyNangIds: number[];
@@ -208,12 +212,13 @@ type JobFormSelectFieldsProps = {
 
 function JobFormSelectFields({
   branches,
-  selectedBranchId,
-  chiNhanhField,
-  onBranchChange,
+  selectedChiNhanhIds,
+  onToggleBranch,
   register,
   nganhNgheOptions,
   loaiHinhOptions,
+  selectedLoaiHinhLamViecIds,
+  onToggleWorkType,
   capDoOptions,
   kyNangOptions,
   selectedKyNangIds,
@@ -222,22 +227,26 @@ function JobFormSelectFields({
   return (
     <>
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Chi nhánh</label>
-        <select
-          {...chiNhanhField}
-          className="w-full border border-slate-300 bg-white px-3 py-2 text-sm"
-          value={selectedBranchId ?? ""}
-          onChange={(event) => {
-            chiNhanhField.onChange(event);
-            onBranchChange(Number(event.target.value));
-          }}
-        >
-          {branches.map((branch) => (
-            <option key={branch.chiNhanhId} value={branch.chiNhanhId ?? ""}>
-              {branch.chiNhanhTen} {branch.vaiTroCongTy ? `(${branch.vaiTroCongTy})` : ""}
-            </option>
-          ))}
-        </select>
+        <label className="mb-1 block text-sm font-medium text-slate-700">Chi nhánh áp dụng</label>
+        <div className="grid gap-2 rounded-md border border-slate-300 bg-white p-3">
+          {branches.map((branch) => {
+            const branchId = branch.chiNhanhId ?? 0;
+            return (
+              <label key={branchId} className="flex items-start gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={selectedChiNhanhIds.includes(branchId)}
+                  onChange={() => onToggleBranch(branchId)}
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
+                />
+                <span>
+                  <span className="block font-medium text-slate-900">{branch.chiNhanhTen}</span>
+                  <span className="block text-xs text-slate-500">{branch.congTyTen ?? ""}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
       </div>
 
       <Field label="Tiêu đề" inputProps={register("tieuDe")} placeholder="Tuyển dụng Backend Engineer" />
@@ -254,12 +263,22 @@ function JobFormSelectFields({
 
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">Loại hình làm việc</label>
-        <select {...register("loaiHinhLamViecId", { valueAsNumber: true })} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
-          <option value={0}>Chọn loại hình làm việc</option>
-          {loaiHinhOptions.map((item) => (
-            <option key={item.id ?? `loaihinh-${item.ten}`} value={item.id ?? 0}>{item.ten ?? "--"}</option>
-          ))}
-        </select>
+        <div className="grid gap-2 rounded-md border border-slate-300 bg-white p-3">
+          {loaiHinhOptions.map((item) => {
+            const workTypeId = item.id ?? 0;
+            return (
+              <label key={workTypeId || `loaihinh-${item.ten}`} className="flex items-start gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={selectedLoaiHinhLamViecIds.includes(workTypeId)}
+                  onChange={() => onToggleWorkType(workTypeId)}
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
+                />
+                <span className="font-medium text-slate-900">{item.ten ?? "--"}</span>
+              </label>
+            );
+          })}
+        </div>
       </div>
 
       <div>
@@ -328,5 +347,3 @@ function Field({
     </div>
   );
 }
-
-export type { JobFormValues };

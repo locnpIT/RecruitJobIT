@@ -267,7 +267,7 @@ public class AdminCompanyService {
         if (activeBranches.size() <= 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể xoá chi nhánh cuối cùng của công ty");
         }
-        if (tinTuyenDungRepository.existsByChiNhanh_IdAndNgayXoaIsNull(branch.getId())) {
+        if (tinTuyenDungRepository.existsByChiNhanhs_IdAndNgayXoaIsNull(branch.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chi nhánh đang có tin tuyển dụng, không thể xoá");
         }
         if (!employerProfileRepository.findByChiNhanh_IdAndNgayXoaIsNullAndNguoiDung_DangHoatDongTrue(branch.getId()).isEmpty()) {

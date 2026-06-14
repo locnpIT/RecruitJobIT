@@ -12,6 +12,10 @@ type JobPreviewHeroProps = {
 
 export function JobPreviewHero({ job, company }: JobPreviewHeroProps) {
   const companyName = job.congTyTen ?? company?.ten ?? "Công ty";
+  const branchNames = (job.chiNhanhs ?? [])
+    .map((branch) => branch.chiNhanhTen)
+    .filter(Boolean)
+    .join(", ");
   const tags = [
     job.nganhNgheTen,
     job.capDoKinhNghiemTen,
@@ -41,7 +45,7 @@ export function JobPreviewHero({ job, company }: JobPreviewHeroProps) {
             </span>
             <span className="inline-flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              {job.chiNhanhTen ?? "Chi nhánh"}
+              {branchNames || "Chi nhánh"}
             </span>
             <span className="inline-flex items-center gap-2">
               <CalendarClock className="h-4 w-4" />
@@ -80,4 +84,3 @@ export function JobPreviewHero({ job, company }: JobPreviewHeroProps) {
     </section>
   );
 }
-

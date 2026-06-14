@@ -220,9 +220,21 @@ public class PublicJobService {
                 .filter(job -> mapper.matchesKeyword(job, normalizedKeyword))
                 .filter(job -> mapper.matchesLocation(job, normalizedLocation))
                 .filter(job -> nganhNgheId == null || (job.getNganhNghe() != null && Objects.equals(job.getNganhNghe().getId(), nganhNgheId)))
-                .filter(job -> loaiHinhLamViecId == null || (job.getLoaiHinhLamViec() != null && Objects.equals(job.getLoaiHinhLamViec().getId(), loaiHinhLamViecId)))
+                .filter(job -> matchesWorkType(job, loaiHinhLamViecId))
                 .filter(job -> capDoKinhNghiemId == null || (job.getCapDoKinhNghiem() != null && Objects.equals(job.getCapDoKinhNghiem().getId(), capDoKinhNghiemId)))
                 .toList();
+    }
+
+    private boolean matchesWorkType(TinTuyenDung job, Integer loaiHinhLamViecId) {
+        if (loaiHinhLamViecId == null) {
+            return true;
+        }
+        if (job.getLoaiHinhLamViecs() != null && !job.getLoaiHinhLamViecs().isEmpty()) {
+            return job.getLoaiHinhLamViecs().stream()
+                    .filter(Objects::nonNull)
+                    .anyMatch(item -> Objects.equals(item.getId(), loaiHinhLamViecId));
+        }
+        return job.getLoaiHinhLamViec() != null && Objects.equals(job.getLoaiHinhLamViec().getId(), loaiHinhLamViecId);
     }
 
     private List<PublicJobSummaryResponse> mapSummaryFromSearchDocumentIds(List<String> documentIds) {
@@ -271,6 +283,14 @@ public class PublicJobService {
     }
 
     private String resolveWorkType(TinTuyenDung job) {
+        if (job.getLoaiHinhLamViecs() != null && !job.getLoaiHinhLamViecs().isEmpty()) {
+            return job.getLoaiHinhLamViecs().stream()
+                    .filter(Objects::nonNull)
+                    .map(item -> item.getTen() == null ? "" : item.getTen())
+                    .filter(StringUtils::hasText)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.joining(", "));
+        }
         return job.getLoaiHinhLamViec() == null ? "" : (job.getLoaiHinhLamViec().getTen() == null ? "" : job.getLoaiHinhLamViec().getTen());
     }
 }

@@ -13,7 +13,10 @@ type ChatWebSocketOptions = {
 // - backend có context path /api/v1: /api/v1/ws/chat
 // - backend qua reverse-proxy prefix: /<prefix>/ws/chat
 function resolveWebSocketUrls() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+  const apiUrl =
+    (typeof window === "undefined"
+      ? process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL
+      : process.env.NEXT_PUBLIC_API_URL) || "http://localhost:8080/api/v1";
   try {
     const parsed = new URL(apiUrl);
     const protocol = parsed.protocol === "https:" ? "wss:" : "ws:";

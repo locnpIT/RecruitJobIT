@@ -11,6 +11,10 @@ type JobPreviewSidebarProps = {
 
 export function JobPreviewSidebar({ job, company }: JobPreviewSidebarProps) {
   const companyName = job.congTyTen ?? company?.ten ?? "Công ty";
+  const branchNames = (job.chiNhanhs ?? [])
+    .map((branch) => branch.chiNhanhTen)
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <aside className="space-y-4">
@@ -41,11 +45,10 @@ export function JobPreviewSidebar({ job, company }: JobPreviewSidebarProps) {
         <p className="text-sm font-semibold text-slate-950">Tổng quan tuyển dụng</p>
         <div className="mt-3 space-y-2 text-sm text-slate-600">
           <p>Lương: {formatSalary(job)}</p>
-          <p>Chi nhánh: {job.chiNhanhTen ?? "--"}</p>
+          <p>Chi nhánh: {branchNames || "--"}</p>
           <p>Mẫu CV: {job.batBuocCV ? "Bắt buộc" : "Không bắt buộc"}</p>
         </div>
       </section>
     </aside>
   );
 }
-

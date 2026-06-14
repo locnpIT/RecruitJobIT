@@ -18,7 +18,6 @@ export function CompanyAdminJobsClient() {
     branches: data.branches,
     selectedBranchId: data.selectedBranchId,
     setJobs: data.setJobs,
-    onBranchChange: data.handleSelectBranch,
   });
 
   if (data.isLoading) {
@@ -110,18 +109,19 @@ export function CompanyAdminJobsClient() {
         </section>
       </div>
 
-      <JobFormModal
+        <JobFormModal
         open={actions.isCreateModalOpen}
         editingJobId={actions.editingJobId}
         branches={data.branches}
-        selectedBranchId={data.selectedBranchId}
-        chiNhanhField={actions.chiNhanhField}
+        selectedChiNhanhIds={actions.chiNhanhIds}
+        onToggleBranch={actions.toggleBranch}
         register={actions.register}
-        onBranchChange={actions.handleBranchChangeFromForm}
         onSubmit={actions.handleSubmit(actions.onSubmitForm)}
         onClose={() => actions.setIsCreateModalOpen(false)}
         nganhNgheOptions={data.nganhNgheOptions}
         loaiHinhOptions={data.loaiHinhOptions}
+        selectedLoaiHinhLamViecIds={actions.loaiHinhLamViecIds}
+        onToggleWorkType={actions.toggleWorkType}
         capDoOptions={data.capDoOptions}
         kyNangOptions={data.kyNangOptions}
         selectedKyNangIds={actions.selectedKyNangIds}

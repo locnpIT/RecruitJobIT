@@ -10,6 +10,8 @@ import com.phuocloc.projectfinal.recruit.candidate.repository.HoSoKinhNghiemRepo
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangUngVienRepository;
 import com.phuocloc.projectfinal.recruit.candidate.repository.NganhNgheUngVienRepository;
 import com.phuocloc.projectfinal.recruit.company.service.CompanyAdminAccessService;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
+import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.LoaiHinhLamViec;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.DonUngTuyenRepository;
@@ -81,8 +83,7 @@ public class SemanticMatchingService {
                 .filter(item -> item.getNgayXoa() == null)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng"));
 
-        Integer branchId = job.getChiNhanh() == null ? null : job.getChiNhanh().getId();
-        accessService.requireMembership(requireUserId(principal), branchId, COMPANY_ADMIN_ROLES);
+        requireMembershipForAnyJobBranch(requireUserId(principal), job);
 
         List<Float> queryVector = jobEmbeddingIndexService.getOrCreateIndexVectorForMatching(job);
         List<QdrantSearchResult> results = qdrantClientService.searchPoints(
@@ -127,8 +128,7 @@ public class SemanticMatchingService {
                 .filter(item -> item.getNgayXoa() == null)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng"));
 
-        Integer branchId = job.getChiNhanh() == null ? null : job.getChiNhanh().getId();
-        accessService.requireMembership(requireUserId(principal), branchId, COMPANY_ADMIN_ROLES);
+        requireMembershipForAnyJobBranch(requireUserId(principal), job);
 
         List<DonUngTuyen> applications = donUngTuyenRepository
                 .findByTinTuyenDung_IdAndNgayXoaIsNullOrderByNgayTaoDesc(normalizedJobId);
@@ -301,7 +301,7 @@ public class SemanticMatchingService {
         if (job == null) {
             return null;
         }
-        var branch = job.getChiNhanh();
+        var branch = firstBranch(job);
         var company = branch == null ? null : branch.getCongTy();
         List<String> requiredSkills = signalService.jobSignals(job.getId());
         List<String> matchedSkills = signalService.matchedNames(requiredSkills, candidateSkills);
@@ -324,7 +324,7 @@ public class SemanticMatchingService {
                 .chiNhanhTen(branch == null ? null : branch.getTen())
                 .diaDiem(resolveLocation(job))
                 .nganhNghe(job.getNganhNghe() == null ? null : job.getNganhNghe().getTen())
-                .loaiHinhLamViec(job.getLoaiHinhLamViec() == null ? null : job.getLoaiHinhLamViec().getTen())
+                .loaiHinhLamViec(resolveWorkTypeText(job))
                 .capDoKinhNghiem(job.getCapDoKinhNghiem() == null ? null : job.getCapDoKinhNghiem().getTen())
                 .denHanLuc(job.getDenHanLuc())
                 .diemPhuHop(diemPhuHop)
@@ -334,14 +334,58 @@ public class SemanticMatchingService {
     }
 
     private String resolveLocation(TinTuyenDung job) {
-        if (job.getChiNhanh() == null) {
+        ChiNhanhCongTy branch = firstBranch(job);
+        if (branch == null) {
             return null;
         }
-        var branch = job.getChiNhanh();
         if (branch.getXaPhuong() != null && branch.getXaPhuong().getTinhThanh() != null) {
             return branch.getXaPhuong().getTen() + ", " + branch.getXaPhuong().getTinhThanh().getTen();
         }
         return branch.getDiaChiChiTiet();
+    }
+
+    private void requireMembershipForAnyJobBranch(Integer userId, TinTuyenDung job) {
+        if (job == null || job.getChiNhanhs() == null || job.getChiNhanhs().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tin tuyển dụng chưa gắn chi nhánh hợp lệ");
+        }
+        ResponseStatusException lastFailure = null;
+        for (ChiNhanhCongTy branch : job.getChiNhanhs()) {
+            if (branch == null || branch.getId() == null) {
+                continue;
+            }
+            try {
+                accessService.requireMembership(userId, branch.getId(), COMPANY_ADMIN_ROLES);
+                return;
+            } catch (ResponseStatusException ex) {
+                lastFailure = ex;
+            }
+        }
+        if (lastFailure != null) {
+            throw lastFailure;
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tin tuyển dụng chưa gắn chi nhánh hợp lệ");
+    }
+
+    private ChiNhanhCongTy firstBranch(TinTuyenDung job) {
+        if (job == null || job.getChiNhanhs() == null) {
+            return null;
+        }
+        return job.getChiNhanhs().stream().findFirst().orElse(null);
+    }
+
+    private String resolveWorkTypeText(TinTuyenDung job) {
+        if (job == null) {
+            return null;
+        }
+        List<LoaiHinhLamViec> workTypes = job.getLoaiHinhLamViecs() == null || job.getLoaiHinhLamViecs().isEmpty()
+                ? (job.getLoaiHinhLamViec() == null ? List.of() : List.of(job.getLoaiHinhLamViec()))
+                : job.getLoaiHinhLamViecs().stream().filter(Objects::nonNull).toList();
+        String joined = workTypes.stream()
+                .map(LoaiHinhLamViec::getTen)
+                .filter(text -> text != null && !text.isBlank())
+                .distinct()
+                .collect(java.util.stream.Collectors.joining(", "));
+        return joined.isBlank() ? null : joined;
     }
 
     private void requireQdrantEnabled() {

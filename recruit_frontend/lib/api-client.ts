@@ -4,7 +4,10 @@ import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
 // HTTP client dùng chung cho toàn bộ frontend.
 // Mặc định trỏ về backend local và tự gắn Bearer token từ localStorage cho API private.
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1",
+  baseURL:
+    (typeof window === "undefined"
+      ? process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL
+      : process.env.NEXT_PUBLIC_API_URL) || "http://localhost:8080/api/v1",
   headers: {
     "Content-Type": "application/json",
   },

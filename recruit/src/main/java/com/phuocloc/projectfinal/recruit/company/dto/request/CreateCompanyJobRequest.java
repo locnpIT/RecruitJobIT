@@ -16,9 +16,6 @@ import lombok.Setter;
 @Setter
 public class CreateCompanyJobRequest implements JobPayloadRequest {
 
-    @NotNull(message = "chiNhanhId không được để trống")
-    private Integer chiNhanhId;
-
     @NotBlank(message = "Tiêu đề không được để trống")
     @Size(max = 255, message = "Tiêu đề không được vượt quá 255 ký tự")
     private String tieuDe;
@@ -38,8 +35,9 @@ public class CreateCompanyJobRequest implements JobPayloadRequest {
 
     private String mauCvUrl;
 
-    @NotNull(message = "loaiHinhLamViecId không được để trống")
-    private Integer loaiHinhLamViecId;
+    @NotNull(message = "loaiHinhLamViecIds không được để trống")
+    @Size(min = 1, message = "Phải chọn ít nhất một loại hình làm việc")
+    private List<Integer> loaiHinhLamViecIds;
 
     @NotNull(message = "capDoKinhNghiemId không được để trống")
     private Integer capDoKinhNghiemId;
@@ -54,4 +52,8 @@ public class CreateCompanyJobRequest implements JobPayloadRequest {
     private LocalDateTime denHanLuc;
 
     private List<Integer> kyNangIds;
+
+    @NotNull(message = "chiNhanhIds không được để trống")
+    @Size(min = 1, message = "Phải chọn ít nhất một chi nhánh")
+    private List<Integer> chiNhanhIds;
 }

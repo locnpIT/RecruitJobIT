@@ -12,8 +12,15 @@ import org.springframework.data.jpa.repository.Query;
  */
 public interface DonUngTuyenRepository extends JpaRepository<DonUngTuyen, Integer> {
 
-    @Query("SELECT d FROM DonUngTuyen d LEFT JOIN d.tinTuyenDung t LEFT JOIN t.chiNhanh c WHERE c.id = :chiNhanhId AND d.ngayXoa IS NULL ORDER BY d.ngayTao desc")
-    List<DonUngTuyen> findByTinTuyenDung_ChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer chiNhanhId);
+    @Query("""
+            SELECT DISTINCT d FROM DonUngTuyen d
+            LEFT JOIN d.tinTuyenDung t
+            LEFT JOIN t.chiNhanhs c
+            WHERE c.id = :chiNhanhId
+              AND d.ngayXoa IS NULL
+            ORDER BY d.ngayTao desc
+            """)
+    List<DonUngTuyen> findByTinTuyenDung_ChiNhanhs_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer chiNhanhId);
 
     @Query("SELECT d FROM DonUngTuyen d WHERE d.tinTuyenDung.id = :tinTuyenDungId AND d.ngayXoa IS NULL ORDER BY d.ngayTao desc")
     List<DonUngTuyen> findByTinTuyenDung_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer tinTuyenDungId);

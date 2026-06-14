@@ -9,6 +9,8 @@ import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyAdminJobRes
 import com.phuocloc.projectfinal.recruit.company.dto.response.CompanyJobMetadataResponse;
 import com.phuocloc.projectfinal.recruit.company.enums.EmployerCompanyRole;
 import com.phuocloc.projectfinal.recruit.candidate.repository.KyNangRepository;
+import com.phuocloc.projectfinal.recruit.company.repository.CompanyBranchRepository;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.CongTy;
 import com.phuocloc.projectfinal.recruit.domain.congty.entity.ThanhVienCongTy;
 import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.CapDoKinhNghiem;
@@ -34,6 +36,7 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
@@ -56,9 +59,11 @@ public class CompanyAdminJobService {
     private final NganhNgheRepository nganhNgheRepository;
     private final LoaiHinhLamViecRepository loaiHinhLamViecRepository;
     private final CapDoKinhNghiemRepository capDoKinhNghiemRepository;
+    private final CompanyBranchRepository companyBranchRepository;
     private final JobEmbeddingIndexService chiMucNhungTinTuyenDungService;
     private final PublicJobElasticsearchIndexService publicJobElasticsearchIndexService;
 
+    @Transactional(readOnly = true)
     public CompanyJobMetadataResponse getJobMetadata() {
         // Metadata cho form tạo/sửa tin tuyển dụng, bao gồm kỹ năng để lưu bảng mapping.
         return CompanyJobMetadataResponse.builder()
@@ -69,28 +74,29 @@ public class CompanyAdminJobService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public List<CompanyAdminJobResponse> listJobs(AppUserPrinciple principal, Integer chiNhanhId) {
         accessService.requireMembership(principal.getUserId().intValue(), chiNhanhId, COMPANY_ADMIN_ROLES);
-        List<TinTuyenDung> jobs = tinTuyenDungRepository.findByChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(chiNhanhId);
+        List<TinTuyenDung> jobs = tinTuyenDungRepository.findByChiNhanhs_IdAndNgayXoaIsNullOrderByNgayTaoDesc(chiNhanhId);
         Map<Integer, List<CompanyAdminJobResponse.KyNangItem>> jobSkillMap = mapJobSkillsByJobIds(jobs);
         return jobs.stream()
                 .map(job -> mapJob(job, jobSkillMap.getOrDefault(job.getId(), List.of())))
                 .toList();
     }
 
+    @Transactional
     public CompanyAdminJobResponse createJob(AppUserPrinciple principal, CreateCompanyJobRequest request) {
-        CongTy congTy = profileService.resolveApprovedManagedCompany(principal.getUserId().intValue());
+        Integer userId = principal.getUserId().intValue();
+        CongTy congTy = profileService.resolveApprovedManagedCompany(userId);
         ensureActivePostingPackage(congTy);
-        ThanhVienCongTy membership = accessService.requireMembership(
-                principal.getUserId().intValue(),
-                request.getChiNhanhId(),
-                COMPANY_ADMIN_ROLES
-        );
+        List<ChiNhanhCongTy> branches = resolveJobBranches(congTy, request.getChiNhanhIds());
+        ThanhVienCongTy membership = requireMembershipForAllJobBranches(userId, branches);
 
         TinTuyenDung tinTuyenDung = new TinTuyenDung();
         tinTuyenDung.setNguoiDang(membership.getNguoiDung());
-        tinTuyenDung.setChiNhanh(membership.getChiNhanh());
         applyJobPayload(tinTuyenDung, request);
+        tinTuyenDung.getChiNhanhs().clear();
+        tinTuyenDung.getChiNhanhs().addAll(branches);
         tinTuyenDung.setTrangThai("DRAFT");
         tinTuyenDung = tinTuyenDungRepository.save(tinTuyenDung);
 
@@ -100,9 +106,16 @@ public class CompanyAdminJobService {
         return mapJob(tinTuyenDung, mapJobSkills(tinTuyenDung.getId()));
     }
 
+    @Transactional
     public CompanyAdminJobResponse updateJob(AppUserPrinciple principal, Long jobId, UpdateCompanyJobRequest request) {
+        Integer userId = principal.getUserId().intValue();
         TinTuyenDung tinTuyenDung = requireManagedJob(principal, jobId);
+        CongTy congTy = profileService.resolveApprovedManagedCompany(userId);
+        List<ChiNhanhCongTy> branches = resolveJobBranches(congTy, request.getChiNhanhIds());
+        requireMembershipForAllJobBranches(userId, branches);
         applyJobPayload(tinTuyenDung, request);
+        tinTuyenDung.getChiNhanhs().clear();
+        tinTuyenDung.getChiNhanhs().addAll(branches);
         tinTuyenDung = tinTuyenDungRepository.save(tinTuyenDung);
 
         replaceJobSkills(tinTuyenDung, request.getKyNangIds());
@@ -110,6 +123,7 @@ public class CompanyAdminJobService {
         return mapJob(tinTuyenDung, mapJobSkills(tinTuyenDung.getId()));
     }
 
+    @Transactional
     public void deleteJob(AppUserPrinciple principal, Long jobId) {
         TinTuyenDung tinTuyenDung = requireManagedJob(principal, jobId);
         tinTuyenDung.setNgayXoa(LocalDateTime.now());
@@ -117,6 +131,7 @@ public class CompanyAdminJobService {
         syncJobIndexes(saved);
     }
 
+    @Transactional(readOnly = true)
     public TinTuyenDung requireManagedJob(AppUserPrinciple principal, Long jobId) {
         if (jobId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "jobId không được để trống");
@@ -126,14 +141,23 @@ public class CompanyAdminJobService {
         if (tinTuyenDung.getNgayXoa() != null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tin tuyển dụng");
         }
-        if (tinTuyenDung.getChiNhanh() == null || tinTuyenDung.getChiNhanh().getId() == null) {
+        if (tinTuyenDung.getChiNhanhs() == null || tinTuyenDung.getChiNhanhs().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tin tuyển dụng không hợp lệ");
         }
-        accessService.requireMembership(
-                principal.getUserId().intValue(),
-                tinTuyenDung.getChiNhanh().getId(),
-                COMPANY_ADMIN_ROLES
-        );
+        boolean allowed = tinTuyenDung.getChiNhanhs().stream()
+                .filter(Objects::nonNull)
+                .filter(branch -> branch.getId() != null)
+                .anyMatch(branch -> {
+                    try {
+                        accessService.requireMembership(principal.getUserId().intValue(), branch.getId(), COMPANY_ADMIN_ROLES);
+                        return true;
+                    } catch (ResponseStatusException ex) {
+                        return false;
+                    }
+                });
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền thao tác trên tin tuyển dụng này");
+        }
         return tinTuyenDung;
     }
 
@@ -143,8 +167,7 @@ public class CompanyAdminJobService {
         }
         NganhNghe nganhNghe = nganhNgheRepository.findById(request.getNganhNgheId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy ngành nghề"));
-        LoaiHinhLamViec loaiHinhLamViec = loaiHinhLamViecRepository.findById(request.getLoaiHinhLamViecId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy loại hình làm việc"));
+        List<LoaiHinhLamViec> loaiHinhLamViecs = resolveWorkTypes(request.getLoaiHinhLamViecIds());
         CapDoKinhNghiem capDoKinhNghiem = capDoKinhNghiemRepository.findById(request.getCapDoKinhNghiemId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy cấp độ kinh nghiệm"));
 
@@ -155,7 +178,9 @@ public class CompanyAdminJobService {
         tinTuyenDung.setPhucLoi(trimToNull(request.getPhucLoi()));
         tinTuyenDung.setBatBuocCV(Boolean.TRUE.equals(request.getBatBuocCV()));
         tinTuyenDung.setMauCvUrl(trimToNull(request.getMauCvUrl()));
-        tinTuyenDung.setLoaiHinhLamViec(loaiHinhLamViec);
+        tinTuyenDung.getLoaiHinhLamViecs().clear();
+        tinTuyenDung.getLoaiHinhLamViecs().addAll(loaiHinhLamViecs);
+        tinTuyenDung.setLoaiHinhLamViec(loaiHinhLamViecs.getFirst());
         tinTuyenDung.setCapDoKinhNghiem(capDoKinhNghiem);
         tinTuyenDung.setLuongToiThieu(request.getLuongToiThieu());
         tinTuyenDung.setLuongToiDa(request.getLuongToiDa());
@@ -164,17 +189,31 @@ public class CompanyAdminJobService {
     }
 
     private CompanyAdminJobResponse mapJob(TinTuyenDung tinTuyenDung, List<CompanyAdminJobResponse.KyNangItem> kyNangs) {
+        List<ChiNhanhCongTy> branches = tinTuyenDung.getChiNhanhs() == null ? List.of() : new ArrayList<>(tinTuyenDung.getChiNhanhs());
+        List<CompanyAdminJobResponse.BranchItem> branchItems = branches.stream()
+                .filter(Objects::nonNull)
+                .filter(branch -> branch.getId() != null)
+                .map(branch -> CompanyAdminJobResponse.BranchItem.builder()
+                        .chiNhanhId(ServiceUtils.toLong(branch.getId()))
+                        .chiNhanhTen(branch.getTen())
+                        .build())
+                .toList();
+        ChiNhanhCongTy firstBranch = branches.stream().filter(Objects::nonNull).findFirst().orElse(null);
+        List<LoaiHinhLamViec> workTypes = resolveJobWorkTypes(tinTuyenDung);
+        List<CompanyAdminJobResponse.WorkTypeItem> workTypeItems = workTypes.stream()
+                .map(item -> CompanyAdminJobResponse.WorkTypeItem.builder()
+                        .id(ServiceUtils.toLong(item.getId()))
+                        .ten(item.getTen())
+                        .build())
+                .toList();
+        LoaiHinhLamViec firstWorkType = workTypes.stream().findFirst().orElse(null);
         return CompanyAdminJobResponse.builder()
                 .id(ServiceUtils.toLong(tinTuyenDung.getId()))
                 .tieuDe(tinTuyenDung.getTieuDe())
                 .trangThai(tinTuyenDung.getTrangThai())
-                .chiNhanhId(tinTuyenDung.getChiNhanh() == null ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getId()))
-                .chiNhanhTen(tinTuyenDung.getChiNhanh() == null ? null : tinTuyenDung.getChiNhanh().getTen())
-                .congTyId(tinTuyenDung.getChiNhanh() == null
-                        || tinTuyenDung.getChiNhanh().getCongTy() == null ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getCongTy().getId()))
-                .congTyTen(tinTuyenDung.getChiNhanh() == null || tinTuyenDung.getChiNhanh().getCongTy() == null
-                        ? null
-                        : tinTuyenDung.getChiNhanh().getCongTy().getTen())
+                .congTyId(firstBranch == null || firstBranch.getCongTy() == null ? null : ServiceUtils.toLong(firstBranch.getCongTy().getId()))
+                .congTyTen(firstBranch == null || firstBranch.getCongTy() == null ? null : firstBranch.getCongTy().getTen())
+                .chiNhanhs(branchItems)
                 .moTa(tinTuyenDung.getMoTa())
                 .yeuCau(tinTuyenDung.getYeuCau())
                 .phucLoi(tinTuyenDung.getPhucLoi())
@@ -182,8 +221,9 @@ public class CompanyAdminJobService {
                 .mauCvUrl(tinTuyenDung.getMauCvUrl())
                 .nganhNgheId(tinTuyenDung.getNganhNghe() == null ? null : ServiceUtils.toLong(tinTuyenDung.getNganhNghe().getId()))
                 .nganhNgheTen(tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getTen())
-                .loaiHinhLamViecId(tinTuyenDung.getLoaiHinhLamViec() == null ? null : ServiceUtils.toLong(tinTuyenDung.getLoaiHinhLamViec().getId()))
-                .loaiHinhLamViecTen(tinTuyenDung.getLoaiHinhLamViec() == null ? null : tinTuyenDung.getLoaiHinhLamViec().getTen())
+                .loaiHinhLamViecId(firstWorkType == null ? null : ServiceUtils.toLong(firstWorkType.getId()))
+                .loaiHinhLamViecTen(joinWorkTypeNames(workTypes))
+                .loaiHinhLamViecs(workTypeItems)
                 .capDoKinhNghiemId(tinTuyenDung.getCapDoKinhNghiem() == null ? null : ServiceUtils.toLong(tinTuyenDung.getCapDoKinhNghiem().getId()))
                 .capDoKinhNghiemTen(tinTuyenDung.getCapDoKinhNghiem() == null ? null : tinTuyenDung.getCapDoKinhNghiem().getTen())
                 .luongToiThieu(tinTuyenDung.getLuongToiThieu())
@@ -288,6 +328,55 @@ public class CompanyAdminJobService {
         return ordered;
     }
 
+    private List<LoaiHinhLamViec> resolveWorkTypes(List<Integer> workTypeIds) {
+        LinkedHashSet<Integer> dedup = workTypeIds == null
+                ? new LinkedHashSet<>()
+                : workTypeIds.stream()
+                .filter(Objects::nonNull)
+                .map(id -> Math.max(id, 0))
+                .filter(id -> id > 0)
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        if (dedup.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phải chọn ít nhất một loại hình làm việc");
+        }
+
+        List<LoaiHinhLamViec> workTypes = loaiHinhLamViecRepository.findAllById(dedup);
+        if (workTypes.size() != dedup.size()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Một hoặc nhiều loại hình làm việc không tồn tại");
+        }
+
+        Map<Integer, LoaiHinhLamViec> byId = workTypes.stream()
+                .filter(item -> item.getId() != null)
+                .collect(java.util.stream.Collectors.toMap(LoaiHinhLamViec::getId, item -> item));
+        List<LoaiHinhLamViec> ordered = new ArrayList<>();
+        for (Integer requestedId : dedup) {
+            LoaiHinhLamViec item = byId.get(requestedId);
+            if (item != null) {
+                ordered.add(item);
+            }
+        }
+        return ordered;
+    }
+
+    private List<LoaiHinhLamViec> resolveJobWorkTypes(TinTuyenDung tinTuyenDung) {
+        if (tinTuyenDung == null) {
+            return List.of();
+        }
+        if (tinTuyenDung.getLoaiHinhLamViecs() != null && !tinTuyenDung.getLoaiHinhLamViecs().isEmpty()) {
+            return new ArrayList<>(tinTuyenDung.getLoaiHinhLamViecs());
+        }
+        return tinTuyenDung.getLoaiHinhLamViec() == null ? List.of() : List.of(tinTuyenDung.getLoaiHinhLamViec());
+    }
+
+    private String joinWorkTypeNames(List<LoaiHinhLamViec> workTypes) {
+        return workTypes.stream()
+                .filter(Objects::nonNull)
+                .map(LoaiHinhLamViec::getTen)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .collect(java.util.stream.Collectors.joining(", "));
+    }
+
     private void ensureActivePostingPackage(CongTy congTy) {
         if (!packageService.hasActivePostingPackage(congTy)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Công ty chưa có gói đăng bài đang hoạt động");
@@ -297,6 +386,43 @@ public class CompanyAdminJobService {
     private void syncJobIndexes(TinTuyenDung tinTuyenDung) {
         chiMucNhungTinTuyenDungService.syncOrDeactivateIndex(tinTuyenDung);
         publicJobElasticsearchIndexService.syncOrDelete(tinTuyenDung);
+    }
+
+    private List<ChiNhanhCongTy> resolveJobBranches(CongTy congTy, List<Integer> branchIds) {
+        if (congTy == null || congTy.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Công ty không hợp lệ");
+        }
+        if (branchIds == null || branchIds.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phải chọn ít nhất một chi nhánh");
+        }
+        LinkedHashSet<Integer> dedup = branchIds.stream()
+                .filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        if (dedup.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phải chọn ít nhất một chi nhánh");
+        }
+        return dedup.stream()
+                .map(branchId -> companyBranchRepository.findByIdAndCongTy_Id(branchId, congTy.getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chi nhánh không hợp lệ hoặc không thuộc công ty")))
+                .toList();
+    }
+
+    private ThanhVienCongTy requireMembershipForAllJobBranches(Integer userId, List<ChiNhanhCongTy> branches) {
+        if (branches == null || branches.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phải chọn ít nhất một chi nhánh");
+        }
+
+        ThanhVienCongTy firstMembership = null;
+        for (ChiNhanhCongTy branch : branches) {
+            if (branch == null || branch.getId() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chi nhánh không hợp lệ");
+            }
+            ThanhVienCongTy membership = accessService.requireMembership(userId, branch.getId(), COMPANY_ADMIN_ROLES);
+            if (firstMembership == null) {
+                firstMembership = membership;
+            }
+        }
+        return firstMembership;
     }
 
     private String trimToNull(String value) {

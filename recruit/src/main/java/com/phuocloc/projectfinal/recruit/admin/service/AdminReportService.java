@@ -3,6 +3,7 @@ package com.phuocloc.projectfinal.recruit.admin.service;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminReportResponse;
 import com.phuocloc.projectfinal.recruit.auth.repository.UsersRepository;
 import com.phuocloc.projectfinal.recruit.company.repository.CompanyRepository;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.DonUngTuyenRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
@@ -55,17 +56,17 @@ public class AdminReportService {
         double jobApproveRate = totalJobs == 0 ? 0 : approvedJobs * 100.0 / totalJobs;
 
         Map<String, List<TinTuyenDung>> jobsByCompany = jobs.stream()
-                .filter(j -> j.getChiNhanh() != null && j.getChiNhanh().getCongTy() != null)
-                .collect(java.util.stream.Collectors.groupingBy(j -> j.getChiNhanh().getCongTy().getTen() == null ? "(Không rõ)" : j.getChiNhanh().getCongTy().getTen()));
+                .filter(j -> j.getChiNhanhs() != null && !j.getChiNhanhs().isEmpty())
+                .collect(java.util.stream.Collectors.groupingBy(j -> resolveCompanyName(j.getChiNhanhs().stream().findFirst().orElse(null))));
 
         List<AdminReportResponse.TopCompany> topCompanies = jobsByCompany.entrySet().stream()
                 .map(entry -> {
                     int jobCount = entry.getValue().size();
                     int appCount = applications.stream()
                             .filter(a -> a.getTinTuyenDung() != null
-                                    && a.getTinTuyenDung().getChiNhanh() != null
-                                    && a.getTinTuyenDung().getChiNhanh().getCongTy() != null
-                                    && entry.getKey().equals(a.getTinTuyenDung().getChiNhanh().getCongTy().getTen()))
+                                    && a.getTinTuyenDung().getChiNhanhs() != null
+                                    && !a.getTinTuyenDung().getChiNhanhs().isEmpty()
+                                    && entry.getKey().equals(resolveCompanyName(a.getTinTuyenDung().getChiNhanhs().stream().findFirst().orElse(null))))
                             .mapToInt(a -> 1)
                             .sum();
                     return AdminReportResponse.TopCompany.builder()
@@ -119,5 +120,12 @@ public class AdminReportService {
                 .mapToObj(i -> start.plusDays(i))
                 .map(day -> (int) jobs.stream().filter(j -> j.getNgayTao() != null && j.getNgayTao().toLocalDate().isEqual(day)).count())
                 .toList();
+    }
+
+    private String resolveCompanyName(ChiNhanhCongTy branch) {
+        if (branch == null || branch.getCongTy() == null || branch.getCongTy().getTen() == null) {
+            return "(Không rõ)";
+        }
+        return branch.getCongTy().getTen();
     }
 }

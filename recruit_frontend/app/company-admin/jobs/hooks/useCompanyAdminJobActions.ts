@@ -11,7 +11,6 @@ type UseCompanyAdminJobActionsOptions = {
   branches: CompanyAdminBranch[];
   selectedBranchId: number | null;
   setJobs: Dispatch<SetStateAction<CompanyAdminJob[]>>;
-  onBranchChange: (nextBranchId: number) => void;
 };
 
 // Quản lý modal state và CRUD (create/update/delete) cho trang company-admin/jobs.
@@ -19,7 +18,6 @@ export function useCompanyAdminJobActions({
   branches,
   selectedBranchId,
   setJobs,
-  onBranchChange,
 }: UseCompanyAdminJobActionsOptions) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -68,12 +66,14 @@ export function useCompanyAdminJobActions({
     }
   };
 
-  const handleBranchChangeFromForm = (branchId: number) => {
-    onBranchChange(branchId);
-  };
-
   const onSubmitForm = async (values: JobFormValues) => {
-    if (!values.nganhNgheId || !values.loaiHinhLamViecId || !values.capDoKinhNghiemId) {
+    const loaiHinhLamViecIds = (values.loaiHinhLamViecIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0);
+    const chiNhanhIds = (values.chiNhanhIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0);
+    if (chiNhanhIds.length === 0) {
+      setActionError("Vui lòng chọn ít nhất một chi nhánh áp dụng.");
+      return;
+    }
+    if (!values.nganhNgheId || loaiHinhLamViecIds.length === 0 || !values.capDoKinhNghiemId) {
       setActionError("Vui lòng chọn ngành nghề, loại hình làm việc và cấp độ kinh nghiệm.");
       return;
     }
@@ -90,23 +90,21 @@ export function useCompanyAdminJobActions({
         phucLoi: values.phucLoi,
         batBuocCV: Boolean(values.batBuocCV),
         mauCvUrl: values.mauCvUrl,
-        loaiHinhLamViecId: Number(values.loaiHinhLamViecId),
+        loaiHinhLamViecIds,
         capDoKinhNghiemId: Number(values.capDoKinhNghiemId),
         luongToiThieu: values.luongToiThieu ? Number(values.luongToiThieu) : undefined,
         luongToiDa: values.luongToiDa ? Number(values.luongToiDa) : undefined,
         soLuongTuyen: Number(values.soLuongTuyen),
         denHanLuc: values.denHanLuc ? new Date(values.denHanLuc).toISOString() : undefined,
         kyNangIds: (values.kyNangIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0),
+        chiNhanhIds,
       };
 
       if (editingJobId != null) {
         const updated = await companyAdminJobsService.updateJob(editingJobId, basePayload);
         setJobs((current) => current.map((job) => (job.id === editingJobId ? updated : job)));
       } else {
-        const created = await companyAdminJobsService.createJob({
-          ...basePayload,
-          chiNhanhId: Number(values.chiNhanhId),
-        } as CreateCompanyJobPayload);
+        const created = await companyAdminJobsService.createJob(basePayload as CreateCompanyJobPayload);
         setJobs((current) => [created, ...current]);
       }
 
@@ -131,7 +129,6 @@ export function useCompanyAdminJobActions({
     register: form.register,
     handleSubmit: form.handleSubmit,
     setValue: form.setValue,
-    chiNhanhField: form.chiNhanhField,
     batBuocCVField: form.batBuocCVField,
     batBuocCV: form.batBuocCV,
     mauCvUrlValue: form.mauCvUrlValue,
@@ -139,6 +136,10 @@ export function useCompanyAdminJobActions({
     yeuCauValue: form.yeuCauValue,
     phucLoiValue: form.phucLoiValue,
     selectedKyNangIds: form.selectedKyNangIds,
+    loaiHinhLamViecIds: form.loaiHinhLamViecIds,
+    toggleWorkType: form.toggleWorkType,
+    chiNhanhIds: form.chiNhanhIds,
+    toggleBranch: form.toggleBranch,
     isUploadingCvTemplate: form.isUploadingCvTemplate,
     cvTemplateFileName: form.cvTemplateFileName,
     setIsCreateModalOpen,
@@ -148,7 +149,6 @@ export function useCompanyAdminJobActions({
     setPreviewJob,
     handleUploadCvTemplate: form.handleUploadCvTemplate,
     handleDeleteJob,
-    handleBranchChangeFromForm,
     handleSelectTemplate: form.handleSelectTemplate,
     onSubmitForm,
   };

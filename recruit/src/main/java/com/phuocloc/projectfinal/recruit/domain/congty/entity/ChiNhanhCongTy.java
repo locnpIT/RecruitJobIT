@@ -1,8 +1,11 @@
 package com.phuocloc.projectfinal.recruit.domain.congty.entity;
 
 import com.phuocloc.projectfinal.recruit.domain.diadiem.entity.XaPhuong;
+import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -49,4 +52,7 @@ public class ChiNhanhCongTy {
 
     @Column(name = "laTruSoChinh")
     private Boolean laTruSoChinh;
+
+    @ManyToMany(mappedBy = "chiNhanhs")
+    private Set<TinTuyenDung> tinTuyenDungs = new LinkedHashSet<>();
 }

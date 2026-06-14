@@ -94,7 +94,7 @@ public class PublicCompanyService {
         List<TinTuyenDung> jobs = tinTuyenDungRepository.findPublicApprovedActiveJobsByCompanyId(safeCompanyId, LocalDateTime.now())
                 .stream()
                 .filter(job -> branchId == null || branchId <= 0
-                        || (job.getChiNhanh() != null && branchId.equals(job.getChiNhanh().getId())))
+                        || (job.getChiNhanhs() != null && job.getChiNhanhs().stream().anyMatch(branch -> branch != null && branch.getId() != null && branchId.equals(branch.getId()))))
                 .limit(safeLimit)
                 .toList();
         return jobs.stream().map(publicJobService::mapSummary).toList();

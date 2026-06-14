@@ -67,13 +67,25 @@ public class TinTuyenDung {
     @JoinColumn(name = "loaiHinhLamViecId")
     private LoaiHinhLamViec loaiHinhLamViec;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "TinTuyenDung_LoaiHinhLamViec",
+            joinColumns = @JoinColumn(name = "tinTuyenDungId"),
+            inverseJoinColumns = @JoinColumn(name = "loaiHinhLamViecId")
+    )
+    private java.util.Set<LoaiHinhLamViec> loaiHinhLamViecs = new java.util.LinkedHashSet<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "capDoKinhNghiemId")
     private CapDoKinhNghiem capDoKinhNghiem;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chiNhanhId")
-    private ChiNhanhCongTy chiNhanh;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "TinTuyenDung_ChiNhanhCongTy",
+            joinColumns = @JoinColumn(name = "tinTuyenDungId"),
+            inverseJoinColumns = @JoinColumn(name = "chiNhanhId")
+    )
+    private java.util.Set<ChiNhanhCongTy> chiNhanhs = new java.util.LinkedHashSet<>();
 
     @Column(name = "luongToiThieu")
     private Integer luongToiThieu;

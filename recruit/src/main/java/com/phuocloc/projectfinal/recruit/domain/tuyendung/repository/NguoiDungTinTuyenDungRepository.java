@@ -27,12 +27,13 @@ public interface NguoiDungTinTuyenDungRepository extends JpaRepository<NguoiDung
 
     @EntityGraph(attributePaths = {
             "tinTuyenDung",
-            "tinTuyenDung.chiNhanh",
-            "tinTuyenDung.chiNhanh.congTy",
-            "tinTuyenDung.chiNhanh.xaPhuong",
-            "tinTuyenDung.chiNhanh.xaPhuong.tinhThanh",
+            "tinTuyenDung.chiNhanhs",
+            "tinTuyenDung.chiNhanhs.congTy",
+            "tinTuyenDung.chiNhanhs.xaPhuong",
+            "tinTuyenDung.chiNhanhs.xaPhuong.tinhThanh",
             "tinTuyenDung.nganhNghe",
             "tinTuyenDung.loaiHinhLamViec",
+            "tinTuyenDung.loaiHinhLamViecs",
             "tinTuyenDung.capDoKinhNghiem"
     })
     @Query("SELECT n FROM NguoiDungTinTuyenDung n WHERE n.nguoiDung.id = :nguoiDungId ORDER BY n.ngayTao desc")

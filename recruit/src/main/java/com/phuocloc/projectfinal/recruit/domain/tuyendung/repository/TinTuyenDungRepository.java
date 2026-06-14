@@ -18,30 +18,52 @@ import org.springframework.data.repository.query.Param;
  */
 public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Integer> {
 
-    @Query("SELECT t FROM TinTuyenDung t WHERE t.chiNhanh.id = :chiNhanhId AND t.ngayXoa IS NULL ORDER BY t.ngayTao desc")
-    List<TinTuyenDung> findByChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer chiNhanhId);
+    @Query("""
+            SELECT DISTINCT t FROM TinTuyenDung t
+            JOIN t.chiNhanhs cn
+            LEFT JOIN FETCH t.chiNhanhs fetchedBranches
+            LEFT JOIN FETCH fetchedBranches.congTy fetchedCompany
+            LEFT JOIN FETCH t.loaiHinhLamViec legacyWorkType
+            LEFT JOIN FETCH t.loaiHinhLamViecs workTypes
+            LEFT JOIN FETCH t.nganhNghe industry
+            LEFT JOIN FETCH t.capDoKinhNghiem experienceLevel
+            WHERE cn.id = :chiNhanhId
+              AND t.ngayXoa IS NULL
+            ORDER BY t.ngayTao desc
+            """)
+    List<TinTuyenDung> findByChiNhanhs_IdAndNgayXoaIsNullOrderByNgayTaoDesc(Integer chiNhanhId);
 
-    @Query("SELECT t FROM TinTuyenDung t WHERE t.id = :id AND t.chiNhanh.id = :chiNhanhId AND t.ngayXoa IS NULL")
-    Optional<TinTuyenDung> findByIdAndChiNhanh_IdAndNgayXoaIsNull(Integer id, Integer chiNhanhId);
+    @Query("""
+            SELECT DISTINCT t FROM TinTuyenDung t
+            JOIN t.chiNhanhs cn
+            WHERE t.id = :id
+              AND cn.id = :chiNhanhId
+              AND t.ngayXoa IS NULL
+            """)
+    Optional<TinTuyenDung> findByIdAndChiNhanhs_IdAndNgayXoaIsNull(Integer id, Integer chiNhanhId);
 
     @Query("SELECT t FROM TinTuyenDung t WHERE t.ngayXoa IS NULL")
     List<TinTuyenDung> findByNgayXoaIsNull(Sort sort);
 
     @Query("""
             SELECT COUNT(t.id) > 0 FROM TinTuyenDung t
-            WHERE t.chiNhanh.id = :chiNhanhId
+            WHERE EXISTS (
+                SELECT 1 FROM t.chiNhanhs cn
+                WHERE cn.id = :chiNhanhId
+            )
               AND t.ngayXoa IS NULL
             """)
-    boolean existsByChiNhanh_IdAndNgayXoaIsNull(Integer chiNhanhId);
+    boolean existsByChiNhanhs_IdAndNgayXoaIsNull(Integer chiNhanhId);
 
     @Query("""
-            SELECT t FROM TinTuyenDung t
-            LEFT JOIN FETCH t.chiNhanh cn
+            SELECT DISTINCT t FROM TinTuyenDung t
+            LEFT JOIN FETCH t.chiNhanhs cn
             LEFT JOIN FETCH cn.congTy ct
             LEFT JOIN FETCH cn.xaPhuong xp
             LEFT JOIN FETCH xp.tinhThanh tt
             LEFT JOIN FETCH t.nganhNghe nn
             LEFT JOIN FETCH t.loaiHinhLamViec lh
+            LEFT JOIN FETCH t.loaiHinhLamViecs lhs
             LEFT JOIN FETCH t.capDoKinhNghiem cd
             WHERE t.ngayXoa IS NULL
               AND UPPER(t.trangThai) = 'APPROVED'
@@ -53,13 +75,14 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
     List<TinTuyenDung> findPublicApprovedActiveJobs(LocalDateTime now);
 
     @Query("""
-            SELECT t FROM TinTuyenDung t
-            LEFT JOIN FETCH t.chiNhanh cn
+            SELECT DISTINCT t FROM TinTuyenDung t
+            LEFT JOIN FETCH t.chiNhanhs cn
             LEFT JOIN FETCH cn.congTy ct
             LEFT JOIN FETCH cn.xaPhuong xp
             LEFT JOIN FETCH xp.tinhThanh tt
             LEFT JOIN FETCH t.nganhNghe nn
             LEFT JOIN FETCH t.loaiHinhLamViec lh
+            LEFT JOIN FETCH t.loaiHinhLamViecs lhs
             LEFT JOIN FETCH t.capDoKinhNghiem cd
             WHERE t.id = :id
               AND t.ngayXoa IS NULL
@@ -71,13 +94,14 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
     Optional<TinTuyenDung> findPublicApprovedActiveJobById(Integer id, LocalDateTime now);
 
     @Query("""
-            SELECT t FROM TinTuyenDung t
-            LEFT JOIN FETCH t.chiNhanh cn
+            SELECT DISTINCT t FROM TinTuyenDung t
+            LEFT JOIN FETCH t.chiNhanhs cn
             LEFT JOIN FETCH cn.congTy ct
             LEFT JOIN FETCH cn.xaPhuong xp
             LEFT JOIN FETCH xp.tinhThanh tt
             LEFT JOIN FETCH t.nganhNghe nn
             LEFT JOIN FETCH t.loaiHinhLamViec lh
+            LEFT JOIN FETCH t.loaiHinhLamViecs lhs
             LEFT JOIN FETCH t.capDoKinhNghiem cd
             WHERE t.id IN :ids
               AND t.ngayXoa IS NULL
@@ -90,12 +114,13 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
 
     @Query("""
             SELECT t FROM TinTuyenDung t
-            LEFT JOIN FETCH t.chiNhanh cn
+            LEFT JOIN FETCH t.chiNhanhs cn
             LEFT JOIN FETCH cn.congTy ct
             LEFT JOIN FETCH cn.xaPhuong xp
             LEFT JOIN FETCH xp.tinhThanh tt
             LEFT JOIN FETCH t.nganhNghe nn
             LEFT JOIN FETCH t.loaiHinhLamViec lh
+            LEFT JOIN FETCH t.loaiHinhLamViecs lhs
             LEFT JOIN FETCH t.capDoKinhNghiem cd
             WHERE ct.id = :companyId
               AND t.ngayXoa IS NULL
@@ -108,8 +133,8 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
     List<TinTuyenDung> findPublicApprovedActiveJobsByCompanyId(Integer companyId, LocalDateTime now);
 
     @Query("""
-            SELECT COUNT(t.id) FROM TinTuyenDung t
-            JOIN t.chiNhanh cn
+            SELECT COUNT(DISTINCT t.id) FROM TinTuyenDung t
+            JOIN t.chiNhanhs cn
             JOIN cn.congTy ct
             WHERE ct.id = :companyId
               AND t.ngayXoa IS NULL
@@ -124,9 +149,9 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
             SELECT ct.id AS companyId,
                    ct.ten AS companyName,
                    ct.logoUrl AS logoUrl,
-                   COUNT(t.id) AS activeJobCount
+                   COUNT(DISTINCT t.id) AS activeJobCount
             FROM TinTuyenDung t
-            JOIN t.chiNhanh cn
+            JOIN t.chiNhanhs cn
             JOIN cn.congTy ct
             WHERE t.ngayXoa IS NULL
               AND UPPER(t.trangThai) = 'APPROVED'
@@ -152,7 +177,7 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
     @Query("""
             SELECT ct.ten
             FROM TinTuyenDung t
-            JOIN t.chiNhanh cn
+            JOIN t.chiNhanhs cn
             JOIN cn.congTy ct
             WHERE t.nguoiDang.id = :recruiterId
               AND t.ngayXoa IS NULL

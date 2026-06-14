@@ -4,6 +4,7 @@ import com.phuocloc.projectfinal.recruit.ai.service.JobEmbeddingIndexService;
 import com.phuocloc.projectfinal.recruit.admin.dto.request.ReviewJobRequest;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobDetailResponse;
 import com.phuocloc.projectfinal.recruit.admin.dto.response.AdminJobResponse;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
@@ -128,10 +129,9 @@ public class AdminJobService {
         if (!StringUtils.hasText(companyKeyword)) {
             return true;
         }
-        String companyName = job.getChiNhanh() != null && job.getChiNhanh().getCongTy() != null
-                ? job.getChiNhanh().getCongTy().getTen()
-                : null;
-        return ServiceUtils.contains(ServiceUtils.normalize(companyName), companyKeyword);
+        return job.getChiNhanhs().stream()
+                .map(branch -> branch.getCongTy() == null ? null : branch.getCongTy().getTen())
+                .anyMatch(companyName -> ServiceUtils.contains(ServiceUtils.normalize(companyName), companyKeyword));
     }
 
     private boolean matchesJobStatus(TinTuyenDung job, String status) {
@@ -154,39 +154,21 @@ public class AdminJobService {
             return true;
         }
 
-        String xaPhuong = job.getChiNhanh() == null || job.getChiNhanh().getXaPhuong() == null
-                ? null
-                : job.getChiNhanh().getXaPhuong().getTen();
-        String tinhThanh = job.getChiNhanh() == null
-                || job.getChiNhanh().getXaPhuong() == null
-                || job.getChiNhanh().getXaPhuong().getTinhThanh() == null
-                ? null
-                : job.getChiNhanh().getXaPhuong().getTinhThanh().getTen();
-        String diaChi = (StringUtils.hasText(xaPhuong) ? xaPhuong : "")
-                + " "
-                + (StringUtils.hasText(tinhThanh) ? tinhThanh : "");
-        return ServiceUtils.contains(ServiceUtils.normalize(diaChi), locationKeyword);
+        return job.getChiNhanhs().stream()
+                .map(this::resolveBranchLocation)
+                .anyMatch(diaChi -> ServiceUtils.contains(ServiceUtils.normalize(diaChi), locationKeyword));
     }
 
     private AdminJobResponse mapJob(TinTuyenDung job) {
-        String companyName = job.getChiNhanh() != null && job.getChiNhanh().getCongTy() != null
-                ? job.getChiNhanh().getCongTy().getTen()
+        ChiNhanhCongTy branch = firstBranch(job);
+        String companyName = branch != null && branch.getCongTy() != null
+                ? branch.getCongTy().getTen()
                 : null;
-        String companyLogoUrl = job.getChiNhanh() != null && job.getChiNhanh().getCongTy() != null
-                ? job.getChiNhanh().getCongTy().getLogoUrl()
+        String companyLogoUrl = branch != null && branch.getCongTy() != null
+                ? branch.getCongTy().getLogoUrl()
                 : null;
-        String branchName = job.getChiNhanh() == null ? null : job.getChiNhanh().getTen();
-        String xaPhuong = job.getChiNhanh() == null || job.getChiNhanh().getXaPhuong() == null
-                ? null
-                : job.getChiNhanh().getXaPhuong().getTen();
-        String tinhThanh = job.getChiNhanh() == null
-                || job.getChiNhanh().getXaPhuong() == null
-                || job.getChiNhanh().getXaPhuong().getTinhThanh() == null
-                ? null
-                : job.getChiNhanh().getXaPhuong().getTinhThanh().getTen();
-        String diaDiem = StringUtils.hasText(xaPhuong) && StringUtils.hasText(tinhThanh)
-                ? xaPhuong + ", " + tinhThanh
-                : (StringUtils.hasText(tinhThanh) ? tinhThanh : xaPhuong);
+        String branchName = branch == null ? null : branch.getTen();
+        String diaDiem = resolveBranchLocation(branch);
 
         return AdminJobResponse.builder()
                 .id(ServiceUtils.toLong(job.getId()))
@@ -211,5 +193,25 @@ public class AdminJobService {
             return "không xác định";
         }
         return job.getTieuDe().trim();
+    }
+
+    private ChiNhanhCongTy firstBranch(TinTuyenDung job) {
+        if (job == null || job.getChiNhanhs() == null) {
+            return null;
+        }
+        return job.getChiNhanhs().stream().findFirst().orElse(null);
+    }
+
+    private String resolveBranchLocation(ChiNhanhCongTy branch) {
+        if (branch == null) {
+            return null;
+        }
+        String xaPhuong = branch.getXaPhuong() == null ? null : branch.getXaPhuong().getTen();
+        String tinhThanh = branch.getXaPhuong() == null || branch.getXaPhuong().getTinhThanh() == null
+                ? null
+                : branch.getXaPhuong().getTinhThanh().getTen();
+        return StringUtils.hasText(xaPhuong) && StringUtils.hasText(tinhThanh)
+                ? xaPhuong + ", " + tinhThanh
+                : (StringUtils.hasText(tinhThanh) ? tinhThanh : xaPhuong);
     }
 }

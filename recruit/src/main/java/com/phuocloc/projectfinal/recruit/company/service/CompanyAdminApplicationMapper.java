@@ -66,16 +66,15 @@ public class CompanyAdminApplicationMapper {
 
     private void fillJobFields(CompanyAdminApplicationResponse.CompanyAdminApplicationResponseBuilder builder,
             TinTuyenDung tinTuyenDung) {
-        builder.chiNhanhId(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
-                        ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getId()))
-                .chiNhanhTen(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
-                        ? null : tinTuyenDung.getChiNhanh().getTen())
-                .congTyId(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
-                        || tinTuyenDung.getChiNhanh().getCongTy() == null
-                        ? null : ServiceUtils.toLong(tinTuyenDung.getChiNhanh().getCongTy().getId()))
-                .congTyTen(tinTuyenDung == null || tinTuyenDung.getChiNhanh() == null
-                        || tinTuyenDung.getChiNhanh().getCongTy() == null
-                        ? null : tinTuyenDung.getChiNhanh().getCongTy().getTen())
+        var branch = tinTuyenDung == null || tinTuyenDung.getChiNhanhs() == null
+                ? null
+                : tinTuyenDung.getChiNhanhs().stream().findFirst().orElse(null);
+        builder.chiNhanhId(branch == null ? null : ServiceUtils.toLong(branch.getId()))
+                .chiNhanhTen(branch == null ? null : branch.getTen())
+                .congTyId(branch == null || branch.getCongTy() == null
+                        ? null : ServiceUtils.toLong(branch.getCongTy().getId()))
+                .congTyTen(branch == null || branch.getCongTy() == null
+                        ? null : branch.getCongTy().getTen())
                 .tinTuyenDungId(tinTuyenDung == null ? null : ServiceUtils.toLong(tinTuyenDung.getId()))
                 .tieuDeTinTuyenDung(tinTuyenDung == null ? null : tinTuyenDung.getTieuDe());
     }

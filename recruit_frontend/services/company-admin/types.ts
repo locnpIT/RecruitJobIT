@@ -101,10 +101,9 @@ export interface CompanyAdminJob {
   id: number | null;
   tieuDe: string | null;
   trangThai: string | null;
-  chiNhanhId: number | null;
-  chiNhanhTen: string | null;
   congTyId: number | null;
   congTyTen: string | null;
+  chiNhanhs?: CompanyAdminBranch[];
   moTa: string | null;
   yeuCau: string | null;
   phucLoi: string | null;
@@ -114,6 +113,7 @@ export interface CompanyAdminJob {
   nganhNgheTen: string | null;
   loaiHinhLamViecId: number | null;
   loaiHinhLamViecTen: string | null;
+  loaiHinhLamViecs?: CompanyJobMetadataOption[];
   capDoKinhNghiemId: number | null;
   capDoKinhNghiemTen: string | null;
   luongToiThieu: number | null;
@@ -265,7 +265,7 @@ export interface UpdateCompanyHrPayload {
 }
 
 export interface CreateCompanyJobPayload {
-  chiNhanhId: number;
+  chiNhanhIds: number[];
   tieuDe: string;
   nganhNgheId: number;
   moTa: string;
@@ -273,7 +273,7 @@ export interface CreateCompanyJobPayload {
   phucLoi?: string;
   batBuocCV?: boolean;
   mauCvUrl?: string;
-  loaiHinhLamViecId: number;
+  loaiHinhLamViecIds: number[];
   capDoKinhNghiemId: number;
   luongToiThieu?: number;
   luongToiDa?: number;
@@ -290,11 +290,12 @@ export interface UpdateCompanyJobPayload {
   phucLoi?: string;
   batBuocCV?: boolean;
   mauCvUrl?: string;
-  loaiHinhLamViecId: number;
+  loaiHinhLamViecIds: number[];
   capDoKinhNghiemId: number;
   luongToiThieu?: number;
   luongToiDa?: number;
   soLuongTuyen: number;
   denHanLuc?: string;
   kyNangIds?: number[];
+  chiNhanhIds: number[];
 }

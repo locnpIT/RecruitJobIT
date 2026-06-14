@@ -19,7 +19,7 @@ public interface JobPayloadRequest {
 
     String getMauCvUrl();
 
-    Integer getLoaiHinhLamViecId();
+    List<Integer> getLoaiHinhLamViecIds();
 
     Integer getCapDoKinhNghiemId();
 
@@ -32,4 +32,6 @@ public interface JobPayloadRequest {
     LocalDateTime getDenHanLuc();
 
     List<Integer> getKyNangIds();
+
+    List<Integer> getChiNhanhIds();
 }

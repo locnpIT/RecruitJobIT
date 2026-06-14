@@ -1,6 +1,24 @@
-version: "3.9"
-
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: recruit_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: recruit
+      MYSQL_USER: recruit
+      MYSQL_PASSWORD: recruit
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
   embedding-api:
     build:
       context: ./embedding-service
@@ -32,6 +50,12 @@ services:
       - "6334:6334"
     volumes:
       - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:6333/healthz >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
@@ -54,6 +78,63 @@ services:
       retries: 20
       start_period: 40s
 
+  backend:
+    build:
+      context: ./recruit
+      dockerfile: Dockerfile
+    container_name: recruit_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      embedding-api:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/recruit?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+      DB_USERNAME: recruit
+      DB_PASSWORD: recruit
+      APP_PUBLIC_BASE_URL: http://localhost:8080
+      APP_FRONTEND_BASE_URL: http://localhost:3000
+      APP_EMBEDDING_PYTHON_URL: http://embedding-api:8001
+      APP_QDRANT_ENABLED: "true"
+      APP_QDRANT_URL: http://qdrant:6333
+      APP_QDRANT_TIMEOUT_MILLIS: "10000"
+      APP_ELASTICSEARCH_ENABLED: "true"
+      APP_ELASTICSEARCH_URL: http://elasticsearch:9200
+      APP_ELASTICSEARCH_TIMEOUT_MILLIS: "10000"
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS 'http://localhost:8080/api/v1/public/jobs?gioiHan=1' >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./recruit_frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+        API_INTERNAL_URL: http://backend:8080/api/v1
+    container_name: recruit_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      API_INTERNAL_URL: http://backend:8080/api/v1
+      NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+    ports:
+      - "3000:3000"
+
 volumes:
+  mysql_data:
   qdrant_data:
   elasticsearch_data:

@@ -2,6 +2,8 @@ package com.phuocloc.projectfinal.recruit.ai.service;
 
 import com.phuocloc.projectfinal.recruit.domain.ai.entity.ChiMucNhungTinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.ai.repository.ChiMucNhungTinTuyenDungRepository;
+import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
+import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.LoaiHinhLamViec;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.KyNangTinTuyenDungRepository;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.TinTuyenDungRepository;
@@ -194,12 +196,13 @@ public class JobEmbeddingIndexService {
         payload.put("trangThai", tinTuyenDung.getTrangThai());
         payload.put("nganhNgheId", tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getId());
         payload.put("nganhNghe", tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getTen());
-        payload.put("congTy", tinTuyenDung.getChiNhanh() == null || tinTuyenDung.getChiNhanh().getCongTy() == null
+        ChiNhanhCongTy branch = firstBranch(tinTuyenDung);
+        payload.put("congTy", branch == null || branch.getCongTy() == null
                 ? null
-                : tinTuyenDung.getChiNhanh().getCongTy().getTen());
-        if (tinTuyenDung.getChiNhanh() != null && tinTuyenDung.getChiNhanh().getXaPhuong() != null
-                && tinTuyenDung.getChiNhanh().getXaPhuong().getTinhThanh() != null) {
-            payload.put("tinhThanhId", tinTuyenDung.getChiNhanh().getXaPhuong().getTinhThanh().getId());
+                : branch.getCongTy().getTen());
+        if (branch != null && branch.getXaPhuong() != null
+                && branch.getXaPhuong().getTinhThanh() != null) {
+            payload.put("tinhThanhId", branch.getXaPhuong().getTinhThanh().getId());
         }
         payload.put("luongToiThieu", tinTuyenDung.getLuongToiThieu());
         payload.put("luongToiDa", tinTuyenDung.getLuongToiDa());
@@ -221,11 +224,12 @@ public class JobEmbeddingIndexService {
         append(sb, "Yeu cau", tinTuyenDung.getYeuCau());
         append(sb, "Phuc loi", tinTuyenDung.getPhucLoi());
         append(sb, "Nganh nghe", tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getTen());
-        append(sb, "Loai hinh lam viec", tinTuyenDung.getLoaiHinhLamViec() == null ? null : tinTuyenDung.getLoaiHinhLamViec().getTen());
+        append(sb, "Loai hinh lam viec", resolveWorkTypeText(tinTuyenDung));
         append(sb, "Cap do kinh nghiem", tinTuyenDung.getCapDoKinhNghiem() == null ? null : tinTuyenDung.getCapDoKinhNghiem().getTen());
-        append(sb, "Cong ty", tinTuyenDung.getChiNhanh() == null || tinTuyenDung.getChiNhanh().getCongTy() == null
+        ChiNhanhCongTy branch = firstBranch(tinTuyenDung);
+        append(sb, "Cong ty", branch == null || branch.getCongTy() == null
                 ? null
-                : tinTuyenDung.getChiNhanh().getCongTy().getTen());
+                : branch.getCongTy().getTen());
 
         kyNangTinTuyenDungRepository.findByTinTuyenDungIdOrderByKyNangTenAsc(tinTuyenDung.getId()).forEach(item -> {
             if (item.getKyNang() != null) {
@@ -244,6 +248,29 @@ public class JobEmbeddingIndexService {
             return;
         }
         sb.append(label).append(": ").append(value.trim()).append('\n');
+    }
+
+    private ChiNhanhCongTy firstBranch(TinTuyenDung tinTuyenDung) {
+        if (tinTuyenDung == null || tinTuyenDung.getChiNhanhs() == null || tinTuyenDung.getChiNhanhs().isEmpty()) {
+            return null;
+        }
+        return tinTuyenDung.getChiNhanhs().stream().findFirst().orElse(null);
+    }
+
+    private String resolveWorkTypeText(TinTuyenDung tinTuyenDung) {
+        if (tinTuyenDung == null) {
+            return null;
+        }
+        List<LoaiHinhLamViec> workTypes = tinTuyenDung.getLoaiHinhLamViecs() == null
+                || tinTuyenDung.getLoaiHinhLamViecs().isEmpty()
+                ? (tinTuyenDung.getLoaiHinhLamViec() == null ? List.of() : List.of(tinTuyenDung.getLoaiHinhLamViec()))
+                : tinTuyenDung.getLoaiHinhLamViecs().stream().filter(java.util.Objects::nonNull).toList();
+        String joined = workTypes.stream()
+                .map(LoaiHinhLamViec::getTen)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .collect(java.util.stream.Collectors.joining(", "));
+        return StringUtils.hasText(joined) ? joined : null;
     }
 
     public record DongBoIndexSummary(boolean enabled, int tongSo, int soDaDongBo, int soThatBai) {

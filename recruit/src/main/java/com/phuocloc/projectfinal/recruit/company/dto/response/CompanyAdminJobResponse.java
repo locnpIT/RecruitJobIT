@@ -20,10 +20,9 @@ public class CompanyAdminJobResponse {
     private Long id;
     private String tieuDe;
     private String trangThai;
-    private Long chiNhanhId;
-    private String chiNhanhTen;
     private Long congTyId;
     private String congTyTen;
+    private List<BranchItem> chiNhanhs;
     private String moTa;
     private String yeuCau;
     private String phucLoi;
@@ -33,6 +32,7 @@ public class CompanyAdminJobResponse {
     private String nganhNgheTen;
     private Long loaiHinhLamViecId;
     private String loaiHinhLamViecTen;
+    private List<WorkTypeItem> loaiHinhLamViecs;
     private Long capDoKinhNghiemId;
     private String capDoKinhNghiemTen;
     private Integer luongToiThieu;
@@ -48,6 +48,24 @@ public class CompanyAdminJobResponse {
     @AllArgsConstructor
     @Builder
     public static class KyNangItem {
+        private Long id;
+        private String ten;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BranchItem {
+        private Long chiNhanhId;
+        private String chiNhanhTen;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class WorkTypeItem {
         private Long id;
         private String ten;
     }

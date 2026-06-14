@@ -20,6 +20,7 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import com.phuocloc.projectfinal.recruit.common.util.ServiceUtils;
 
@@ -48,24 +49,28 @@ public class CompanyAdminApplicationService {
     private final NotificationService notificationService;
     private final HrCredentialMailService hrCredentialMailService;
 
+    @Transactional(readOnly = true)
     public List<CompanyAdminApplicationResponse> listApplications(AppUserPrinciple principal, Integer chiNhanhId) {
         accessService.requireMembership(principal.getUserId().intValue(), chiNhanhId, COMPANY_ADMIN_ROLES);
-        return donUngTuyenRepository.findByTinTuyenDung_ChiNhanh_IdAndNgayXoaIsNullOrderByNgayTaoDesc(chiNhanhId).stream()
+        return donUngTuyenRepository.findByTinTuyenDung_ChiNhanhs_IdAndNgayXoaIsNullOrderByNgayTaoDesc(chiNhanhId).stream()
                 .map(application -> applicationMapper.mapApplication(application, false))
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public CompanyAdminApplicationResponse getApplicationDetail(AppUserPrinciple principal, Long applicationId) {
         DonUngTuyen application = requireManagedApplication(principal, applicationId);
         return applicationMapper.mapApplication(application, true);
     }
 
+    @Transactional(readOnly = true)
     public CompanyAdminApplicationResponse getCandidateProfileForJob(AppUserPrinciple principal, Long jobId, Long profileId) {
         TinTuyenDung tinTuyenDung = jobService.requireManagedJob(principal, jobId);
         HoSoUngVien profile = requireActiveCandidateProfile(profileId);
         return applicationMapper.mapCandidateProfileForJob(tinTuyenDung, profile, true);
     }
 
+    @Transactional
     public CompanyAdminApplicationResponse updateApplicationStatus(
             AppUserPrinciple principal,
             Long applicationId,
@@ -92,6 +97,7 @@ public class CompanyAdminApplicationService {
         return applicationMapper.mapApplication(saved, true);
     }
 
+    @Transactional
     public CompanyAdminApplicationResponse sendInterviewEmail(
             AppUserPrinciple principal,
             Long applicationId,
@@ -110,7 +116,7 @@ public class CompanyAdminApplicationService {
 
         var candidate = application.getHoSoUngVien().getNguoiDung();
         var job = application.getTinTuyenDung();
-        var branch = job.getChiNhanh();
+        var branch = job.getChiNhanhs() == null ? null : job.getChiNhanhs().stream().findFirst().orElse(null);
         var company = branch != null ? branch.getCongTy() : null;
 
         hrCredentialMailService.sendInterviewInvitation(
@@ -142,16 +148,24 @@ public class CompanyAdminApplicationService {
         DonUngTuyen application = donUngTuyenRepository.findByIdAndNgayXoaIsNull(Math.toIntExact(applicationId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy đơn ứng tuyển"));
         if (application.getTinTuyenDung() == null
-                || application.getTinTuyenDung().getChiNhanh() == null
-                || application.getTinTuyenDung().getChiNhanh().getId() == null) {
+                || application.getTinTuyenDung().getChiNhanhs() == null
+                || application.getTinTuyenDung().getChiNhanhs().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Đơn ứng tuyển không hợp lệ");
         }
 
-        accessService.requireMembership(
-                principal.getUserId().intValue(),
-                application.getTinTuyenDung().getChiNhanh().getId(),
-                COMPANY_ADMIN_ROLES
-        );
+        boolean allowed = application.getTinTuyenDung().getChiNhanhs().stream()
+                .filter(branch -> branch != null && branch.getId() != null)
+                .anyMatch(branch -> {
+                    try {
+                        accessService.requireMembership(principal.getUserId().intValue(), branch.getId(), COMPANY_ADMIN_ROLES);
+                        return true;
+                    } catch (ResponseStatusException ex) {
+                        return false;
+                    }
+                });
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không có quyền thao tác trên đơn ứng tuyển này");
+        }
         return application;
     }
 

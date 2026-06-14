@@ -23,6 +23,8 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
     defaultValues: {
       batBuocCV: false,
       kyNangIds: [],
+      chiNhanhIds: [],
+      loaiHinhLamViecIds: [],
     },
   });
 
@@ -32,8 +34,9 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
   const yeuCauValue = useWatch({ control, name: "yeuCau" }) ?? "";
   const phucLoiValue = useWatch({ control, name: "phucLoi" }) ?? "";
   const selectedKyNangIds = useWatch({ control, name: "kyNangIds" }) ?? [];
+  const loaiHinhLamViecIds = useWatch({ control, name: "loaiHinhLamViecIds" }) ?? [];
 
-  const chiNhanhField = register("chiNhanhId", { valueAsNumber: true });
+  const chiNhanhIds = useWatch({ control, name: "chiNhanhIds" }) ?? [];
   const batBuocCVField = register("batBuocCV", {
     onChange: (event) => {
       if (!event.target.checked) {
@@ -44,8 +47,14 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
   });
 
   const resetForCreate = () => {
+    const fallbackBranchId = Number(branches[0]?.chiNhanhId ?? 0);
+    const defaultBranchIds = selectedBranchId
+      ? [selectedBranchId]
+      : Number.isFinite(fallbackBranchId) && fallbackBranchId > 0
+        ? [fallbackBranchId]
+        : [];
     reset({
-      chiNhanhId: selectedBranchId ?? branches[0]?.chiNhanhId ?? 0,
+      chiNhanhIds: defaultBranchIds,
       tieuDe: "",
       nganhNgheId: 0,
       moTa: "",
@@ -53,7 +62,7 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
       phucLoi: "",
       batBuocCV: false,
       mauCvUrl: "",
-      loaiHinhLamViecId: 0,
+      loaiHinhLamViecIds: [],
       capDoKinhNghiemId: 0,
       luongToiThieu: undefined,
       luongToiDa: undefined,
@@ -66,7 +75,9 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
 
   const resetForEdit = (job: CompanyAdminJob) => {
     reset({
-      chiNhanhId: job.chiNhanhId ?? selectedBranchId ?? 0,
+      chiNhanhIds: (job.chiNhanhs ?? [])
+        .map((branch) => Number(branch.chiNhanhId ?? 0))
+        .filter((id) => Number.isFinite(id) && id > 0),
       tieuDe: job.tieuDe ?? "",
       nganhNgheId: job.nganhNgheId ?? 0,
       moTa: job.moTa ?? "",
@@ -74,7 +85,10 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
       phucLoi: job.phucLoi ?? "",
       batBuocCV: Boolean(job.batBuocCV),
       mauCvUrl: job.mauCvUrl ?? "",
-      loaiHinhLamViecId: job.loaiHinhLamViecId ?? 0,
+      loaiHinhLamViecIds: ((job.loaiHinhLamViecs ?? []).length > 0
+        ? (job.loaiHinhLamViecs ?? []).map((item) => Number(item.id ?? 0))
+        : [Number(job.loaiHinhLamViecId ?? 0)]
+      ).filter((id) => Number.isFinite(id) && id > 0),
       capDoKinhNghiemId: job.capDoKinhNghiemId ?? 0,
       luongToiThieu: job.luongToiThieu ?? undefined,
       luongToiDa: job.luongToiDa ?? undefined,
@@ -85,6 +99,26 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
         .filter((id) => Number.isFinite(id) && id > 0),
     });
     setCvTemplateFileName(null);
+  };
+
+  const toggleBranch = (branchId: number) => {
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      return;
+    }
+    const next = chiNhanhIds.includes(branchId)
+      ? chiNhanhIds.filter((id) => id !== branchId)
+      : [...chiNhanhIds, branchId];
+    setValue("chiNhanhIds", next, { shouldDirty: true });
+  };
+
+  const toggleWorkType = (workTypeId: number) => {
+    if (!Number.isFinite(workTypeId) || workTypeId <= 0) {
+      return;
+    }
+    const next = loaiHinhLamViecIds.includes(workTypeId)
+      ? loaiHinhLamViecIds.filter((id) => id !== workTypeId)
+      : [...loaiHinhLamViecIds, workTypeId];
+    setValue("loaiHinhLamViecIds", next, { shouldDirty: true });
   };
 
   const handleUploadCvTemplate = async (file: File | null) => {
@@ -117,7 +151,6 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
     handleSubmit,
     reset,
     setValue,
-    chiNhanhField,
     batBuocCVField,
     batBuocCV,
     mauCvUrlValue,
@@ -125,6 +158,10 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
     yeuCauValue,
     phucLoiValue,
     selectedKyNangIds,
+    loaiHinhLamViecIds,
+    toggleWorkType,
+    chiNhanhIds,
+    toggleBranch,
     isUploadingCvTemplate,
     cvTemplateFileName,
     resetForCreate,
