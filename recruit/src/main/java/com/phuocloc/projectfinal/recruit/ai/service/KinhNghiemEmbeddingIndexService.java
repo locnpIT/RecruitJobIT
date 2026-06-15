@@ -167,7 +167,6 @@ public class KinhNghiemEmbeddingIndexService {
     private String buildEmbeddingContent(KinhNghiemLamViecUngVien kinhNghiem) {
         StringBuilder sb = new StringBuilder(512);
         append(sb, kinhNghiem.getChucDanh());
-        append(sb, kinhNghiem.getTenCongTy());
         append(sb, kinhNghiem.getMoTaCongViec());
         return sb.toString().trim();
     }

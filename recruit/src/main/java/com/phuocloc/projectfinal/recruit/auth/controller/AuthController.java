@@ -3,6 +3,7 @@ package com.phuocloc.projectfinal.recruit.auth.controller;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.CreateOwnerRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.LoginRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.RegisterRequest;
+import com.phuocloc.projectfinal.recruit.auth.dto.request.VerifyEmailRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.UpdateAvatarRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.UpdateUserProfileRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.AuthResponse;
@@ -21,8 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.view.RedirectView;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -85,16 +84,16 @@ public class AuthController {
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách loại tài liệu thành công", data));
     }
 
-    @GetMapping("/verify-email")
-    // Luồng xác nhận email đơn giản theo yêu cầu: link có userId và bấm vào sẽ kích hoạt tài khoản.
-    // Không dùng token nên chỉ phù hợp demo/nội bộ, không nên dùng làm cơ chế bảo mật production.
-    public RedirectView verifyEmail(@RequestParam("userId") Long userId) {
-        try {
-            authService.verifyEmailByUserId(userId);
-            return new RedirectView(buildFrontendVerifyUrl("success"));
-        } catch (RuntimeException ex) {
-            return new RedirectView(buildFrontendVerifyUrl("error"));
-        }
+    @PostMapping("/verify-email/confirm")
+    public ResponseEntity<SuccessResponse<String>> confirmEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        authService.verifyEmailByCode(request);
+        return ResponseEntity.ok(new SuccessResponse<>("Xác nhận email thành công", "OK"));
+    }
+
+    @PostMapping("/verify-email/resend")
+    public ResponseEntity<SuccessResponse<String>> resendVerifyEmail(@RequestParam("email") String email) {
+        authService.resendEmailVerification(email);
+        return ResponseEntity.ok(new SuccessResponse<>("Đã gửi lại mã xác nhận", "OK"));
     }
 
     @PostMapping("/login")
@@ -134,10 +133,4 @@ public class AuthController {
         return ResponseEntity.ok(new SuccessResponse<>("Cập nhật hồ sơ người dùng thành công", data));
     }
 
-    private String buildFrontendVerifyUrl(String status) {
-        String baseUrl = StringUtils.hasText(publicUrlProperties.getFrontendBaseUrl())
-                ? publicUrlProperties.getFrontendBaseUrl().trim()
-                : "http://localhost:3000";
-        return baseUrl + "/auth/verify-email?status=" + status;
-    }
 }

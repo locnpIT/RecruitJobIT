@@ -8,7 +8,6 @@ import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.LoaiHinhLamVie
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchProperties;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +111,7 @@ public class PublicJobElasticsearchIndexService {
         if (job.getDenHanLuc() != null && job.getDenHanLuc().isBefore(LocalDateTime.now())) {
             return false;
         }
-        ChiNhanhCongTy branch = firstBranch(job);
+        ChiNhanhCongTy branch = job.firstBranch();
         if (branch == null || branch.getCongTy() == null) {
             return false;
         }
@@ -127,27 +126,21 @@ public class PublicJobElasticsearchIndexService {
      */
     private Map<String, Object> buildDocument(TinTuyenDung job) {
         Map<String, Object> document = new LinkedHashMap<>();
-        document.put("jobId", buildDocumentId(job.getId()));
         document.put("tieuDe", trimToEmpty(job.getTieuDe()));
         document.put("moTa", trimToEmpty(job.getMoTa()));
         document.put("yeuCau", trimToEmpty(job.getYeuCau()));
         document.put("phucLoi", trimToEmpty(job.getPhucLoi()));
-        ChiNhanhCongTy branch = firstBranch(job);
+        ChiNhanhCongTy branch = job.firstBranch();
         document.put("congTyTen", branch == null || branch.getCongTy() == null
                 ? ""
                 : trimToEmpty(branch.getCongTy().getTen()));
         document.put("nganhNgheTen", job.getNganhNghe() == null ? "" : trimToEmpty(job.getNganhNghe().getTen()));
         document.put("capDoKinhNghiemTen", job.getCapDoKinhNghiem() == null ? "" : trimToEmpty(job.getCapDoKinhNghiem().getTen()));
-        List<LoaiHinhLamViec> workTypes = resolveWorkTypes(job);
+        List<LoaiHinhLamViec> workTypes = job.getEffectiveWorkTypes();
         document.put("loaiHinhLamViecTen", joinWorkTypeNames(workTypes));
         document.put("kyNangs", joinSkills(job.getId()));
-        document.put("diaDiem", resolveDiaDiem(job));
         document.put("tinhThanhTen", resolveTinhThanh(job));
         document.put("xaPhuongTen", resolveXaPhuong(job));
-        document.put("trangThai", trimToEmpty(job.getTrangThai()).toUpperCase());
-        document.put("congTyTrangThai", branch == null || branch.getCongTy() == null
-                ? ""
-                : trimToEmpty(branch.getCongTy().getTrangThai()).toUpperCase());
         document.put("nganhNgheId", job.getNganhNghe() == null ? null : job.getNganhNghe().getId());
         document.put("loaiHinhLamViecId", workTypes.stream()
                 .map(LoaiHinhLamViec::getId)
@@ -156,10 +149,8 @@ public class PublicJobElasticsearchIndexService {
         document.put("capDoKinhNghiemId", job.getCapDoKinhNghiem() == null ? null : job.getCapDoKinhNghiem().getId());
         document.put("luongToiThieu", job.getLuongToiThieu());
         document.put("luongToiDa", job.getLuongToiDa());
-        // Tin không có hạn (denHanLuc = null) dùng mốc rất lớn để luôn pass filter hạn.
-        document.put("denHanLucEpoch", toDeadlineEpoch(job.getDenHanLuc()));
-        document.put("ngayTaoEpoch", toEpochSecond(job.getNgayTao()));
-        document.put("ngayCapNhatEpoch", toEpochSecond(job.getNgayCapNhat()));
+        document.put("denHanLuc", job.getDenHanLuc() == null ? null : job.getDenHanLuc().toString());
+        document.put("ngayTao", job.getNgayTao() == null ? null : job.getNgayTao().toString());
         return document;
     }
 
@@ -176,18 +167,6 @@ public class PublicJobElasticsearchIndexService {
                 .orElse("");
     }
 
-    private List<LoaiHinhLamViec> resolveWorkTypes(TinTuyenDung job) {
-        if (job == null) {
-            return List.of();
-        }
-        if (job.getLoaiHinhLamViecs() != null && !job.getLoaiHinhLamViecs().isEmpty()) {
-            return job.getLoaiHinhLamViecs().stream()
-                    .filter(java.util.Objects::nonNull)
-                    .toList();
-        }
-        return job.getLoaiHinhLamViec() == null ? List.of() : List.of(job.getLoaiHinhLamViec());
-    }
-
     private String joinWorkTypeNames(List<LoaiHinhLamViec> workTypes) {
         return workTypes.stream()
                 .map(LoaiHinhLamViec::getTen)
@@ -198,56 +177,34 @@ public class PublicJobElasticsearchIndexService {
                 .orElse("");
     }
 
-    private String resolveDiaDiem(TinTuyenDung job) {
-        String xaPhuong = resolveXaPhuong(job);
-        String tinhThanh = resolveTinhThanh(job);
-        if (StringUtils.hasText(xaPhuong) && StringUtils.hasText(tinhThanh)) {
-            return xaPhuong + ", " + tinhThanh;
-        }
-        return StringUtils.hasText(tinhThanh) ? tinhThanh : xaPhuong;
-    }
-
     private String resolveTinhThanh(TinTuyenDung job) {
-        ChiNhanhCongTy branch = firstBranch(job);
-        if (branch == null
-                || branch.getXaPhuong() == null
-                || branch.getXaPhuong().getTinhThanh() == null) {
-            return "";
-        }
-        return trimToEmpty(branch.getXaPhuong().getTinhThanh().getTen());
+        if (job.getChiNhanhs() == null || job.getChiNhanhs().isEmpty()) return "";
+        return job.getChiNhanhs().stream()
+                .filter(java.util.Objects::nonNull)
+                .filter(b -> b.getXaPhuong() != null && b.getXaPhuong().getTinhThanh() != null)
+                .map(b -> b.getXaPhuong().getTinhThanh().getTen())
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .distinct()
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
     }
 
     private String resolveXaPhuong(TinTuyenDung job) {
-        ChiNhanhCongTy branch = firstBranch(job);
-        if (branch == null || branch.getXaPhuong() == null) {
-            return "";
-        }
-        return trimToEmpty(branch.getXaPhuong().getTen());
-    }
-
-    private long toEpochSecond(LocalDateTime value) {
-        if (value == null) {
-            return 0L;
-        }
-        return value.toEpochSecond(ZoneOffset.UTC);
-    }
-
-    private long toDeadlineEpoch(LocalDateTime value) {
-        if (value == null) {
-            return Long.MAX_VALUE;
-        }
-        return value.toEpochSecond(ZoneOffset.UTC);
+        if (job.getChiNhanhs() == null || job.getChiNhanhs().isEmpty()) return "";
+        return job.getChiNhanhs().stream()
+                .filter(java.util.Objects::nonNull)
+                .filter(b -> b.getXaPhuong() != null)
+                .map(b -> b.getXaPhuong().getTen())
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .distinct()
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
     }
 
     private String trimToEmpty(String value) {
         return StringUtils.hasText(value) ? value.trim() : "";
-    }
-
-    private ChiNhanhCongTy firstBranch(TinTuyenDung job) {
-        if (job == null || job.getChiNhanhs() == null || job.getChiNhanhs().isEmpty()) {
-            return null;
-        }
-        return job.getChiNhanhs().stream().findFirst().orElse(null);
     }
 
     @Getter

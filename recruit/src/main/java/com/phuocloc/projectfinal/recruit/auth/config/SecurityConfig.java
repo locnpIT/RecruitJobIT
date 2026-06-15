@@ -106,6 +106,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/register-owner",
                                 "/api/v1/auth/verify-email",
+                                "/api/v1/auth/verify-email/confirm",
+                                "/api/v1/auth/verify-email/resend",
                                 "/api/v1/auth/proof-types",
                                 "/api/v1/auth/cloudinary-signature",
                                 "/api/v1/payments/sepay/webhook"

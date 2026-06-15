@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { PageHeader } from "./PageHeader";
 
@@ -9,25 +9,20 @@ import { PageHeader } from "./PageHeader";
  * Thành phần này chỉ lo phần copy/text ngữ cảnh, còn bố cục thật sự nằm ở `PageHeader`.
  */
 export function AdminHeader() {
-  const [displayName] = useState(() => {
-    try {
-      if (typeof window === "undefined") {
-        return "Quản trị viên";
-      }
+  const [displayName, setDisplayName] = useState("Quản trị viên");
 
+  useEffect(() => {
+    try {
       // Lấy tên admin từ local storage để tránh gọi thêm API chỉ cho lời chào đầu trang.
       const storedUser = localStorage.getItem("user");
-      if (!storedUser) {
-        return "Quản trị viên";
-      }
-
+      if (!storedUser) return;
       const user = JSON.parse(storedUser) as { ten?: string | null; ho?: string | null };
       const fullName = [user.ho, user.ten].filter(Boolean).join(" ").trim();
-      return fullName || "Quản trị viên";
+      if (fullName) setDisplayName(fullName);
     } catch {
-      return "Quản trị viên";
+      // giữ fallback
     }
-  });
+  }, []);
 
   return (
     <PageHeader

@@ -8,6 +8,7 @@ import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.NganhNghe;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -104,4 +105,16 @@ public class TinTuyenDung {
 
     @Column(name = "denHanLuc")
     private LocalDateTime denHanLuc;
+
+    public ChiNhanhCongTy firstBranch() {
+        if (chiNhanhs == null || chiNhanhs.isEmpty()) return null;
+        return chiNhanhs.iterator().next();
+    }
+
+    public List<LoaiHinhLamViec> getEffectiveWorkTypes() {
+        if (loaiHinhLamViecs == null || loaiHinhLamViecs.isEmpty()) return List.of();
+        return loaiHinhLamViecs.stream()
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
 }

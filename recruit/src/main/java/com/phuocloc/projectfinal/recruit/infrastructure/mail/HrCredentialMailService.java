@@ -156,27 +156,23 @@ public class HrCredentialMailService {
     }
 
     /**
-     * Gửi link xác nhận email candidate theo yêu cầu hiện tại: link chỉ mang userId
-     * và bấm vào là kích hoạt tài khoản. Cách này đơn giản cho demo nhưng không
-     * có độ an toàn như token một lần.
+     * Gửi mã xác nhận 6 số cho candidate.
      */
     @Async("mailTaskExecutor")
     public void sendCandidateEmailVerification(
-            Long userId,
             String toEmail,
             String firstName,
-            String lastName
+            String lastName,
+            String verificationCode
     ) {
         String fullName = buildFullName(firstName, lastName);
-        String verificationUrl = buildSimpleEmailVerificationUrl(userId);
 
         if (!mailProperties.isEnabled()) {
             log.info(
-                    "[CANDIDATE-VERIFY][MAIL_DISABLED] userId={}, to={}, fullName={}, url={}",
-                    userId,
+                    "[CANDIDATE-VERIFY][MAIL_DISABLED] to={}, fullName={}, code={}",
                     toEmail,
                     fullName,
-                    verificationUrl
+                    verificationCode
             );
             return;
         }
@@ -185,18 +181,17 @@ public class HrCredentialMailService {
         if (mailSender == null) {
             log.warn("[CANDIDATE-VERIFY][MAIL_NOT_CONFIGURED] Missing JavaMailSender bean, fallback to log-only.");
             log.info(
-                    "[CANDIDATE-VERIFY] userId={}, to={}, fullName={}, url={}",
-                    userId,
+                    "[CANDIDATE-VERIFY] to={}, fullName={}, code={}",
                     toEmail,
                     fullName,
-                    verificationUrl
+                    verificationCode
             );
             return;
         }
 
         String fromEmail = resolveFromEmail();
         String subject = "Xác nhận email tài khoản ứng viên";
-        String body = renderCandidateVerificationTemplate(fullName, toEmail, verificationUrl);
+        String body = renderCandidateVerificationTemplate(fullName, toEmail, verificationCode);
 
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -207,9 +202,9 @@ public class HrCredentialMailService {
             helper.setText(body, true);
             mailSender.send(mimeMessage);
 
-            log.info("[CANDIDATE-VERIFY][SENT] userId={}, to={}", userId, toEmail);
+            log.info("[CANDIDATE-VERIFY][SENT] to={}", toEmail);
         } catch (MessagingException | MailException ex) {
-            log.error("[CANDIDATE-VERIFY][FAILED] userId={}, to={}, reason={}", userId, toEmail, ex.getMessage(), ex);
+            log.error("[CANDIDATE-VERIFY][FAILED] to={}, reason={}", toEmail, ex.getMessage(), ex);
         }
     }
 
@@ -298,17 +293,17 @@ public class HrCredentialMailService {
         }
     }
 
-    private String renderCandidateVerificationTemplate(String fullName, String email, String verificationUrl) {
+    private String renderCandidateVerificationTemplate(String fullName, String email, String verificationCode) {
         try {
             ClassPathResource resource = new ClassPathResource("mail/candidate-email-verification.html");
             String template = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             return template
                     .replace("${fullName}", escapeHtml(fullName))
                     .replace("${email}", escapeHtml(email))
-                    .replace("${verificationUrl}", escapeHtml(verificationUrl));
+                    .replace("${verificationCode}", escapeHtml(verificationCode));
         } catch (IOException ex) {
             log.warn("[CANDIDATE-VERIFY][TEMPLATE_FALLBACK] Cannot load HTML template, using plain text body.");
-            return buildCandidateVerificationBody(fullName, email, verificationUrl).replace("\n", "<br>");
+            return buildCandidateVerificationBody(fullName, email, verificationCode).replace("\n", "<br>");
         }
     }
 
@@ -357,15 +352,15 @@ public class HrCredentialMailService {
                 """.formatted(fullName, jobTitle, companyName, email, interviewDateTime, interviewLocation, safeBranchAddress, safeNote, confirmUrl, declineUrl);
     }
 
-    private String buildCandidateVerificationBody(String fullName, String email, String verificationUrl) {
+    private String buildCandidateVerificationBody(String fullName, String email, String verificationCode) {
         return """
                 Chào %s,
 
                 Tài khoản ứng viên của bạn đã được tạo với email: %s.
 
-                Vui lòng bấm vào link sau để xác nhận email và kích hoạt tài khoản:
-                %s
-                """.formatted(fullName, email, verificationUrl);
+                Mã xác nhận của bạn là: %s
+                Hãy nhập mã này trên màn hình xác nhận email để kích hoạt tài khoản.
+                """.formatted(fullName, email, verificationCode);
     }
 
     private String safeText(String value) {
@@ -381,12 +376,5 @@ public class HrCredentialMailService {
         claims.put("action", action);
         String token = jwtService.generatePublicActionToken(claims, 7L * 24 * 60 * 60);
         return baseUrl + "/api/v1/public/interview/respond?token=" + token + "&action=" + action;
-    }
-
-    private String buildSimpleEmailVerificationUrl(Long userId) {
-        String baseUrl = StringUtils.hasText(publicUrlProperties.getBaseUrl())
-                ? publicUrlProperties.getBaseUrl().trim()
-                : "http://localhost:8080";
-        return baseUrl + "/api/v1/auth/verify-email?userId=" + userId;
     }
 }

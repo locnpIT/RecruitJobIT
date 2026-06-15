@@ -2,6 +2,7 @@ package com.phuocloc.projectfinal.recruit.auth.service;
 
 import com.phuocloc.projectfinal.recruit.auth.dto.request.LoginRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.RegisterRequest;
+import com.phuocloc.projectfinal.recruit.auth.dto.request.VerifyEmailRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.AuthResponse;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
 import com.phuocloc.projectfinal.recruit.auth.repository.RolesRepository;
@@ -20,6 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.util.StringUtils;
+import java.security.SecureRandom;
 
 @Slf4j
 @Service
@@ -53,17 +56,17 @@ public class AuthService {
         // Candidate phải bấm link xác nhận email trước khi đăng nhập.
         user.setDangHoatDong(false);
         user.setVaiTroHeThong(userRole);
+        user.setMaXacNhanEmail(generateEmailVerificationCode());
         user = usersRepository.save(user);
 
         mailService.sendCandidateEmailVerification(
-                ServiceUtils.toLong(user.getId()),
                 user.getEmail(),
                 user.getTen(),
-                user.getHo()
+                user.getHo(),
+                user.getMaXacNhanEmail()
         );
 
-        String accessToken = jwtService.generateAccessToken(user);
-        return buildAuthResponse(user, accessToken);
+        return buildAuthResponse(user, null);
     }
 
     @Transactional
@@ -90,12 +93,43 @@ public class AuthService {
     }
 
     @Transactional
-    public void verifyEmailByUserId(Long userId) {
-        Integer safeUserId = toIntId(userId, "userId");
-        NguoiDung user = usersRepository.findById(safeUserId)
+    public void verifyEmailByCode(VerifyEmailRequest request) {
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
+        NguoiDung user = usersRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản cần xác nhận"));
+
+        if (Boolean.TRUE.equals(user.getDangHoatDong())) {
+            return;
+        }
+
+        String currentCode = user.getMaXacNhanEmail();
+        if (!StringUtils.hasText(currentCode) || !currentCode.equals(request.getMaXacNhan())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã xác nhận không đúng");
+        }
+
         user.setDangHoatDong(true);
+        user.setMaXacNhanEmail(null);
         usersRepository.save(user);
+    }
+
+    @Transactional
+    public void resendEmailVerification(String email) {
+        String normalizedEmail = ServiceUtils.normalizeEmail(email);
+        NguoiDung user = usersRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản cần xác nhận"));
+
+        if (Boolean.TRUE.equals(user.getDangHoatDong())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Tài khoản đã được kích hoạt");
+        }
+
+        user.setMaXacNhanEmail(generateEmailVerificationCode());
+        usersRepository.save(user);
+        mailService.sendCandidateEmailVerification(
+                user.getEmail(),
+                user.getTen(),
+                user.getHo(),
+                user.getMaXacNhanEmail()
+        );
     }
 
     private VaiTroHeThong requireRole(RoleName roleName) {
@@ -109,17 +143,6 @@ public class AuthService {
     private void ensureEmailNotExists(String email) {
         if (usersRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email đã tồn tại");
-        }
-    }
-
-    private Integer toIntId(Long value, String fieldName) {
-        if (value == null || value <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " không hợp lệ");
-        }
-        try {
-            return Math.toIntExact(value);
-        } catch (ArithmeticException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " vượt quá giới hạn", ex);
         }
     }
 
@@ -144,5 +167,13 @@ public class AuthService {
         response.setNguoiDung(thongTinNguoiDung);
         response.setPhienDangNhap(phienDangNhap);
         return response;
+    }
+
+    private String generateEmailVerificationCode() {
+        return String.format("%06d", SecureRandomHolder.INSTANCE.nextInt(1_000_000));
+    }
+
+    private static final class SecureRandomHolder {
+        private static final SecureRandom INSTANCE = new SecureRandom();
     }
 }

@@ -4,7 +4,7 @@ services:
     container_name: recruit_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: 12345678
       MYSQL_DATABASE: recruit
       MYSQL_USER: recruit
       MYSQL_PASSWORD: recruit
@@ -13,7 +13,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p12345678"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -95,8 +95,8 @@ services:
         condition: service_healthy
     environment:
       DB_URL: jdbc:mysql://mysql:3306/recruit?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
-      DB_USERNAME: recruit
-      DB_PASSWORD: recruit
+      DB_USERNAME: root
+      DB_PASSWORD: 12345678
       APP_PUBLIC_BASE_URL: http://localhost:8080
       APP_FRONTEND_BASE_URL: http://localhost:3000
       APP_EMBEDDING_PYTHON_URL: http://embedding-api:8001

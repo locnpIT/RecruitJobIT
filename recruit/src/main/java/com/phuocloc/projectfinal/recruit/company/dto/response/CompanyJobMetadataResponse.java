@@ -22,5 +22,6 @@ public class CompanyJobMetadataResponse {
     public static class OptionItem {
         private Long id;
         private String ten;
+        private String moTa;
     }
 }

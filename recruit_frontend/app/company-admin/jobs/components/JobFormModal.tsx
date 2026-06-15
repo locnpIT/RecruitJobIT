@@ -274,7 +274,10 @@ function JobFormSelectFields({
                   onChange={() => onToggleWorkType(workTypeId)}
                   className="mt-1 h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
                 />
-                <span className="font-medium text-slate-900">{item.ten ?? "--"}</span>
+                <span>
+                  <span className="block font-medium text-slate-900">{item.ten ?? "--"}</span>
+                  {item.moTa ? <span className="block text-xs text-slate-500">{item.moTa}</span> : null}
+                </span>
               </label>
             );
           })}
@@ -286,7 +289,9 @@ function JobFormSelectFields({
         <select {...register("capDoKinhNghiemId", { valueAsNumber: true })} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
           <option value={0}>Chọn cấp độ kinh nghiệm</option>
           {capDoOptions.map((item) => (
-            <option key={item.id ?? `capdo-${item.ten}`} value={item.id ?? 0}>{item.ten ?? "--"}</option>
+            <option key={item.id ?? `capdo-${item.ten}`} value={item.id ?? 0}>
+              {item.moTa ? `${item.ten ?? "--"} — ${item.moTa}` : (item.ten ?? "--")}
+            </option>
           ))}
         </select>
       </div>

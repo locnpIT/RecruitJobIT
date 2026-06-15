@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,8 @@ public class VietnamLocalitySeeder implements ApplicationRunner {
 
     private final TinhThanhRepository tinhThanhRepository;
     private final XaPhuongRepository xaPhuongRepository;
+    @Value("${app.bootstrap.reset-localities:false}")
+    private boolean resetLocalities;
 
     public VietnamLocalitySeeder(
             TinhThanhRepository tinhThanhRepository,
@@ -44,6 +47,12 @@ public class VietnamLocalitySeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        if (resetLocalities) {
+            xaPhuongRepository.deleteAllInBatch();
+            tinhThanhRepository.deleteAllInBatch();
+            tinhThanhRepository.flush();
+        }
+
         Map<String, TinhThanh> provinceByName = tinhThanhRepository.findAll().stream()
                 .filter(item -> item.getTen() != null)
                 .collect(Collectors.toMap(
@@ -113,6 +122,7 @@ public class VietnamLocalitySeeder implements ApplicationRunner {
         }
         if (!wardsToSave.isEmpty()) {
             xaPhuongRepository.saveAll(wardsToSave);
+            xaPhuongRepository.flush();
         }
     }
 
@@ -175,7 +185,14 @@ public class VietnamLocalitySeeder implements ApplicationRunner {
     }
 
     private static String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase();
+        if (value == null) {
+            return "";
+        }
+        String normalized = value.trim().toLowerCase();
+        normalized = normalized.replaceFirst("^(tỉnh|thanh phố|tp\\.?|thi xa|thị xã|quan|quận|huyện)\\s+", "");
+        normalized = normalized.replace("đ", "d");
+        normalized = normalized.replace("thành phố", "");
+        return normalized.trim();
     }
 
     private static String wardKey(String provinceName, String wardName) {

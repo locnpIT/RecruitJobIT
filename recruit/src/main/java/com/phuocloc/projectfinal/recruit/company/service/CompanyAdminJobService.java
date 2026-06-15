@@ -68,8 +68,8 @@ public class CompanyAdminJobService {
         // Metadata cho form tạo/sửa tin tuyển dụng, bao gồm kỹ năng để lưu bảng mapping.
         return CompanyJobMetadataResponse.builder()
                 .nganhNghes(nganhNgheRepository.findAll().stream().map(e -> mapMetadataOption(e.getId(), e.getTen())).toList())
-                .loaiHinhLamViecs(loaiHinhLamViecRepository.findAll().stream().map(e -> mapMetadataOption(e.getId(), e.getTen())).toList())
-                .capDoKinhNghiems(capDoKinhNghiemRepository.findAll().stream().map(e -> mapMetadataOption(e.getId(), e.getTen())).toList())
+                .loaiHinhLamViecs(loaiHinhLamViecRepository.findAll().stream().map(e -> mapMetadataOption(e.getId(), e.getTen(), e.getMoTa())).toList())
+                .capDoKinhNghiems(capDoKinhNghiemRepository.findAll().stream().map(e -> mapMetadataOption(e.getId(), e.getTen(), e.getMoTa())).toList())
                 .kyNangs(kyNangRepository.findAllByOrderByTenAsc().stream().map(e -> mapMetadataOption(e.getId(), e.getTen())).toList())
                 .build();
     }
@@ -180,7 +180,6 @@ public class CompanyAdminJobService {
         tinTuyenDung.setMauCvUrl(trimToNull(request.getMauCvUrl()));
         tinTuyenDung.getLoaiHinhLamViecs().clear();
         tinTuyenDung.getLoaiHinhLamViecs().addAll(loaiHinhLamViecs);
-        tinTuyenDung.setLoaiHinhLamViec(loaiHinhLamViecs.getFirst());
         tinTuyenDung.setCapDoKinhNghiem(capDoKinhNghiem);
         tinTuyenDung.setLuongToiThieu(request.getLuongToiThieu());
         tinTuyenDung.setLuongToiDa(request.getLuongToiDa());
@@ -199,7 +198,7 @@ public class CompanyAdminJobService {
                         .build())
                 .toList();
         ChiNhanhCongTy firstBranch = branches.stream().filter(Objects::nonNull).findFirst().orElse(null);
-        List<LoaiHinhLamViec> workTypes = resolveJobWorkTypes(tinTuyenDung);
+        List<LoaiHinhLamViec> workTypes = tinTuyenDung.getEffectiveWorkTypes();
         List<CompanyAdminJobResponse.WorkTypeItem> workTypeItems = workTypes.stream()
                 .map(item -> CompanyAdminJobResponse.WorkTypeItem.builder()
                         .id(ServiceUtils.toLong(item.getId()))
@@ -237,9 +236,14 @@ public class CompanyAdminJobService {
     }
 
     private CompanyJobMetadataResponse.OptionItem mapMetadataOption(Integer id, String ten) {
+        return mapMetadataOption(id, ten, null);
+    }
+
+    private CompanyJobMetadataResponse.OptionItem mapMetadataOption(Integer id, String ten, String moTa) {
         return CompanyJobMetadataResponse.OptionItem.builder()
                 .id(ServiceUtils.toLong(id))
                 .ten(ten)
+                .moTa(moTa)
                 .build();
     }
 
@@ -356,16 +360,6 @@ public class CompanyAdminJobService {
             }
         }
         return ordered;
-    }
-
-    private List<LoaiHinhLamViec> resolveJobWorkTypes(TinTuyenDung tinTuyenDung) {
-        if (tinTuyenDung == null) {
-            return List.of();
-        }
-        if (tinTuyenDung.getLoaiHinhLamViecs() != null && !tinTuyenDung.getLoaiHinhLamViecs().isEmpty()) {
-            return new ArrayList<>(tinTuyenDung.getLoaiHinhLamViecs());
-        }
-        return tinTuyenDung.getLoaiHinhLamViec() == null ? List.of() : List.of(tinTuyenDung.getLoaiHinhLamViec());
     }
 
     private String joinWorkTypeNames(List<LoaiHinhLamViec> workTypes) {

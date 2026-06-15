@@ -39,16 +39,17 @@ public class PublicJobMapper {
     // -------------------------------------------------------------------------
 
     public PublicJobSummaryResponse mapSummary(TinTuyenDung job) {
-        String companyLogoUrl = resolveCompany(job) == null ? null : resolveCompany(job).getLogoUrl();
+        ChiNhanhCongTy branch = job.firstBranch();
+        CongTy company = branch == null ? null : branch.getCongTy();
         return PublicJobSummaryResponse.builder()
                 .id(toLong(job.getId()))
                 .maTin(buildJobCode(job))
                 .tieuDe(job.getTieuDe())
-                .congTyId(resolveCompany(job) == null ? null : ServiceUtils.toLong(resolveCompany(job).getId()))
-                .congTyTen(resolveCompanyName(job))
-                .chiNhanhId(firstBranch(job) == null ? null : ServiceUtils.toLong(firstBranch(job).getId()))
-                .chiNhanhTen(firstBranch(job) == null ? null : firstBranch(job).getTen())
-                .logoUrl(companyLogoUrl)
+                .congTyId(company == null ? null : ServiceUtils.toLong(company.getId()))
+                .congTyTen(company == null || !StringUtils.hasText(company.getTen()) ? "Đang cập nhật" : company.getTen())
+                .chiNhanhId(branch == null ? null : ServiceUtils.toLong(branch.getId()))
+                .chiNhanhTen(branch == null ? null : branch.getTen())
+                .logoUrl(company == null ? null : company.getLogoUrl())
                 .diaDiem(resolveLocation(job))
                 .mucLuong(formatSalary(job))
                 .capDo(job.getCapDoKinhNghiem() == null ? "Đang cập nhật" : job.getCapDoKinhNghiem().getTen())
@@ -267,22 +268,32 @@ public class PublicJobMapper {
     }
 
     private String resolveLocation(TinTuyenDung job) {
-        ChiNhanhCongTy branch = firstBranch(job);
-        if (branch == null || branch.getXaPhuong() == null) {
-            return "Đang cập nhật";
+        if (job.getChiNhanhs() == null || job.getChiNhanhs().isEmpty()) return "Đang cập nhật";
+        List<ChiNhanhCongTy> branches = job.getChiNhanhs().stream()
+                .filter(Objects::nonNull)
+                .filter(b -> b.getXaPhuong() != null)
+                .toList();
+        if (branches.isEmpty()) return "Đang cập nhật";
+        if (branches.size() == 1) {
+            ChiNhanhCongTy branch = branches.get(0);
+            String ward = branch.getXaPhuong().getTen();
+            String province = branch.getXaPhuong().getTinhThanh() == null
+                    ? null : branch.getXaPhuong().getTinhThanh().getTen();
+            if (StringUtils.hasText(ward) && StringUtils.hasText(province)) return ward + ", " + province;
+            return StringUtils.hasText(province) ? province : (StringUtils.hasText(ward) ? ward : "Đang cập nhật");
         }
-        String ward = branch.getXaPhuong().getTen();
-        String province = branch.getXaPhuong().getTinhThanh() == null
-                ? null
-                : branch.getXaPhuong().getTinhThanh().getTen();
-        if (StringUtils.hasText(ward) && StringUtils.hasText(province)) {
-            return ward + ", " + province;
-        }
-        return StringUtils.hasText(province) ? province : ward;
+        String provinces = branches.stream()
+                .filter(b -> b.getXaPhuong().getTinhThanh() != null)
+                .map(b -> b.getXaPhuong().getTinhThanh().getTen())
+                .filter(StringUtils::hasText)
+                .map(String::trim)
+                .distinct()
+                .collect(java.util.stream.Collectors.joining(", "));
+        return StringUtils.hasText(provinces) ? provinces : "Đang cập nhật";
     }
 
     private CongTy resolveCompany(TinTuyenDung job) {
-        ChiNhanhCongTy branch = firstBranch(job);
+        ChiNhanhCongTy branch = job.firstBranch();
         return branch == null ? null : branch.getCongTy();
     }
 
@@ -302,7 +313,7 @@ public class PublicJobMapper {
     }
 
     private String resolveWorkType(TinTuyenDung job) {
-        String joined = resolveWorkTypes(job).stream()
+        String joined = job.getEffectiveWorkTypes().stream()
                 .map(LoaiHinhLamViec::getTen)
                 .filter(StringUtils::hasText)
                 .distinct()
@@ -363,25 +374,6 @@ public class PublicJobMapper {
 
     private String formatMillion(Integer amount) {
         return amount == null ? "" : String.valueOf(Math.round(amount / 1_000_000.0));
-    }
-
-    private ChiNhanhCongTy firstBranch(TinTuyenDung job) {
-        if (job == null || job.getChiNhanhs() == null || job.getChiNhanhs().isEmpty()) {
-            return null;
-        }
-        return job.getChiNhanhs().stream().findFirst().orElse(null);
-    }
-
-    private List<LoaiHinhLamViec> resolveWorkTypes(TinTuyenDung job) {
-        if (job == null) {
-            return List.of();
-        }
-        if (job.getLoaiHinhLamViecs() != null && !job.getLoaiHinhLamViecs().isEmpty()) {
-            return job.getLoaiHinhLamViecs().stream()
-                    .filter(Objects::nonNull)
-                    .toList();
-        }
-        return job.getLoaiHinhLamViec() == null ? List.of() : List.of(job.getLoaiHinhLamViec());
     }
 
     private String formatDate(LocalDateTime value) {

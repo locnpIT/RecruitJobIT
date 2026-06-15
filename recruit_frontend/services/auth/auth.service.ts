@@ -67,6 +67,11 @@ export interface RegisterCandidatePayload {
   ho: string;
 }
 
+export interface VerifyEmailPayload {
+  email: string;
+  maXacNhan: string;
+}
+
 export interface RegisterOwnerPayload extends RegisterCandidatePayload {
   tenCongTy: string;
   maSoThue: string;
@@ -138,6 +143,18 @@ export const authService = {
   registerCandidate: async (data: RegisterCandidatePayload) => {
     const response = await apiClient.post("/auth/register", data);
     return response.data.data;
+  },
+
+  confirmEmail: async (data: VerifyEmailPayload) => {
+    const response = await apiClient.post("/auth/verify-email/confirm", data);
+    return response.data.data as string;
+  },
+
+  resendEmailVerification: async (email: string) => {
+    const response = await apiClient.post("/auth/verify-email/resend", null, {
+      params: { email },
+    });
+    return response.data.data as string;
   },
 
   registerOwner: async (data: RegisterOwnerPayload) => {

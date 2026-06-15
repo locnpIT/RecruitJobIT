@@ -128,6 +128,7 @@ export interface CompanyAdminJob {
 export interface CompanyJobMetadataOption {
   id: number | null;
   ten: string | null;
+  moTa?: string | null;
 }
 
 export interface CompanyJobSkillItem {

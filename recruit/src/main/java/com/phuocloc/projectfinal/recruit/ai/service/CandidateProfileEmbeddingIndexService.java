@@ -212,19 +212,14 @@ public class CandidateProfileEmbeddingIndexService {
                 return;
             }
             append(sb, "Kinh nghiem", item.getChucDanh());
-            append(sb, "Cong ty", item.getTenCongTy());
             append(sb, "Mo ta cong viec", item.getMoTaCongViec());
-            appendTimeRange(sb, "Thoi gian kinh nghiem", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
         });
         hoSoHocVanRepository.findByHoSoUngVien_IdOrderByHocVan_ThoiGianBatDauDesc(hoSoUngVien.getId()).forEach(link -> {
             var item = link.getHocVan();
             if (item == null) {
                 return;
             }
-            append(sb, "Hoc van", item.getBacHoc());
             append(sb, "Chuyen nganh", item.getChuyenNganh());
-            append(sb, "Truong", item.getTenTruong());
-            appendTimeRange(sb, "Thoi gian hoc", item.getThoiGianBatDau(), item.getThoiGianKetThuc());
         });
         hoSoChungChiRepository.findByHoSoUngVien_IdOrderByChungChi_NgayBatDauDesc(hoSoUngVien.getId()).forEach(link -> {
             var item = link.getChungChi();
@@ -232,9 +227,6 @@ public class CandidateProfileEmbeddingIndexService {
                 return;
             }
             append(sb, "Chung chi", item.getTenChungChi());
-            if (item.getLoaiChungChi() != null) {
-                append(sb, "Loai chung chi", item.getLoaiChungChi().getTen());
-            }
         });
 
         return sb.toString();

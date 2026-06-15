@@ -3,8 +3,6 @@ package com.phuocloc.projectfinal.recruit.publicjob.service;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchProperties;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchSearchResult;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -67,7 +65,7 @@ public class PublicJobElasticsearchSearchService {
         body.put("query", buildQuery(tuKhoa, diaDiem, nganhNgheId, loaiHinhLamViecId, capDoKinhNghiemId));
         body.put("sort", List.of(
                 Map.of("_score", "desc"),
-                Map.of("ngayTaoEpoch", "desc")
+                Map.of("ngayTao", "desc")
         ));
         return elasticsearchClientService.searchDocuments(elasticsearchProperties.getJobIndex(), body);
     }
@@ -108,7 +106,7 @@ public class PublicJobElasticsearchSearchService {
         ));
         body.put("sort", List.of(
                 Map.of("_score", "desc"),
-                Map.of("ngayTaoEpoch", "desc")
+                Map.of("ngayTao", "desc")
         ));
         return elasticsearchClientService.searchDocuments(elasticsearchProperties.getJobIndex(), body);
     }
@@ -166,9 +164,14 @@ public class PublicJobElasticsearchSearchService {
         List<Object> mustNot = new ArrayList<>();
         List<Object> filter = new ArrayList<>();
 
-        filter.add(Map.of("term", Map.of("trangThai", "APPROVED")));
-        filter.add(Map.of("term", Map.of("congTyTrangThai", "APPROVED")));
-        filter.add(Map.of("range", Map.of("denHanLucEpoch", Map.of("gte", LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)))));
+        // null denHanLuc = không có hạn chót = luôn hợp lệ
+        filter.add(Map.of("bool", Map.of(
+                "should", List.of(
+                        Map.of("bool", Map.of("must_not", List.of(Map.of("exists", Map.of("field", "denHanLuc"))))),
+                        Map.of("range", Map.of("denHanLuc", Map.of("gte", "now")))
+                ),
+                "minimum_should_match", 1
+        )));
 
         if (nganhNgheId != null) {
             filter.add(Map.of("term", Map.of("nganhNgheId", nganhNgheId)));
@@ -203,17 +206,16 @@ public class PublicJobElasticsearchSearchService {
             must.add(Map.of(
                     "multi_match", Map.of(
                             "query", diaDiem.trim(),
-                            "fields", List.of("diaDiem^3", "tinhThanhTen^2", "xaPhuongTen"),
+                            "fields", List.of("tinhThanhTen^2", "xaPhuongTen"),
                             "operator", "and"
                     )
             ));
         }
         addTextMust(must, capDoKinhNghiemText, List.of("capDoKinhNghiemTen^3", "tieuDe", "moTa", "yeuCau"));
-        addTextMust(must, loaiHinhLamViecText, List.of("loaiHinhLamViecTen^3", "tieuDe", "moTa", "yeuCau", "diaDiem"));
+        addTextMust(must, loaiHinhLamViecText, List.of("loaiHinhLamViecTen^3", "tieuDe", "moTa", "yeuCau"));
         if (Boolean.TRUE.equals(remote)) {
             addTextMust(must, "remote từ xa online work from home làm ở nhà", List.of(
                     "loaiHinhLamViecTen^3",
-                    "diaDiem^2",
                     "tieuDe",
                     "moTa",
                     "yeuCau",

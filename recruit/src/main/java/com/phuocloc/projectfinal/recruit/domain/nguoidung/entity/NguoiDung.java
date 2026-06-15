@@ -76,6 +76,9 @@ public class NguoiDung {
     @Column(name = "dangHoatDong")
     private Boolean dangHoatDong;
 
+    @Column(name = "maXacNhanEmail", length = 6)
+    private String maXacNhanEmail;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vaiTroHeThongId")
     private VaiTroHeThong vaiTroHeThong;

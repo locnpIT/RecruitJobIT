@@ -80,12 +80,17 @@ export function useCompanyAdminShellData() {
           .map((branch) => branch.chiNhanhId)
           .filter((branchId): branchId is number => branchId != null);
 
-        if (branchIds.length > 0) {
-          const applicationLists = await Promise.all(branchIds.map((branchId) => companyAdminService.getApplications(branchId)));
+        // Applications chỉ có thể truy cập khi công ty đã APPROVED.
+        // PENDING/REJECTED trả 403 → Promise.all reject → catch reset toàn bộ state (kể cả logo).
+        if (branchIds.length > 0 && response.congTy.trangThai?.toUpperCase() === "APPROVED") {
+          const results = await Promise.allSettled(branchIds.map((branchId) => companyAdminService.getApplications(branchId)));
           if (!active) {
             return;
           }
-          setApplicationCount(applicationLists.reduce((total, applications) => total + applications.length, 0));
+          const total = results.reduce((sum, result) => {
+            return result.status === "fulfilled" ? sum + result.value.length : sum;
+          }, 0);
+          setApplicationCount(total);
         } else {
           setApplicationCount(0);
         }

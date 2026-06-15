@@ -196,7 +196,7 @@ public class JobEmbeddingIndexService {
         payload.put("trangThai", tinTuyenDung.getTrangThai());
         payload.put("nganhNgheId", tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getId());
         payload.put("nganhNghe", tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getTen());
-        ChiNhanhCongTy branch = firstBranch(tinTuyenDung);
+        ChiNhanhCongTy branch = tinTuyenDung.firstBranch();
         payload.put("congTy", branch == null || branch.getCongTy() == null
                 ? null
                 : branch.getCongTy().getTen());
@@ -222,21 +222,11 @@ public class JobEmbeddingIndexService {
         append(sb, "Tieu de", tinTuyenDung.getTieuDe());
         append(sb, "Mo ta", tinTuyenDung.getMoTa());
         append(sb, "Yeu cau", tinTuyenDung.getYeuCau());
-        append(sb, "Phuc loi", tinTuyenDung.getPhucLoi());
-        append(sb, "Nganh nghe", tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getTen());
-        append(sb, "Loai hinh lam viec", resolveWorkTypeText(tinTuyenDung));
-        append(sb, "Cap do kinh nghiem", tinTuyenDung.getCapDoKinhNghiem() == null ? null : tinTuyenDung.getCapDoKinhNghiem().getTen());
-        ChiNhanhCongTy branch = firstBranch(tinTuyenDung);
-        append(sb, "Cong ty", branch == null || branch.getCongTy() == null
-                ? null
-                : branch.getCongTy().getTen());
-
         kyNangTinTuyenDungRepository.findByTinTuyenDungIdOrderByKyNangTenAsc(tinTuyenDung.getId()).forEach(item -> {
             if (item.getKyNang() != null) {
                 append(sb, "Ky nang", item.getKyNang().getTen());
             }
         });
-
         return sb.toString();
     }
 
@@ -250,22 +240,11 @@ public class JobEmbeddingIndexService {
         sb.append(label).append(": ").append(value.trim()).append('\n');
     }
 
-    private ChiNhanhCongTy firstBranch(TinTuyenDung tinTuyenDung) {
-        if (tinTuyenDung == null || tinTuyenDung.getChiNhanhs() == null || tinTuyenDung.getChiNhanhs().isEmpty()) {
-            return null;
-        }
-        return tinTuyenDung.getChiNhanhs().stream().findFirst().orElse(null);
-    }
-
     private String resolveWorkTypeText(TinTuyenDung tinTuyenDung) {
         if (tinTuyenDung == null) {
             return null;
         }
-        List<LoaiHinhLamViec> workTypes = tinTuyenDung.getLoaiHinhLamViecs() == null
-                || tinTuyenDung.getLoaiHinhLamViecs().isEmpty()
-                ? (tinTuyenDung.getLoaiHinhLamViec() == null ? List.of() : List.of(tinTuyenDung.getLoaiHinhLamViec()))
-                : tinTuyenDung.getLoaiHinhLamViecs().stream().filter(java.util.Objects::nonNull).toList();
-        String joined = workTypes.stream()
+        String joined = tinTuyenDung.getEffectiveWorkTypes().stream()
                 .map(LoaiHinhLamViec::getTen)
                 .filter(StringUtils::hasText)
                 .distinct()

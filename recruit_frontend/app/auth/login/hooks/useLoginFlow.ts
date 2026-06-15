@@ -30,7 +30,7 @@ export function useLoginFlow() {
 
       const role = authResponse.nguoiDung.vaiTro?.toUpperCase();
       if (role === "ADMIN") {
-        router.replace("/admin");
+        window.location.assign("/admin");
         return;
       }
 
@@ -45,12 +45,20 @@ export function useLoginFlow() {
         router.replace("/");
       }
     } catch (error: unknown) {
+      const response = typeof error === "object" && error !== null && "response" in error
+        ? (error as { response?: { status?: number; data?: { message?: string } } }).response
+        : undefined;
+
       const message =
-        typeof error === "object" && error !== null && "response" in error
-          ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message ?? "Đăng nhập thất bại.")
-          : error instanceof Error
-            ? error.message
-            : "Đăng nhập thất bại.";
+        response?.data?.message ??
+        (error instanceof Error ? error.message : "Đăng nhập thất bại.");
+
+      if (response?.status === 403) {
+        router.replace(`/auth/verify-email?status=sent&email=${encodeURIComponent(data.email)}`);
+        toast.info("Tài khoản chưa xác nhận. Vui lòng nhập mã 6 số đã gửi qua email.");
+        return;
+      }
+
       toast.error(message);
     } finally {
       setIsLoading(false);

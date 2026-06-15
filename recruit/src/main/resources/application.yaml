@@ -110,6 +110,8 @@ app:
           connectiontimeout: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_CONNECTIONTIMEOUT:5000}
           timeout: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_TIMEOUT:5000}
           writetimeout: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_WRITETIMEOUT:5000}
+  bootstrap:
+    reset-localities: ${APP_BOOTSTRAP_RESET_LOCALITIES:false}
 
 server:
   port: 8080
