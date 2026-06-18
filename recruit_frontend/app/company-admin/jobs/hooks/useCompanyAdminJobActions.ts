@@ -77,6 +77,10 @@ export function useCompanyAdminJobActions({
       setActionError("Vui lòng chọn ngành nghề, loại hình làm việc và cấp độ kinh nghiệm.");
       return;
     }
+    if (isDeadlineBeforeToday(values.denHanLuc)) {
+      setActionError("Hạn nộp không được là ngày trong quá khứ.");
+      return;
+    }
 
     setIsSubmitting(true);
     setActionError("");
@@ -126,6 +130,7 @@ export function useCompanyAdminJobActions({
     previewJob,
     actionError,
     // form state (giữ nguyên tên để backward compat với caller)
+    control: form.control,
     register: form.register,
     handleSubmit: form.handleSubmit,
     setValue: form.setValue,
@@ -152,4 +157,19 @@ export function useCompanyAdminJobActions({
     handleSelectTemplate: form.handleSelectTemplate,
     onSubmitForm,
   };
+}
+
+function isDeadlineBeforeToday(value?: string) {
+  if (!value) {
+    return false;
+  }
+
+  const deadline = new Date(value);
+  if (Number.isNaN(deadline.getTime())) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return deadline < today;
 }

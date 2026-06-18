@@ -8,14 +8,10 @@ type UseAdminJobsActionsOptions = {
   onReload: () => Promise<void>;
 };
 
-// Dùng cho màn admin/jobs: detail + approve/reject/hide.
 export function useAdminJobsActions({ onReload }: UseAdminJobsActionsOptions) {
   const [submitting, setSubmitting] = useState(false);
   const [detail, setDetail] = useState<AdminJobDetail | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [rejectingJob, setRejectingJob] = useState<AdminJob | null>(null);
-  const [hidingJob, setHidingJob] = useState<AdminJob | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
 
   const handleViewDetail = async (jobId: number) => {
     try {
@@ -32,6 +28,7 @@ export function useAdminJobsActions({ onReload }: UseAdminJobsActionsOptions) {
     setSubmitting(true);
     try {
       await adminJobsService.approveJob(jobId);
+      setDetailOpen(false);
       await onReload();
     } catch (err) {
       console.error(err);
@@ -41,16 +38,11 @@ export function useAdminJobsActions({ onReload }: UseAdminJobsActionsOptions) {
     }
   };
 
-  const handleReject = async () => {
-    if (!rejectingJob || !rejectReason.trim()) {
-      alert("Vui lòng nhập lý do từ chối.");
-      return;
-    }
+  const handleReject = async (jobId: number, reason: string) => {
     setSubmitting(true);
     try {
-      await adminJobsService.rejectJob(rejectingJob.id, { lyDoTuChoi: rejectReason.trim() });
-      setRejectingJob(null);
-      setRejectReason("");
+      await adminJobsService.rejectJob(jobId, { lyDoTuChoi: reason });
+      setDetailOpen(false);
       await onReload();
     } catch (err) {
       console.error(err);
@@ -60,14 +52,11 @@ export function useAdminJobsActions({ onReload }: UseAdminJobsActionsOptions) {
     }
   };
 
-  const handleHide = async () => {
-    if (!hidingJob) {
-      return;
-    }
+  const handleHide = async (jobId: number) => {
     setSubmitting(true);
     try {
-      await adminJobsService.hideJob(hidingJob.id);
-      setHidingJob(null);
+      await adminJobsService.hideJob(jobId);
+      setDetailOpen(false);
       await onReload();
     } catch (err) {
       console.error(err);
@@ -89,7 +78,6 @@ export function useAdminJobsActions({ onReload }: UseAdminJobsActionsOptions) {
             currency: "VND",
             maximumFractionDigits: 0,
           }).format(value);
-
     if (job.luongToiThieu != null && job.luongToiDa != null) {
       return `${toVnd(job.luongToiThieu)} - ${toVnd(job.luongToiDa)}`;
     }
@@ -100,13 +88,7 @@ export function useAdminJobsActions({ onReload }: UseAdminJobsActionsOptions) {
     submitting,
     detail,
     detailOpen,
-    rejectingJob,
-    hidingJob,
-    rejectReason,
     setDetailOpen,
-    setRejectingJob,
-    setHidingJob,
-    setRejectReason,
     handleViewDetail,
     handleApprove,
     handleReject,

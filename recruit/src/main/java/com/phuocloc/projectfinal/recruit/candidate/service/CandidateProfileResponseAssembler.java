@@ -42,6 +42,7 @@ public class CandidateProfileResponseAssembler {
                 .mucTieuNgheNghiep(profile.getMucTieuNgheNghiep())
                 .gioiThieuBanThan(profile.getGioiThieuBanThan())
                 .ngayCapNhat(profile.getNgayCapNhat())
+                .laHoSoChinh(profile.isLaHoSoChinh())
                 .build();
     }
 

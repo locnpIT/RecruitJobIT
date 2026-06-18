@@ -58,6 +58,7 @@ export function CompanyAdminShell({ children }: CompanyAdminShellProps) {
         companyStatus={shellData.companyStatus}
         companyRole={shellData.companyRole}
         applicationCount={shellData.applicationCount}
+        unreadNotificationCount={shellData.unreadNotificationCount}
       />
 
       {/* Nội dung thực tế của từng route doanh nghiệp được render tại đây. */}

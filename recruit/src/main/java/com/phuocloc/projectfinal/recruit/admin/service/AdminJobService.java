@@ -181,6 +181,7 @@ public class AdminJobService {
                 .capDoKinhNghiemTen(job.getCapDoKinhNghiem() == null ? null : job.getCapDoKinhNghiem().getTen())
                 .luongToiThieu(job.getLuongToiThieu())
                 .luongToiDa(job.getLuongToiDa())
+                .soLuongTuyen(job.getSoLuongTuyen())
                 .trangThai(job.getTrangThai())
                 .lyDoTuChoi(job.getLyDoTuChoi())
                 .denHanLuc(job.getDenHanLuc())

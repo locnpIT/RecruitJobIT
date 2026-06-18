@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react";
 import type { BaseSyntheticEvent } from "react";
-import type { UseFormRegisterReturn } from "react-hook-form";
+import { useController, type Control, type UseFormRegisterReturn } from "react-hook-form";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -34,6 +34,7 @@ type JobFormModalProps = {
   branches: CompanyAdminBranch[];
   selectedChiNhanhIds: number[];
   onToggleBranch: (branchId: number) => void;
+  control: Control<JobFormValues>;
   register: (name: keyof JobFormValues, options?: Record<string, unknown>) => UseFormRegisterReturn;
   onSubmit: (event?: BaseSyntheticEvent) => void;
   onClose: () => void;
@@ -66,6 +67,7 @@ export function JobFormModal({
   branches,
   selectedChiNhanhIds,
   onToggleBranch,
+  control,
   register,
   onSubmit,
   onClose,
@@ -92,6 +94,8 @@ export function JobFormModal({
   onSelectTemplate,
 }: JobFormModalProps) {
   if (!open) return null;
+
+  const minDeadline = formatDateTimeLocal(startOfToday());
 
   return (
     <div className="fixed inset-0 z-80 flex items-center justify-center bg-slate-900/40 px-4 py-6">
@@ -151,9 +155,9 @@ export function JobFormModal({
             onKyNangIdsChange={onKyNangIdsChange}
           />
 
-          <Field label="Số lượng tuyển" inputProps={register("soLuongTuyen", { valueAsNumber: true })} placeholder="2" type="number" />
-          <Field label="Lương tối thiểu" inputProps={register("luongToiThieu", { valueAsNumber: true })} placeholder="15000000" type="number" />
-          <Field label="Lương tối đa" inputProps={register("luongToiDa", { valueAsNumber: true })} placeholder="25000000" type="number" />
+          <Field label="Số lượng tuyển" inputProps={register("soLuongTuyen", { valueAsNumber: true })} min={1} placeholder="2" type="number" />
+          <SalaryField name="luongToiThieu" label="Lương tối thiểu" control={control} placeholder="15.000.000" />
+          <SalaryField name="luongToiDa" label="Lương tối đa" control={control} placeholder="25.000.000" />
 
           <input type="hidden" {...register("phucLoi")} />
           <input type="hidden" {...register("moTa")} />
@@ -163,7 +167,7 @@ export function JobFormModal({
           <RichTextEditor label="Mô tả công việc" value={moTaValue} onChange={(v) => onRichTextChange("moTa", v)} placeholder="Mô tả công việc..." />
           <RichTextEditor label="Yêu cầu ứng viên" value={yeuCauValue} onChange={(v) => onRichTextChange("yeuCau", v)} placeholder="Yêu cầu ứng viên..." />
 
-          <Field label="Hạn nộp" inputProps={register("denHanLuc")} type="datetime-local" />
+          <Field label="Hạn nộp" inputProps={register("denHanLuc")} min={minDeadline} type="datetime-local" />
 
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input type="checkbox" {...batBuocCVField} />
@@ -334,21 +338,98 @@ function JobFormCvTemplate({
   );
 }
 
+function SalaryField({
+  name,
+  label,
+  control,
+  placeholder,
+}: {
+  name: "luongToiThieu" | "luongToiDa";
+  label: string;
+  control: Control<JobFormValues>;
+  placeholder?: string;
+}) {
+  const { field } = useController({ name, control });
+  const { name: inputName, onBlur, onChange, ref, value } = field;
+  const displayValue =
+    value != null && !Number.isNaN(value)
+      ? new Intl.NumberFormat("vi-VN").format(value)
+      : "";
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\./g, "").replace(/[^0-9]/g, "");
+    onChange(raw === "" ? undefined : Number(raw));
+  };
+
+  return (
+    <div>
+      <label className="mb-1 block text-sm font-medium text-slate-700">{label}</label>
+      <div className="flex items-center gap-2">
+        <Input
+          name={inputName}
+          ref={ref}
+          onBlur={onBlur}
+          value={displayValue}
+          onChange={handleChange}
+          type="text"
+          inputMode="numeric"
+          placeholder={placeholder}
+        />
+        <span className="shrink-0 text-sm font-medium text-slate-500">VNĐ</span>
+      </div>
+    </div>
+  );
+}
+
 function Field({
   label,
   inputProps,
+  min,
   placeholder,
   type = "text",
 }: {
   label: string;
   inputProps: UseFormRegisterReturn;
+  min?: string | number;
   placeholder?: string;
   type?: string;
 }) {
+  const preventNegativeInput = type === "number" && Number(min) >= 0;
+
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-slate-700">{label}</label>
-      <Input {...inputProps} type={type} placeholder={placeholder} />
+      <Input
+        {...inputProps}
+        type={type}
+        min={min}
+        placeholder={placeholder}
+        onKeyDown={(event) => {
+          if (preventNegativeInput && ["-", "+", "e", "E"].includes(event.key)) {
+            event.preventDefault();
+          }
+        }}
+        onPaste={(event) => {
+          if (preventNegativeInput && event.clipboardData.getData("text").trim().startsWith("-")) {
+            event.preventDefault();
+          }
+        }}
+      />
     </div>
   );
+}
+
+function startOfToday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+function formatDateTimeLocal(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-") + `T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

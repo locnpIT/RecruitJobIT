@@ -15,6 +15,7 @@ export const companyAdminNavItems: CompanyAdminNavItem[] = [
   { label: "Tin tuyển dụng", href: "/company-admin/jobs", requiresApprovedCompany: true },
   { label: "Ứng viên", href: "/company-admin/applications", requiresApprovedCompany: true },
   { label: "Tin nhắn", href: "/company-admin/messages", requiresApprovedCompany: true },
+  { label: "Thông báo", href: "/company-admin/notifications", requiresApprovedCompany: true },
   { label: "Chi nhánh", href: "/company-admin/branches", requiresApprovedCompany: true },
   { label: "Nhân sự", href: "/company-admin/hr", requiresApprovedCompany: true },
   { label: "Gói công ty", href: "/company-admin/packages", requiresApprovedCompany: true, requiresOwnerCompany: true },

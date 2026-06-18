@@ -104,11 +104,35 @@ public class SemanticMatchingService {
             return List.of();
         }
 
-        Map<Integer, HoSoUngVien> profiles = new LinkedHashMap<>();
+        // Load tất cả profiles từ DB
+        Map<Integer, HoSoUngVien> profileById = new LinkedHashMap<>();
         candidateProfileRepository.findByIdInAndNgayXoaIsNull(resultByProfileId.keySet().stream().toList())
-                .forEach(profile -> profiles.put(profile.getId(), profile));
+                .forEach(p -> profileById.put(p.getId(), p));
+
+        // Mỗi ứng viên chỉ giữ 1 hồ sơ: ưu tiên hồ sơ chính (laHoSoChinh),
+        // nếu chưa đặt thì giữ hồ sơ có score Qdrant cao nhất (xuất hiện đầu tiên).
+        Map<Integer, Integer> bestProfileIdPerUser = new LinkedHashMap<>();
+        for (Integer profileId : resultByProfileId.keySet()) {
+            HoSoUngVien profile = profileById.get(profileId);
+            if (profile == null || profile.getNguoiDung() == null) continue;
+            Integer userId = profile.getNguoiDung().getId();
+            bestProfileIdPerUser.merge(userId, profileId, (existingId, candidateId) -> {
+                HoSoUngVien existing = profileById.get(existingId);
+                HoSoUngVien candidate = profileById.get(candidateId);
+                boolean candidateIsPrimary = candidate != null && candidate.isLaHoSoChinh();
+                boolean existingIsPrimary = existing != null && existing.isLaHoSoChinh();
+                return (candidateIsPrimary && !existingIsPrimary) ? candidateId : existingId;
+            });
+        }
+
+        Map<Integer, HoSoUngVien> profiles = new LinkedHashMap<>();
+        bestProfileIdPerUser.values().forEach(profileId -> {
+            HoSoUngVien p = profileById.get(profileId);
+            if (p != null) profiles.put(profileId, p);
+        });
 
         return resultByProfileId.entrySet().stream()
+                .filter(entry -> profiles.containsKey(entry.getKey()))
                 .map(entry -> mapCandidateMatch(job, profiles.get(entry.getKey()), entry.getValue(), queryVector))
                 .filter(Objects::nonNull)
                 .sorted(matchScoreComparator())

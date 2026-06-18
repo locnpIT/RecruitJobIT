@@ -95,8 +95,10 @@ export default function ProfilePage() {
             profiles={profiles}
             activeProfileId={activeProfileId}
             creatingProfile={actions.creatingProfile}
+            settingPrimary={actions.settingPrimary}
             onChangeProfile={setActiveProfileId}
             onCreateProfile={() => void actions.handleCreateProfile()}
+            onSetPrimary={(profileId) => void actions.handleSetPrimary(profileId)}
           />
         ) : (
           <section className="mb-6 rounded-lg border border-slate-200 bg-white p-6">

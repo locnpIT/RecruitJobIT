@@ -7,26 +7,11 @@ type JobsTableProps = {
   jobs: AdminJob[];
   loading: boolean;
   error: string | null;
-  submitting: boolean;
   formatSalary: (job: AdminJob) => string;
   onViewDetail: (jobId: number) => void;
-  onApprove: (jobId: number) => void;
-  onReject: (job: AdminJob) => void;
-  onHide: (job: AdminJob) => void;
 };
 
-// Bảng danh sách tin tuyển dụng cho admin duyệt tin.
-export function JobsTable({
-  jobs,
-  loading,
-  error,
-  submitting,
-  formatSalary,
-  onViewDetail,
-  onApprove,
-  onReject,
-  onHide,
-}: JobsTableProps) {
+export function JobsTable({ jobs, loading, error, formatSalary, onViewDetail }: JobsTableProps) {
   if (loading) {
     return <p className="py-6 text-sm text-slate-500">Đang tải dữ liệu...</p>;
   }
@@ -41,7 +26,7 @@ export function JobsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[1100px] text-sm">
+      <table className="w-full min-w-[1000px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
             <th className="pb-2 font-medium">Tin tuyển dụng</th>
@@ -68,37 +53,18 @@ export function JobsTable({
               <td className="py-2.5">
                 <StatusPill value={job.trangThai} />
               </td>
-              <td className="py-2.5 text-slate-500">{job.ngayTao ? new Date(job.ngayTao).toLocaleDateString("vi-VN") : "-"}</td>
+              <td className="py-2.5 text-slate-500">
+                {job.ngayTao ? new Date(job.ngayTao).toLocaleDateString("vi-VN") : "-"}
+              </td>
               <td className="py-2.5">
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="unstyled" type="button" onClick={() => onViewDetail(job.id)} className="rounded-md border border-slate-300 px-2.5 py-1 text-slate-700 hover:bg-slate-50">
-                    Chi tiết
-                  </Button>
-                  <Button variant="unstyled"
-                    type="button"
-                    disabled={submitting || job.trangThai === "APPROVED"}
-                    onClick={() => onApprove(job.id)}
-                    className="rounded-md border border-emerald-300 px-2.5 py-1 text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Duyệt
-                  </Button>
-                  <Button variant="unstyled"
-                    type="button"
-                    disabled={submitting}
-                    onClick={() => onReject(job)}
-                    className="rounded-md border border-rose-300 px-2.5 py-1 text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Từ chối
-                  </Button>
-                  <Button variant="unstyled"
-                    type="button"
-                    disabled={submitting || job.trangThai === "HIDDEN"}
-                    onClick={() => onHide(job)}
-                    className="rounded-md border border-violet-300 px-2.5 py-1 text-violet-700 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Ẩn tin
-                  </Button>
-                </div>
+                <Button
+                  variant="unstyled"
+                  type="button"
+                  onClick={() => onViewDetail(job.id)}
+                  className="rounded-md border border-slate-300 px-2.5 py-1 text-slate-700 hover:bg-slate-50"
+                >
+                  Chi tiết
+                </Button>
               </td>
             </tr>
           ))}

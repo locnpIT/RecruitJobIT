@@ -17,4 +17,5 @@ public class CandidateProfileListItemResponse {
     private String mucTieuNgheNghiep;
     private String gioiThieuBanThan;
     private LocalDateTime ngayCapNhat;
+    private boolean laHoSoChinh;
 }

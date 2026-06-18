@@ -30,6 +30,7 @@ public class AdminJobResponse {
     private String capDoKinhNghiemTen;
     private Integer luongToiThieu;
     private Integer luongToiDa;
+    private Integer soLuongTuyen;
     private String trangThai;
     private String lyDoTuChoi;
     private LocalDateTime denHanLuc;

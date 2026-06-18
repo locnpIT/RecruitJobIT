@@ -177,6 +177,7 @@ export interface AdminJob {
   capDoKinhNghiemTen: string | null;
   luongToiThieu: number | null;
   luongToiDa: number | null;
+  soLuongTuyen: number | null;
   trangThai: string | null;
   lyDoTuChoi: string | null;
   denHanLuc: string | null;

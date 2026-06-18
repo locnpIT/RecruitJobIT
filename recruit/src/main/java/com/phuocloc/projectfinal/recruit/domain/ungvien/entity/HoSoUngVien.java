@@ -45,4 +45,7 @@ public class HoSoUngVien {
 
     @Column(name = "gioiThieuBanThan", columnDefinition = "TEXT")
     private String gioiThieuBanThan;
+
+    @Column(name = "laHoSoChinh", nullable = false, columnDefinition = "BIT(1) DEFAULT 0")
+    private boolean laHoSoChinh;
 }

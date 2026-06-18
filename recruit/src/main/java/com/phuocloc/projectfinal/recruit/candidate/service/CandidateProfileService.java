@@ -59,11 +59,29 @@ public class CandidateProfileService {
 
     @Transactional(readOnly = true)
     public Long findLatestProfileIdOrNull(Long userId) {
-        // Homepage chỉ render "việc làm phù hợp với tôi" khi candidate đã có hồ sơ thật.
-        return accessService.listProfiles(userId).stream()
+        List<HoSoUngVien> profiles = accessService.listProfiles(userId);
+        if (profiles.isEmpty()) return null;
+        // Ưu tiên hồ sơ được đánh dấu chính; fallback về hồ sơ cập nhật gần nhất.
+        return profiles.stream()
+                .filter(HoSoUngVien::isLaHoSoChinh)
                 .findFirst()
-                .map(profile -> ServiceUtils.toLong(profile.getId()))
+                .or(() -> profiles.stream().findFirst())
+                .map(p -> ServiceUtils.toLong(p.getId()))
                 .orElse(null);
+    }
+
+    @Transactional
+    public List<CandidateProfileListItemResponse> setPrimaryProfile(Long userId, Long profileId) {
+        Integer nguoiDungId = accessService.toInt(userId, "userId");
+        Integer targetId = accessService.toInt(profileId, "profileId");
+        // Xác minh profile thuộc về user này
+        accessService.requireProfileById(userId, profileId);
+        List<HoSoUngVien> allProfiles = candidateProfileRepository.findAllByNguoiDung_IdOrderByNgayCapNhatDesc(nguoiDungId);
+        for (HoSoUngVien p : allProfiles) {
+            p.setLaHoSoChinh(targetId.equals(p.getId()));
+        }
+        candidateProfileRepository.saveAll(allProfiles);
+        return allProfiles.stream().map(responseAssembler::mapListItem).toList();
     }
 
     @Transactional
@@ -71,9 +89,6 @@ public class CandidateProfileService {
         Integer nguoiDungId = accessService.toInt(userId, "userId");
         NguoiDung nguoiDung = usersRepository.findById(nguoiDungId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
-        HoSoUngVien baseProfile = candidateProfileRepository
-                .findFirstByNguoiDung_IdOrderByNgayCapNhatDesc(nguoiDungId)
-                .orElse(null);
 
         HoSoUngVien profile = new HoSoUngVien();
         profile.setNguoiDung(nguoiDung);
@@ -87,8 +102,6 @@ public class CandidateProfileService {
             profile = candidateProfileRepository.save(profile);
         }
 
-        Integer sourceProfileId = baseProfile == null ? null : baseProfile.getId();
-        attachmentService.attachExistingContentByDefault(profile, nguoiDungId, sourceProfileId);
         return responseAssembler.mapListItem(profile);
     }
 

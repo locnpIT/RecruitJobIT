@@ -49,6 +49,16 @@ public class CandidateProfileController {
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách hồ sơ ứng viên thành công", data));
     }
 
+    @PutMapping("/all/{profileId}/set-primary")
+    public ResponseEntity<SuccessResponse<List<CandidateProfileListItemResponse>>> setPrimaryProfile(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @PathVariable Long profileId
+    ) {
+        requireCandidate(principal);
+        var data = candidateProfileService.setPrimaryProfile(principal.getUserId(), profileId);
+        return ResponseEntity.ok(new SuccessResponse<>("Đã đặt hồ sơ chính thành công", data));
+    }
+
     @PostMapping("/all")
     public ResponseEntity<SuccessResponse<CandidateProfileListItemResponse>> createProfile(
             @AuthenticationPrincipal AppUserPrinciple principal,

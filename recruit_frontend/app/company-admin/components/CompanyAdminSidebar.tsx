@@ -17,6 +17,7 @@ type CompanyAdminSidebarProps = {
   companyStatus?: string | null;
   companyRole?: string | null;
   applicationCount?: number;
+  unreadNotificationCount?: number;
 };
 
 /**
@@ -34,6 +35,7 @@ export function CompanyAdminSidebar({
   companyStatus,
   companyRole,
   applicationCount = 0,
+  unreadNotificationCount = 0,
 }: CompanyAdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -91,6 +93,7 @@ export function CompanyAdminSidebar({
           const isActive = pathname === item.href;
           const isDisabled = item.requiresApprovedCompany && !companyApproved;
           const showApplicationBadge = item.href === "/company-admin/applications" && applicationCount > 0;
+          const showNotificationDot = item.href === "/company-admin/notifications" && unreadNotificationCount > 0;
           return (
             isDisabled ? (
               // Route phụ thuộc công ty đã duyệt thì giữ nguyên label nhưng khóa trạng thái để giải thích flow.
@@ -114,6 +117,9 @@ export function CompanyAdminSidebar({
                   <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-semibold leading-none text-white">
                     {applicationCount > 99 ? "99+" : applicationCount}
                   </span>
+                ) : null}
+                {showNotificationDot ? (
+                  <span className="h-2 w-2 rounded-full bg-rose-500" />
                 ) : null}
               </Link>
             )

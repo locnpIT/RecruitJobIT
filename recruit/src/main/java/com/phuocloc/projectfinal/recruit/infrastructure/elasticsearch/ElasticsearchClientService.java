@@ -157,13 +157,14 @@ public class ElasticsearchClientService {
 
     private Map<String, Object> createIndexBody() {
         Map<String, Object> properties = new LinkedHashMap<>();
-        properties.put("jobId", Map.of("type", "keyword"));
         properties.put("tieuDe", Map.of("type", "text"));
         properties.put("moTa", Map.of("type", "text"));
         properties.put("yeuCau", Map.of("type", "text"));
         properties.put("phucLoi", Map.of("type", "text"));
         properties.put("congTyTen", Map.of("type", "text"));
         properties.put("nganhNgheTen", Map.of("type", "text"));
+        properties.put("capDoKinhNghiemTen", Map.of("type", "text"));
+        properties.put("loaiHinhLamViecTen", Map.of("type", "text"));
         properties.put("kyNangs", Map.of("type", "text"));
         properties.put("diaDiem", Map.of("type", "text"));
         properties.put("tinhThanhTen", Map.of("type", "text"));

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { companyAdminService } from "@/services/company-admin/company-admin.service";
+import { notificationService } from "@/services/common/notification.service";
 
 // Dùng cho CompanyAdminShell: nạp thông tin công ty/role và xử lý redirect theo trạng thái + quyền.
 export function useCompanyAdminShellData() {
@@ -13,6 +14,7 @@ export function useCompanyAdminShellData() {
   const [companyStatus, setCompanyStatus] = useState<string | null>(null);
   const [companyRole, setCompanyRole] = useState<string | null>(null);
   const [applicationCount, setApplicationCount] = useState(0);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const getStoredSystemRole = () => {
     try {
@@ -83,16 +85,25 @@ export function useCompanyAdminShellData() {
         // Applications chỉ có thể truy cập khi công ty đã APPROVED.
         // PENDING/REJECTED trả 403 → Promise.all reject → catch reset toàn bộ state (kể cả logo).
         if (branchIds.length > 0 && response.congTy.trangThai?.toUpperCase() === "APPROVED") {
-          const results = await Promise.allSettled(branchIds.map((branchId) => companyAdminService.getApplications(branchId)));
+          const [appResults, notifResult] = await Promise.allSettled([
+            Promise.allSettled(branchIds.map((branchId) => companyAdminService.getApplications(branchId))),
+            notificationService.unreadCount(),
+          ]);
           if (!active) {
             return;
           }
-          const total = results.reduce((sum, result) => {
-            return result.status === "fulfilled" ? sum + result.value.length : sum;
-          }, 0);
-          setApplicationCount(total);
+          if (appResults.status === "fulfilled") {
+            const total = appResults.value.reduce((sum, result) => {
+              return result.status === "fulfilled" ? sum + result.value.length : sum;
+            }, 0);
+            setApplicationCount(total);
+          }
+          if (notifResult.status === "fulfilled") {
+            setUnreadNotificationCount(notifResult.value.soChuaDoc ?? 0);
+          }
         } else {
           setApplicationCount(0);
+          setUnreadNotificationCount(0);
         }
 
         if (response.congTy.trangThai?.toUpperCase() === "REJECTED" && pathname === "/company-admin") {
@@ -117,6 +128,7 @@ export function useCompanyAdminShellData() {
         setCompanyStatus(null);
         setCompanyRole(null);
         setApplicationCount(0);
+        setUnreadNotificationCount(0);
       });
 
     const handleLogoUpdated = (event: Event) => {
@@ -152,5 +164,6 @@ export function useCompanyAdminShellData() {
     companyStatus,
     companyRole,
     applicationCount,
+    unreadNotificationCount,
   };
 }

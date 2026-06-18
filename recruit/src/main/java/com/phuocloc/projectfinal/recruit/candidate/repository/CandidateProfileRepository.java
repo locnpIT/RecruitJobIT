@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.Query;
  */
 public interface CandidateProfileRepository extends JpaRepository<HoSoUngVien, Integer> {
 
-    @Query("SELECT h FROM HoSoUngVien h WHERE h.nguoiDung.id = :nguoiDungId AND h.ngayXoa IS NULL ORDER BY h.ngayCapNhat desc")
+    @Query("SELECT h FROM HoSoUngVien h WHERE h.nguoiDung.id = :nguoiDungId AND h.ngayXoa IS NULL ORDER BY h.ngayCapNhat desc LIMIT 1")
     Optional<HoSoUngVien> findFirstByNguoiDung_IdOrderByNgayCapNhatDesc(Integer nguoiDungId);
 
     @Query("SELECT h FROM HoSoUngVien h WHERE h.nguoiDung.id = :nguoiDungId AND h.ngayXoa IS NULL ORDER BY h.ngayCapNhat desc")

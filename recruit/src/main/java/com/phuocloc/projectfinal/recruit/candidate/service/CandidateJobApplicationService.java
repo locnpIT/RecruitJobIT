@@ -8,6 +8,7 @@ import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.DonUngTuyen;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.entity.TinTuyenDung;
 import com.phuocloc.projectfinal.recruit.domain.tuyendung.repository.DonUngTuyenRepository;
 import com.phuocloc.projectfinal.recruit.domain.ungvien.entity.HoSoUngVien;
+import com.phuocloc.projectfinal.recruit.notification.service.NotificationService;
 import com.phuocloc.projectfinal.recruit.publicjob.service.PublicJobService;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -36,6 +37,7 @@ public class CandidateJobApplicationService {
     private final PublicJobService publicJobService;
     private final CandidateProfileRepository candidateProfileRepository;
     private final DonUngTuyenRepository donUngTuyenRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public CandidateJobApplicationResponse apply(Long userId, Long jobId, CreateJobApplicationRequest request) {
@@ -66,6 +68,15 @@ public class CandidateJobApplicationService {
         application.setTrangThai(STATUS_PENDING);
         application.setCvUrl(cvUrl);
         DonUngTuyen saved = donUngTuyenRepository.save(application);
+        if (job.getNguoiDang() != null) {
+            String tieuDe = StringUtils.hasText(job.getTieuDe()) ? job.getTieuDe() : "tin tuyển dụng";
+            notificationService.createForUser(
+                    job.getNguoiDang(),
+                    "Ứng viên mới",
+                    "Có ứng viên vừa nộp đơn cho tin \"" + tieuDe + "\"",
+                    "/company-admin/applications"
+            );
+        }
         return mapApplication(saved);
     }
 

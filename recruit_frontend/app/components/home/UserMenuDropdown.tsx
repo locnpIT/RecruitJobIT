@@ -87,6 +87,16 @@ export function UserMenuDropdown({ open, dropdownRef, data, onToggle, onClose }:
 
           {data.isCandidate ? (
             <Link
+              href="/my-applications"
+              onClick={onClose}
+              className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+            >
+              Đơn ứng tuyển
+            </Link>
+          ) : null}
+
+          {data.isCandidate ? (
+            <Link
               href="/favorite-jobs"
               onClick={onClose}
               className="block rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"

@@ -115,6 +115,7 @@ export function CompanyAdminJobsClient() {
         branches={data.branches}
         selectedChiNhanhIds={actions.chiNhanhIds}
         onToggleBranch={actions.toggleBranch}
+        control={actions.control}
         register={actions.register}
         onSubmit={actions.handleSubmit(actions.onSubmitForm)}
         onClose={() => actions.setIsCreateModalOpen(false)}

@@ -17,12 +17,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Entity
 @Table(name = "ChiNhanhCongTy")
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChiNhanhCongTy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Integer id;
 
     @CreationTimestamp

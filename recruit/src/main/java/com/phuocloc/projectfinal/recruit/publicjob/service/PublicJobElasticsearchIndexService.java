@@ -8,6 +8,7 @@ import com.phuocloc.projectfinal.recruit.domain.nghenghiep.entity.LoaiHinhLamVie
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchProperties;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,9 @@ import com.phuocloc.projectfinal.recruit.domain.congty.entity.ChiNhanhCongTy;
 @RequiredArgsConstructor
 @Slf4j
 public class PublicJobElasticsearchIndexService {
+
+    // Tin không có hạn dùng mốc rất lớn để luôn pass filter hạn (epoch giây, năm 3000 UTC).
+    private static final long FAR_FUTURE_EPOCH = 32_503_680_000L;
 
     private final TinTuyenDungRepository tinTuyenDungRepository;
     private final KyNangTinTuyenDungRepository kyNangTinTuyenDungRepository;
@@ -126,6 +130,7 @@ public class PublicJobElasticsearchIndexService {
      */
     private Map<String, Object> buildDocument(TinTuyenDung job) {
         Map<String, Object> document = new LinkedHashMap<>();
+        document.put("jobId", buildDocumentId(job.getId()));
         document.put("tieuDe", trimToEmpty(job.getTieuDe()));
         document.put("moTa", trimToEmpty(job.getMoTa()));
         document.put("yeuCau", trimToEmpty(job.getYeuCau()));
@@ -139,8 +144,13 @@ public class PublicJobElasticsearchIndexService {
         List<LoaiHinhLamViec> workTypes = job.getEffectiveWorkTypes();
         document.put("loaiHinhLamViecTen", joinWorkTypeNames(workTypes));
         document.put("kyNangs", joinSkills(job.getId()));
+        document.put("diaDiem", resolveTinhThanh(job));
         document.put("tinhThanhTen", resolveTinhThanh(job));
         document.put("xaPhuongTen", resolveXaPhuong(job));
+        document.put("trangThai", trimToEmpty(job.getTrangThai()).toUpperCase());
+        document.put("congTyTrangThai", branch == null || branch.getCongTy() == null
+                ? ""
+                : trimToEmpty(branch.getCongTy().getTrangThai()).toUpperCase());
         document.put("nganhNgheId", job.getNganhNghe() == null ? null : job.getNganhNghe().getId());
         document.put("loaiHinhLamViecId", workTypes.stream()
                 .map(LoaiHinhLamViec::getId)
@@ -149,9 +159,20 @@ public class PublicJobElasticsearchIndexService {
         document.put("capDoKinhNghiemId", job.getCapDoKinhNghiem() == null ? null : job.getCapDoKinhNghiem().getId());
         document.put("luongToiThieu", job.getLuongToiThieu());
         document.put("luongToiDa", job.getLuongToiDa());
-        document.put("denHanLuc", job.getDenHanLuc() == null ? null : job.getDenHanLuc().toString());
-        document.put("ngayTao", job.getNgayTao() == null ? null : job.getNgayTao().toString());
+        document.put("denHanLucEpoch", toDeadlineEpoch(job.getDenHanLuc()));
+        document.put("ngayTaoEpoch", toEpochSecond(job.getNgayTao()));
+        document.put("ngayCapNhatEpoch", toEpochSecond(job.getNgayCapNhat()));
         return document;
+    }
+
+    private long toEpochSecond(LocalDateTime dt) {
+        if (dt == null) return 0L;
+        return dt.toEpochSecond(ZoneOffset.UTC);
+    }
+
+    private long toDeadlineEpoch(LocalDateTime denHanLuc) {
+        if (denHanLuc == null) return FAR_FUTURE_EPOCH;
+        return denHanLuc.toEpochSecond(ZoneOffset.UTC);
     }
 
     private String joinSkills(Integer jobId) {

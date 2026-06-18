@@ -3,6 +3,7 @@ package com.phuocloc.projectfinal.recruit.publicjob.service;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchClientService;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchProperties;
 import com.phuocloc.projectfinal.recruit.infrastructure.elasticsearch.ElasticsearchSearchResult;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -65,7 +66,7 @@ public class PublicJobElasticsearchSearchService {
         body.put("query", buildQuery(tuKhoa, diaDiem, nganhNgheId, loaiHinhLamViecId, capDoKinhNghiemId));
         body.put("sort", List.of(
                 Map.of("_score", "desc"),
-                Map.of("ngayTao", "desc")
+                Map.of("ngayTaoEpoch", Map.of("order", "desc"))
         ));
         return elasticsearchClientService.searchDocuments(elasticsearchProperties.getJobIndex(), body);
     }
@@ -106,7 +107,7 @@ public class PublicJobElasticsearchSearchService {
         ));
         body.put("sort", List.of(
                 Map.of("_score", "desc"),
-                Map.of("ngayTao", "desc")
+                Map.of("ngayTaoEpoch", Map.of("order", "desc"))
         ));
         return elasticsearchClientService.searchDocuments(elasticsearchProperties.getJobIndex(), body);
     }
@@ -164,14 +165,8 @@ public class PublicJobElasticsearchSearchService {
         List<Object> mustNot = new ArrayList<>();
         List<Object> filter = new ArrayList<>();
 
-        // null denHanLuc = không có hạn chót = luôn hợp lệ
-        filter.add(Map.of("bool", Map.of(
-                "should", List.of(
-                        Map.of("bool", Map.of("must_not", List.of(Map.of("exists", Map.of("field", "denHanLuc"))))),
-                        Map.of("range", Map.of("denHanLuc", Map.of("gte", "now")))
-                ),
-                "minimum_should_match", 1
-        )));
+        // null denHanLuc được lưu là FAR_FUTURE_EPOCH → luôn pass filter này.
+        filter.add(Map.of("range", Map.of("denHanLucEpoch", Map.of("gte", Instant.now().getEpochSecond()))));
 
         if (nganhNgheId != null) {
             filter.add(Map.of("term", Map.of("nganhNgheId", nganhNgheId)));

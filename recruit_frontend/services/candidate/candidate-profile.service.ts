@@ -78,6 +78,7 @@ export interface CandidateProfileListItem {
   mucTieuNgheNghiep: string | null;
   gioiThieuBanThan: string | null;
   ngayCapNhat: string | null;
+  laHoSoChinh: boolean;
 }
 
 export interface UpsertEducationPayload {
@@ -162,6 +163,12 @@ export const candidateProfileService = {
   }): Promise<CandidateProfileListItem> => {
     const response = await apiClient.post("/candidate/profile/all", payload ?? {});
     return response.data.data as CandidateProfileListItem;
+  },
+
+  setPrimary: async (profileId: number): Promise<CandidateProfileListItem[]> => {
+    const safeProfileId = requirePathParam(profileId, "profileId");
+    const response = await apiClient.put(`/candidate/profile/all/${safeProfileId}/set-primary`);
+    return response.data.data as CandidateProfileListItem[];
   },
 
   getProfileById: async (profileId: number): Promise<CandidateProfile> => {

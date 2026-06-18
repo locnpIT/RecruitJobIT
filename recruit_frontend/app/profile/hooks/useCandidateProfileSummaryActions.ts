@@ -45,6 +45,7 @@ export function useCandidateProfileSummaryActions({
   const [savingPersonalInfo, setSavingPersonalInfo] = useState(false);
   const [savingProfileIndex, setSavingProfileIndex] = useState(false);
   const [creatingProfile, setCreatingProfile] = useState(false);
+  const [settingPrimary, setSettingPrimary] = useState(false);
 
   const syncPhoneToLocalUser = (soDienThoai: string | null) => {
     const raw = localStorage.getItem("user");
@@ -151,6 +152,19 @@ export function useCandidateProfileSummaryActions({
     }
   };
 
+  const handleSetPrimary = async (profileId: number) => {
+    try {
+      setSettingPrimary(true);
+      const updated = await candidateProfileService.setPrimary(profileId);
+      setProfiles(updated);
+      toast.success("Đã đặt hồ sơ chính.");
+    } catch {
+      toast.error("Không thể đặt hồ sơ chính.");
+    } finally {
+      setSettingPrimary(false);
+    }
+  };
+
   const handleSaveProfileIndex = async () => {
     if (!activeProfileId) {
       toast.error("Bạn cần chọn hồ sơ trước khi lưu.");
@@ -175,10 +189,12 @@ export function useCandidateProfileSummaryActions({
     savingPersonalInfo,
     savingProfileIndex,
     creatingProfile,
+    settingPrimary,
     setSummaryForm,
     handleSaveSummary,
     handleSavePersonalInfo,
     handleCreateProfile,
     handleSaveProfileIndex,
+    handleSetPrimary,
   };
 }

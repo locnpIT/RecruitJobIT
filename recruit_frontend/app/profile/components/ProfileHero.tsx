@@ -7,16 +7,22 @@ export function ProfileHero({
   profiles,
   activeProfileId,
   creatingProfile,
+  settingPrimary = false,
   onChangeProfile,
   onCreateProfile,
+  onSetPrimary,
 }: {
   profiles: CandidateProfileListItem[];
   activeProfileId: number | null;
   creatingProfile: boolean;
+  settingPrimary?: boolean;
   onChangeProfile: (profileId: number | null) => void;
   onCreateProfile: () => void;
+  onSetPrimary?: (profileId: number) => void;
 }) {
   const hasProfiles = profiles.length > 0;
+  const activeProfile = profiles.find((p) => p.id === activeProfileId);
+  const isActivePrimary = activeProfile?.laHoSoChinh ?? false;
 
   return (
     <section className="mb-6 rounded-lg border border-slate-200 bg-white p-6">
@@ -33,7 +39,7 @@ export function ProfileHero({
           {!hasProfiles && <option value="">Chưa có hồ sơ</option>}
           {profiles.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.tieuDe}
+              {item.tieuDe}{item.laHoSoChinh ? " (Chính)" : ""}
             </option>
           ))}
         </select>
@@ -41,6 +47,25 @@ export function ProfileHero({
           {hasProfiles ? "Tạo hồ sơ mới" : "Tạo hồ sơ đầu tiên"}
         </ProfileActionButton>
       </div>
+      {hasProfiles && activeProfileId != null ? (
+        <div className="mt-3 flex items-center gap-2">
+          {isActivePrimary ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+              Hồ sơ chính — dùng cho gợi ý việc làm trên trang chủ
+            </span>
+          ) : (
+            <ProfileActionButton
+              type="button"
+              variant="muted"
+              disabled={settingPrimary}
+              onClick={() => onSetPrimary?.(activeProfileId)}
+            >
+              {settingPrimary ? "Đang đặt..." : "Đặt làm hồ sơ chính"}
+            </ProfileActionButton>
+          )}
+        </div>
+      ) : null}
     </section>
   );
 }
