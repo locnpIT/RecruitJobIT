@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { authService } from "@/services/auth/auth.service";
 import type { CompanyAdminBranch, CompanyAdminJob } from "@/services/company-admin/types";
-import type { JobFormValues } from "../components/JobFormModal";
+import type { JobFormValues } from "../components/job-form-types";
 
 type UseJobFormStateOptions = {
   branches: CompanyAdminBranch[];

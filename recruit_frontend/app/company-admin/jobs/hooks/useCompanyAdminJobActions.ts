@@ -4,7 +4,7 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { companyAdminJobsService } from "@/services/company-admin/jobs.service";
 import type { CompanyAdminBranch, CompanyAdminJob, CreateCompanyJobPayload } from "@/services/company-admin/types";
-import type { JobFormValues } from "../components/JobFormModal";
+import type { JobFormValues } from "../components/job-form-types";
 import { useJobFormState } from "./useJobFormState";
 
 type UseCompanyAdminJobActionsOptions = {
