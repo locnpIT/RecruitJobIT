@@ -43,7 +43,12 @@ export function LoginForm({ isLoading, onSubmit }: LoginFormProps) {
         </div>
 
         <div className="relative">
-          <label className="mb-1 block text-sm font-semibold text-slate-900">Mật khẩu</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-sm font-semibold text-slate-900">Mật khẩu</label>
+            <Link href="/auth/forgot-password" className="text-xs text-blue-600 hover:underline">
+              Quên mật khẩu?
+            </Link>
+          </div>
           <div className="relative">
             <Input
               {...register("matKhau")}

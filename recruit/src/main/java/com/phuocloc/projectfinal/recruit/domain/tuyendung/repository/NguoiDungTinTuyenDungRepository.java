@@ -32,7 +32,6 @@ public interface NguoiDungTinTuyenDungRepository extends JpaRepository<NguoiDung
             "tinTuyenDung.chiNhanhs.xaPhuong",
             "tinTuyenDung.chiNhanhs.xaPhuong.tinhThanh",
             "tinTuyenDung.nganhNghe",
-            "tinTuyenDung.loaiHinhLamViec",
             "tinTuyenDung.loaiHinhLamViecs",
             "tinTuyenDung.capDoKinhNghiem"
     })

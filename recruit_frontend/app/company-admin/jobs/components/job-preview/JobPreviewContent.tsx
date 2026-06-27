@@ -1,6 +1,8 @@
 "use client";
 
-import { BriefcaseBusiness, CalendarClock, ListChecks, ShieldCheck, Users, UsersRound } from "lucide-react";
+import { useMemo, useState } from "react";
+import { BriefcaseBusiness, CalendarClock, Check, Clipboard, ListChecks, ShieldCheck, Users, UsersRound } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { CompanyAdminJob } from "@/services/company-admin/types";
 import { formatDate } from "./formatters";
 import { JobTextPreview } from "./JobTextPreview";
@@ -10,14 +12,34 @@ type JobPreviewContentProps = {
 };
 
 export function JobPreviewContent({ job }: JobPreviewContentProps) {
+  const [copied, setCopied] = useState(false);
+  const publicJobUrl = useMemo(() => {
+    if (!job.id || typeof window === "undefined") {
+      return "";
+    }
+
+    return `${window.location.origin}/jobs/${job.id}`;
+  }, [job.id]);
+
   const infoItems = [
     { label: "Cấp bậc", value: job.capDoKinhNghiemTen, icon: Users },
     { label: "Ngành nghề", value: job.nganhNgheTen, icon: BriefcaseBusiness },
-    { label: "Hình thức làm việc", value: job.loaiHinhLamViecTen, icon: ListChecks },
+    { label: "Hình thức làm việc", value: (job.loaiHinhLamViecs ?? []).map((item) => item.ten).filter(Boolean).join(", ") || undefined, icon: ListChecks },
     { label: "Số lượng tuyển", value: job.soLuongTuyen?.toString(), icon: UsersRound },
     { label: "Hạn nộp", value: formatDate(job.denHanLuc), icon: CalendarClock },
     { label: "Trạng thái", value: job.trangThai, icon: ShieldCheck },
   ];
+  const isApproved = job.trangThai?.toUpperCase() === "APPROVED";
+
+  const handleCopyPublicLink = async () => {
+    if (!publicJobUrl) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(publicJobUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-6">
@@ -59,7 +81,25 @@ export function JobPreviewContent({ job }: JobPreviewContentProps) {
       <JobTextPreview title="Mô tả công việc" text={job.moTa} />
       <JobTextPreview title="Yêu cầu ứng viên" text={job.yeuCau} />
       <JobTextPreview title="Phúc lợi" text={job.phucLoi} />
+
+      <section className="mt-8 border-t border-slate-200 pt-5">
+        <h3 className="text-base font-semibold text-slate-950">Link gửi ứng viên</h3>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="text"
+            readOnly
+            value={publicJobUrl || "Chưa có link công khai"}
+            className="h-10 min-w-0 flex-1 rounded-md border border-slate-300 bg-slate-50 px-3 text-sm text-slate-700"
+          />
+          <Button type="button" variant="outline" onClick={() => void handleCopyPublicLink()} disabled={!publicJobUrl} className="gap-2">
+            {copied ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
+            {copied ? "Đã copy" : "Copy link"}
+          </Button>
+        </div>
+        {!isApproved ? (
+          <p className="mt-2 text-xs text-amber-700">Tin chưa được duyệt nên ứng viên có thể chưa xem được link này.</p>
+        ) : null}
+      </section>
     </article>
   );
 }
-

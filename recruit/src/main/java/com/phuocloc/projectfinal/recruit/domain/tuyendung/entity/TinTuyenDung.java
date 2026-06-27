@@ -66,10 +66,6 @@ public class TinTuyenDung {
     @Column(name = "mauCvUrl")
     private String mauCvUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "loaiHinhLamViecId")
-    private LoaiHinhLamViec loaiHinhLamViec;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "TinTuyenDung_LoaiHinhLamViec",

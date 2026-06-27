@@ -1,8 +1,11 @@
 package com.phuocloc.projectfinal.recruit.auth.controller;
 
+import com.phuocloc.projectfinal.recruit.auth.dto.request.ChangePasswordRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.CreateOwnerRequest;
+import com.phuocloc.projectfinal.recruit.auth.dto.request.ForgotPasswordRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.LoginRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.RegisterRequest;
+import com.phuocloc.projectfinal.recruit.auth.dto.request.ResetPasswordRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.VerifyEmailRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.UpdateAvatarRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.UpdateUserProfileRequest;
@@ -50,14 +53,12 @@ public class AuthController {
     public ResponseEntity<SuccessResponse<Map<String, Object>>> getCloudinarySignature(
             @RequestParam(name = "purpose", required = false, defaultValue = "proof") String purpose
     ) {
-        // Frontend dùng chữ ký này để upload trực tiếp lên Cloudinary.
         Map<String, Object> signatureData = cloudinaryStorageService.generateSignature(purpose);
         return ResponseEntity.ok(new SuccessResponse<>("Lấy chữ ký thành công", signatureData));
     }
 
     @PostMapping("/register")
     // Đăng ký tài khoản candidate mới.
-    // Sau khi thành công backend đồng thời khởi tạo dữ liệu user/hồ sơ tối thiểu cho ứng viên.
     public ResponseEntity<SuccessResponse<AuthResponse>> registerCandidate(
             @Valid @RequestBody RegisterRequest request
     ) {
@@ -68,7 +69,6 @@ public class AuthController {
 
     @PostMapping("/register-owner")
     // Đăng ký tài khoản owner công ty.
-    // Route này dùng ở form đăng ký doanh nghiệp và đi kèm dữ liệu công ty/chi nhánh/minh chứng.
     public ResponseEntity<SuccessResponse<CreateOwnerResponse>> registerOwner(
             @Valid @RequestBody CreateOwnerRequest request
     ) {
@@ -78,7 +78,6 @@ public class AuthController {
     }
 
     @GetMapping("/proof-types")
-    // Danh sách loại tài liệu public cho form đăng ký công ty (owner).
     public ResponseEntity<SuccessResponse<List<CompanyProofTypeResponse>>> getOwnerProofTypes() {
         List<CompanyProofTypeResponse> data = ownerRegistrationService.listOwnerProofTypes();
         return ResponseEntity.ok(new SuccessResponse<>("Lấy danh sách loại tài liệu thành công", data));
@@ -97,15 +96,36 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    // Xác thực email + mật khẩu và trả về access token cùng thông tin user hiện tại.
     public ResponseEntity<SuccessResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse data = authService.login(request);
         return ResponseEntity.ok(new SuccessResponse<>("Đăng nhập thành công", data));
     }
 
+    @PostMapping("/forgot-password")
+    // Gửi OTP 6 số về email để bắt đầu luồng khôi phục mật khẩu.
+    public ResponseEntity<SuccessResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(new SuccessResponse<>("Mã xác nhận đã được gửi về email của bạn", "OK"));
+    }
+
+    @PostMapping("/reset-password")
+    // Đặt lại mật khẩu bằng OTP đã gửi qua email.
+    public ResponseEntity<SuccessResponse<String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(new SuccessResponse<>("Đặt lại mật khẩu thành công", "OK"));
+    }
+
+    @PostMapping("/me/change-password")
+    // Đổi mật khẩu khi đã đăng nhập — yêu cầu mật khẩu hiện tại để xác minh danh tính.
+    public ResponseEntity<SuccessResponse<String>> changePassword(
+            @AuthenticationPrincipal AppUserPrinciple principal,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        authService.changePassword(principal.getUserId().intValue(), request);
+        return ResponseEntity.ok(new SuccessResponse<>("Đổi mật khẩu thành công", "OK"));
+    }
+
     @GetMapping("/me")
-    // Lấy thông tin user hiện tại theo JWT đang đăng nhập.
-    // Frontend dùng route này để hydrate header/profile sau khi có token.
     public ResponseEntity<SuccessResponse<UserProfileResponse>> getMe(
             @AuthenticationPrincipal AppUserPrinciple principal
     ) {
@@ -114,7 +134,6 @@ public class AuthController {
     }
 
     @PatchMapping("/me/avatar")
-    // Cập nhật URL ảnh đại diện của user hiện tại sau khi frontend upload ảnh lên Cloudinary.
     public ResponseEntity<SuccessResponse<UserProfileResponse>> updateAvatar(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @Valid @RequestBody UpdateAvatarRequest request
@@ -124,7 +143,6 @@ public class AuthController {
     }
 
     @PatchMapping("/me")
-    // Cập nhật thông tin cá nhân mở rộng của user hiện tại (ngày sinh, giới tính, địa chỉ, xã/phường).
     public ResponseEntity<SuccessResponse<UserProfileResponse>> updateMe(
             @AuthenticationPrincipal AppUserPrinciple principal,
             @RequestBody UpdateUserProfileRequest request

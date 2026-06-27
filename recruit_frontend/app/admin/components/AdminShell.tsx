@@ -9,6 +9,7 @@ import { adminService } from "@/services/admin/admin.service";
 
 import { AdminSidebar } from "./AdminSidebar";
 import { clearAdminSession, getJwtExpiryMs } from "@/lib/admin-session";
+import { ChangePasswordModal } from "@/app/profile/components/modals/ChangePasswordModal";
 
 type AdminShellProps = {
   children: ReactNode;
@@ -23,6 +24,9 @@ type AdminShellProps = {
 export function AdminShell({ children }: AdminShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [pendingCompanies, setPendingCompanies] = useState(0);
+  const [pendingJobs, setPendingJobs] = useState(0);
+  const [pendingCandidateProofs, setPendingCandidateProofs] = useState(0);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const router = useRouter();
 
   /**
@@ -98,13 +102,29 @@ export function AdminShell({ children }: AdminShellProps) {
       }
     };
 
+    const loadSidebarBadges = async () => {
+      try {
+        const [stats, jobs, candidateProofs] = await Promise.all([
+          adminService.getStats(),
+          adminService.listJobs({ status: "PENDING" }),
+          adminService.listCandidateProofs({ status: "PENDING" }),
+        ]);
+        setPendingCompanies(stats.congTyChoDuyet ?? 0);
+        setPendingJobs(jobs.length);
+        setPendingCandidateProofs(candidateProofs.length);
+      } catch {
+        setPendingCompanies(0);
+        setPendingJobs(0);
+        setPendingCandidateProofs(0);
+      }
+    };
+
     // Kiểm tra ngay khi mount, sau đó duy trì kiểm tra định kỳ mỗi phút.
     void validateSession();
     scheduleExpiryLogout();
     intervalId = setInterval(validateSession, 60_000);
-
-    // Tải số công ty chờ duyệt để hiển thị badge trên sidebar.
-    adminService.getStats().then((s) => setPendingCompanies(s.congTyChoDuyet ?? 0)).catch(() => {});
+    // Tải số mục chờ duyệt để hiển thị badge trên sidebar.
+    void loadSidebarBadges();
 
     return () => {
       if (intervalId) {
@@ -155,12 +175,21 @@ export function AdminShell({ children }: AdminShellProps) {
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onNavigate={() => setIsMenuOpen(false)}
+        onChangePassword={() => {
+          setIsMenuOpen(false);
+          setChangePasswordOpen(true);
+        }}
         onLogout={handleLogout}
-        badges={{ "/admin/companies": pendingCompanies }}
+        badges={{
+          "/admin/companies": pendingCompanies,
+          "/admin/jobs": pendingJobs,
+          "/admin/candidate-proofs": pendingCandidateProofs,
+        }}
       />
 
       {/* Nội dung của từng route con trong admin sẽ được render vào vùng main này. */}
       <main className="min-w-0 px-4 py-5 sm:px-6 lg:px-8">{children}</main>
+      <ChangePasswordModal open={changePasswordOpen} onClose={() => setChangePasswordOpen(false)} />
     </div>
   );
 }

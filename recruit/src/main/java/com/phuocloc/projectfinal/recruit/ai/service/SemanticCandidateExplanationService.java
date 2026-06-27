@@ -83,10 +83,10 @@ public class SemanticCandidateExplanationService {
     ) {
         List<String> signals = new ArrayList<>();
         if (!matchedSkills.isEmpty()) {
-            signals.add("Khớp kỹ năng yêu cầu: " + signalService.joinLimited(matchedSkills, 5));
+            signals.add("Khớp kỹ năng yêu cầu: " + signalService.joinAll(matchedSkills));
         }
         if (matchedSkills.isEmpty() && !candidateSkills.isEmpty()) {
-            signals.add("Kỹ năng đã khai báo: " + signalService.joinLimited(candidateSkills, 5));
+            signals.add("Kỹ năng đã khai báo: " + signalService.joinAll(candidateSkills));
         }
         if (!candidateIndustries.isEmpty()) {
             signals.add("Ngành nghề quan tâm: " + signalService.joinLimited(candidateIndustries, 3));
@@ -116,7 +116,7 @@ public class SemanticCandidateExplanationService {
             strengths.add("Điểm phù hợp tổng hợp ở mức có thể xem xét");
         }
         if (!matchedSkills.isEmpty()) {
-            strengths.add("Có kỹ năng trùng trực tiếp với yêu cầu: " + signalService.joinLimited(matchedSkills, 4));
+            strengths.add("Có kỹ năng trùng trực tiếp với yêu cầu: " + signalService.joinAll(matchedSkills));
         }
         if (hasExperience) {
             strengths.add("Có kinh nghiệm làm việc đã khai báo trong hồ sơ");
@@ -147,7 +147,7 @@ public class SemanticCandidateExplanationService {
         if (requiredSkills.isEmpty()) {
             gaps.add("Tin tuyển dụng chưa khai báo kỹ năng yêu cầu để đối chiếu trực tiếp");
         } else if (!missingSkills.isEmpty()) {
-            gaps.add("Chưa thấy các kỹ năng yêu cầu trong hồ sơ: " + signalService.joinLimited(missingSkills, 4));
+            gaps.add("Chưa thấy các kỹ năng yêu cầu trong hồ sơ: " + signalService.joinAll(missingSkills));
         }
         if (candidateSkills.isEmpty()) {
             gaps.add("Hồ sơ chưa khai báo kỹ năng");
@@ -176,7 +176,7 @@ public class SemanticCandidateExplanationService {
         String base = "Hệ thống đánh giá hồ sơ đạt " + diemPhuHop + "% phù hợp với \"" + jobTitle
                 + "\" sau khi kết hợp semantic score từ Qdrant (" + semanticPercent + "%) và tín hiệu hồ sơ";
         if (!matchedSkills.isEmpty()) {
-            String reason = base + " vì có các kỹ năng trùng trực tiếp như " + signalService.joinLimited(matchedSkills, 4) + ".";
+            String reason = base + " vì có các kỹ năng trùng trực tiếp như " + signalService.joinAll(matchedSkills) + ".";
             if (!relevantExperiences.isEmpty()) {
                 reason += " Kinh nghiệm nổi bật: " + relevantExperiences.getFirst();
             }

@@ -75,7 +75,7 @@ export function CatalogsAdminClient() {
     <div className="space-y-5">
       <PageHeader
         eyebrow="Hệ thống"
-        title="CRUD Danh Mục"
+        title="Quản lý Danh Mục"
         subtitle={`Quản trị 4 nhóm danh mục nền tảng. Tổng số item hiện có: ${data.totalItems}.`}
         actions={
           <Button type="button" variant="outline" onClick={() => void data.loadAll(true)} disabled={data.loading}>

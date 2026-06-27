@@ -169,12 +169,10 @@ export function SimpleChartCard({
 
   return (
     <article className="rounded-md border border-slate-200 bg-white p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
-          {description ? <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p> : null}
-        </div>
-        {headerRight ? <div className="shrink-0">{headerRight}</div> : null}
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
+        {description ? <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p> : null}
+        {headerRight ? <div className="mt-2">{headerRight}</div> : null}
       </div>
 
       <div className={`mt-4 ${heightClassName}`}>

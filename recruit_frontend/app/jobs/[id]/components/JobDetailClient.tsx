@@ -18,9 +18,9 @@ export function JobDetailClient({ jobId }: JobDetailClientProps) {
   const jobDetail = useJobDetail(jobId);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <HomeHeader />
-      <main>
+      <main className="flex-1">
         {jobDetail.isLoading ? (
           <section className="mx-auto w-full max-w-6xl px-4 py-16">
             <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">

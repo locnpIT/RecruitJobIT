@@ -30,8 +30,6 @@ public class CompanyAdminJobResponse {
     private String mauCvUrl;
     private Long nganhNgheId;
     private String nganhNgheTen;
-    private Long loaiHinhLamViecId;
-    private String loaiHinhLamViecTen;
     private List<WorkTypeItem> loaiHinhLamViecs;
     private Long capDoKinhNghiemId;
     private String capDoKinhNghiemTen;

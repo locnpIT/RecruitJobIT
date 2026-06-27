@@ -156,6 +156,48 @@ public class HrCredentialMailService {
     }
 
     /**
+     * Gửi mã OTP 6 số cho luồng quên mật khẩu.
+     */
+    @Async("mailTaskExecutor")
+    public void sendForgotPasswordCode(
+            String toEmail,
+            String firstName,
+            String lastName,
+            String resetCode
+    ) {
+        String fullName = buildFullName(firstName, lastName);
+
+        if (!mailProperties.isEnabled()) {
+            log.info("[FORGOT-PASSWORD][MAIL_DISABLED] to={}, fullName={}, code={}", toEmail, fullName, resetCode);
+            return;
+        }
+
+        JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
+        if (mailSender == null) {
+            log.warn("[FORGOT-PASSWORD][MAIL_NOT_CONFIGURED] Missing JavaMailSender bean, fallback to log-only.");
+            log.info("[FORGOT-PASSWORD] to={}, fullName={}, code={}", toEmail, fullName, resetCode);
+            return;
+        }
+
+        String fromEmail = resolveFromEmail();
+        String subject = "Mã khôi phục mật khẩu";
+        String body = renderForgotPasswordTemplate(fullName, toEmail, resetCode);
+
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
+            helper.setTo(toEmail);
+            helper.setFrom(fromEmail);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+            mailSender.send(mimeMessage);
+            log.info("[FORGOT-PASSWORD][SENT] to={}", toEmail);
+        } catch (MessagingException | MailException ex) {
+            log.error("[FORGOT-PASSWORD][FAILED] to={}, reason={}", toEmail, ex.getMessage(), ex);
+        }
+    }
+
+    /**
      * Gửi mã xác nhận 6 số cho candidate.
      */
     @Async("mailTaskExecutor")
@@ -361,6 +403,20 @@ public class HrCredentialMailService {
                 Mã xác nhận của bạn là: %s
                 Hãy nhập mã này trên màn hình xác nhận email để kích hoạt tài khoản.
                 """.formatted(fullName, email, verificationCode);
+    }
+
+    private String renderForgotPasswordTemplate(String fullName, String email, String resetCode) {
+        try {
+            ClassPathResource resource = new ClassPathResource("mail/forgot-password.html");
+            String template = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return template
+                    .replace("${fullName}", escapeHtml(fullName))
+                    .replace("${email}", escapeHtml(email))
+                    .replace("${resetCode}", escapeHtml(resetCode));
+        } catch (IOException ex) {
+            log.warn("[FORGOT-PASSWORD][TEMPLATE_FALLBACK] Cannot load HTML template, using plain text body.");
+            return ("Chào " + fullName + ",\n\nMã khôi phục mật khẩu của bạn là: " + resetCode + "\nMã có hiệu lực trong 15 phút.").replace("\n", "<br>");
+        }
     }
 
     private String safeText(String value) {

@@ -67,7 +67,6 @@ public class SemanticMatchingService {
     private final CandidateProfileEmbeddingIndexService candidateProfileEmbeddingIndexService;
     private final SemanticCandidateExplanationService explanationService;
     private final SemanticMatchSignalService signalService;
-    private final SemanticMatchScoringService scoringService;
     private final QdrantClientService qdrantClientService;
     private final QdrantProperties qdrantProperties;
 
@@ -229,17 +228,11 @@ public class SemanticMatchingService {
                 .forEach(job -> jobs.put(job.getId(), job));
 
         List<String> candidateSkills = signalService.candidateSkillNames(profile.getId());
-        List<String> candidateIndustries = signalService.candidateIndustryNames(profile.getId());
-        boolean hasProfileExperience = !signalService.profileExperiences(profile.getId()).isEmpty();
-        boolean hasProfileSummary = signalService.hasText(profile.getGioiThieuBanThan())
-                || signalService.hasText(profile.getMucTieuNgheNghiep());
 
         return resultByJobId.entrySet().stream()
                 .map(entry -> mapJobMatch(
+                        profile,
                         candidateSkills,
-                        candidateIndustries,
-                        hasProfileExperience,
-                        hasProfileSummary,
                         jobs.get(entry.getKey()),
                         entry.getValue()
                 ))
@@ -315,10 +308,8 @@ public class SemanticMatchingService {
     }
 
     private JobSemanticMatchResponse mapJobMatch(
+            HoSoUngVien profile,
             List<String> candidateSkills,
-            List<String> candidateIndustries,
-            boolean hasProfileExperience,
-            boolean hasProfileSummary,
             TinTuyenDung job,
             QdrantSearchResult result
     ) {
@@ -330,15 +321,9 @@ public class SemanticMatchingService {
         List<String> requiredSkills = signalService.jobSignals(job.getId());
         List<String> matchedSkills = signalService.matchedNames(requiredSkills, candidateSkills);
         double semanticPercent = toPercent(result.score());
-        double diemPhuHop = scoringService.scoreJobForProfile(
-                semanticPercent,
-                requiredSkills,
-                matchedSkills,
-                job.getNganhNghe() == null ? null : job.getNganhNghe().getTen(),
-                candidateIndustries,
-                hasProfileExperience,
-                hasProfileSummary
-        );
+        List<Float> jobVector = jobEmbeddingIndexService.getOrCreateIndexVectorForMatching(job);
+        CandidateMatchExplanation explanation = explanationService.buildCandidateExplanation(job, profile, semanticPercent, jobVector);
+        double diemPhuHop = explanation.diemPhuHop();
         return JobSemanticMatchResponse.builder()
                 .tinTuyenDungId(toLong(job.getId()))
                 .tieuDe(job.getTieuDe())
@@ -401,10 +386,7 @@ public class SemanticMatchingService {
         if (job == null) {
             return null;
         }
-        List<LoaiHinhLamViec> workTypes = job.getLoaiHinhLamViecs() == null || job.getLoaiHinhLamViecs().isEmpty()
-                ? (job.getLoaiHinhLamViec() == null ? List.of() : List.of(job.getLoaiHinhLamViec()))
-                : job.getLoaiHinhLamViecs().stream().filter(Objects::nonNull).toList();
-        String joined = workTypes.stream()
+        String joined = job.getEffectiveWorkTypes().stream()
                 .map(LoaiHinhLamViec::getTen)
                 .filter(text -> text != null && !text.isBlank())
                 .distinct()

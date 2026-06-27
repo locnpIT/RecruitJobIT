@@ -8,6 +8,11 @@ type CandidateProofTableProps = {
   items: AdminCandidateProof[];
   submittingId: string | null;
   proofTypeLabel: Record<string, string>;
+  selectedProofKeys: string[];
+  allSelectableChecked: boolean;
+  hasSelectableProofs: boolean;
+  onToggleProof: (proofKey: string, checked: boolean) => void;
+  onToggleAllProofs: (checked: boolean) => void;
   onApprove: (item: AdminCandidateProof) => void;
   onReject: (item: AdminCandidateProof) => void;
 };
@@ -18,6 +23,11 @@ export function CandidateProofTable({
   items,
   submittingId,
   proofTypeLabel,
+  selectedProofKeys,
+  allSelectableChecked,
+  hasSelectableProofs,
+  onToggleProof,
+  onToggleAllProofs,
   onApprove,
   onReject,
 }: CandidateProofTableProps) {
@@ -40,6 +50,16 @@ export function CandidateProofTable({
       <table className="w-full min-w-[980px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+            <th className="pb-2 pr-3 font-medium">
+              <input
+                type="checkbox"
+                aria-label="Chọn tất cả minh chứng có thể duyệt"
+                checked={allSelectableChecked}
+                disabled={!hasSelectableProofs || Boolean(submittingId)}
+                onChange={(event) => onToggleAllProofs(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
+              />
+            </th>
             <th className="pb-2 font-medium">Minh chứng</th>
             <th className="pb-2 font-medium">Loại</th>
             <th className="pb-2 font-medium">Ứng viên</th>
@@ -52,8 +72,19 @@ export function CandidateProofTable({
           {items.map((item) => {
             const rowKey = `${item.loai}-${item.id}`;
             const isSubmitting = submittingId === rowKey;
+            const canApprove = item.trangThai !== "APPROVED";
             return (
               <tr key={rowKey} className="border-b border-slate-100 last:border-none">
+                <td className="py-3 pr-3">
+                  <input
+                    type="checkbox"
+                    aria-label={`Chọn minh chứng ${item.tieuDe ?? item.id}`}
+                    checked={selectedProofKeys.includes(rowKey)}
+                    disabled={!canApprove || Boolean(submittingId)}
+                    onChange={(event) => onToggleProof(rowKey, event.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
+                  />
+                </td>
                 <td className="py-3 pr-4">
                   <p className="font-medium text-slate-900">{item.tieuDe ?? "--"}</p>
                   <p className="mt-0.5 text-xs text-slate-500">{item.moTa ?? `Hồ sơ #${item.hoSoUngVienId ?? "--"}`}</p>
@@ -79,7 +110,7 @@ export function CandidateProofTable({
                   <div className="flex flex-wrap gap-2">
                     <Button variant="unstyled"
                       type="button"
-                      disabled={isSubmitting || item.trangThai === "APPROVED"}
+                      disabled={isSubmitting || !canApprove}
                       onClick={() => onApprove(item)}
                       className="rounded-md border border-emerald-300 px-2.5 py-1 font-medium text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >

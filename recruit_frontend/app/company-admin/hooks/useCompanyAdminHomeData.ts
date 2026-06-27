@@ -13,8 +13,6 @@ import { isCompanyApproved } from "../company-admin-status";
 export function useCompanyAdminHomeData() {
   const [data, setData] = useState<CompanyAdminMeResponse | null>(null);
   const [branches, setBranches] = useState<CompanyAdminBranch[]>([]);
-  const [jobsCount, setJobsCount] = useState(0);
-  const [applicationsCount, setApplicationsCount] = useState(0);
   const [branchSummary, setBranchSummary] = useState<
     Array<{
       branchId: number;
@@ -23,16 +21,6 @@ export function useCompanyAdminHomeData() {
       applications: CompanyAdminApplication[];
     }>
   >([]);
-  const [jobStatusChart, setJobStatusChart] = useState({
-    labels: ["Đã duyệt", "Chờ duyệt", "Bị từ chối"],
-    values: [0, 0, 0],
-    colors: ["#008080", "#f59e0b", "#ef4444"],
-  });
-  const [applicationStatusChart, setApplicationStatusChart] = useState({
-    labels: ["Chờ xử lý", "Đã duyệt", "Bị từ chối"],
-    values: [0, 0, 0],
-    colors: ["#0f766e", "#2563eb", "#ef4444"],
-  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,8 +53,6 @@ export function useCompanyAdminHomeData() {
               return;
             }
 
-            const allJobs = jobsByBranch.flat();
-            const allApplications = applicationsByBranch.flat();
             const summaries = responseBranches
               .map((branch, index) => ({
                 branchId: branch.chiNhanhId,
@@ -81,31 +67,12 @@ export function useCompanyAdminHomeData() {
                 applications: CompanyAdminApplication[];
               } => item.branchId != null);
 
-            setJobsCount(allJobs.length);
-            setApplicationsCount(allApplications.length);
             setBranchSummary(summaries);
-            setJobStatusChart(makeStatusChart(allJobs.map((job) => job.trangThai), ["APPROVED", "PENDING", "REJECTED"], [
-              "Đã duyệt",
-              "Chờ duyệt",
-              "Bị từ chối",
-            ], ["#008080", "#f59e0b", "#ef4444"]));
-            setApplicationStatusChart(
-              makeStatusChart(
-                allApplications.map((application) => application.trangThai),
-                ["PENDING", "APPROVED", "REJECTED"],
-                ["Chờ xử lý", "Đã duyệt", "Bị từ chối"],
-                ["#0f766e", "#2563eb", "#ef4444"],
-              ),
-            );
           } else {
-            setJobsCount(0);
-            setApplicationsCount(0);
             setBranchSummary([]);
           }
         } else {
           setBranches([]);
-          setJobsCount(0);
-          setApplicationsCount(0);
           setBranchSummary([]);
         }
       })
@@ -147,22 +114,9 @@ export function useCompanyAdminHomeData() {
     companyApproved,
     companyRejected,
     companyCanPostJobs,
-    jobsCount,
-    applicationsCount,
     branchSummary,
-    jobStatusChart,
-    applicationStatusChart,
     isLoading,
     error,
   };
 }
 
-function makeStatusChart(
-  statuses: Array<string | null>,
-  expectedStatuses: string[],
-  labels: string[],
-  colors: string[],
-) {
-  const values = expectedStatuses.map((status) => statuses.filter((item) => item?.toUpperCase() === status).length);
-  return { labels, values, colors };
-}

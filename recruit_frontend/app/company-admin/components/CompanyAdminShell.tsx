@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 
 import { CompanyAdminSidebar } from "./CompanyAdminSidebar";
 import { useCompanyAdminShellData } from "../hooks/useCompanyAdminShellData";
+import { ChangePasswordModal } from "@/app/profile/components/modals/ChangePasswordModal";
 
 type CompanyAdminShellProps = {
   children: ReactNode;
@@ -20,6 +21,7 @@ type CompanyAdminShellProps = {
  */
 export function CompanyAdminShell({ children }: CompanyAdminShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const shellData = useCompanyAdminShellData();
 
   return (
@@ -53,6 +55,10 @@ export function CompanyAdminShell({ children }: CompanyAdminShellProps) {
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onNavigate={() => setIsMenuOpen(false)}
+        onChangePassword={() => {
+          setIsMenuOpen(false);
+          setChangePasswordOpen(true);
+        }}
         companyName={shellData.companyName}
         companyLogo={shellData.companyLogo}
         companyStatus={shellData.companyStatus}
@@ -63,6 +69,7 @@ export function CompanyAdminShell({ children }: CompanyAdminShellProps) {
 
       {/* Nội dung thực tế của từng route doanh nghiệp được render tại đây. */}
       <main className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">{children}</main>
+      <ChangePasswordModal open={changePasswordOpen} onClose={() => setChangePasswordOpen(false)} />
     </div>
   );
 }

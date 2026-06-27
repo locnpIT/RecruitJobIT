@@ -8,10 +8,28 @@ type JobsTableProps = {
   loading: boolean;
   error: string | null;
   formatSalary: (job: AdminJob) => string;
+  selectedJobIds: number[];
+  allSelectableChecked: boolean;
+  hasSelectableJobs: boolean;
+  submitting: boolean;
+  onToggleJob: (jobId: number, checked: boolean) => void;
+  onToggleAllJobs: (checked: boolean) => void;
   onViewDetail: (jobId: number) => void;
 };
 
-export function JobsTable({ jobs, loading, error, formatSalary, onViewDetail }: JobsTableProps) {
+export function JobsTable({
+  jobs,
+  loading,
+  error,
+  formatSalary,
+  selectedJobIds,
+  allSelectableChecked,
+  hasSelectableJobs,
+  submitting,
+  onToggleJob,
+  onToggleAllJobs,
+  onViewDetail,
+}: JobsTableProps) {
   if (loading) {
     return <p className="py-6 text-sm text-slate-500">Đang tải dữ liệu...</p>;
   }
@@ -29,6 +47,16 @@ export function JobsTable({ jobs, loading, error, formatSalary, onViewDetail }: 
       <table className="w-full min-w-[1000px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+            <th className="pb-2 pr-3 font-medium">
+              <input
+                type="checkbox"
+                aria-label="Chọn tất cả tin có thể duyệt"
+                checked={allSelectableChecked}
+                disabled={!hasSelectableJobs || submitting}
+                onChange={(event) => onToggleAllJobs(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
+              />
+            </th>
             <th className="pb-2 font-medium">Tin tuyển dụng</th>
             <th className="pb-2 font-medium">Công ty</th>
             <th className="pb-2 font-medium">Địa điểm</th>
@@ -40,8 +68,20 @@ export function JobsTable({ jobs, loading, error, formatSalary, onViewDetail }: 
           </tr>
         </thead>
         <tbody>
-          {jobs.map((job) => (
+          {jobs.map((job) => {
+            const canApprove = job.trangThai !== "APPROVED" && job.trangThai !== "DELETED";
+            return (
             <tr key={job.id} className="border-b border-slate-100 last:border-none">
+              <td className="py-2.5 pr-3">
+                <input
+                  type="checkbox"
+                  aria-label={`Chọn tin ${job.tieuDe ?? job.id}`}
+                  checked={selectedJobIds.includes(job.id)}
+                  disabled={!canApprove || submitting}
+                  onChange={(event) => onToggleJob(job.id, event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
+                />
+              </td>
               <td className="py-2.5">
                 <p className="font-medium text-slate-900">{job.tieuDe ?? "(Không có tiêu đề)"}</p>
                 <p className="text-xs text-slate-500">#{job.id}</p>
@@ -67,7 +107,8 @@ export function JobsTable({ jobs, loading, error, formatSalary, onViewDetail }: 
                 </Button>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

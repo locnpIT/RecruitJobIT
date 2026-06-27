@@ -43,6 +43,29 @@ export function useAdminCompaniesActions({ onReload }: UseAdminCompaniesActionsO
     }
   };
 
+  const handleBulkApprove = async (companies: AdminCompany[]) => {
+    if (companies.length === 0) {
+      toast.error("Vui lòng chọn ít nhất một công ty để duyệt.");
+      return false;
+    }
+
+    const confirmed = window.confirm(`Duyệt ${companies.length} công ty đã chọn?`);
+    if (!confirmed) return false;
+
+    setIsMutating(true);
+    try {
+      await Promise.all(companies.map((company) => adminCompaniesService.approveCompany(company.id)));
+      toast.success(`Đã duyệt ${companies.length} công ty.`);
+      await onReload();
+      return true;
+    } catch {
+      toast.error("Không thể duyệt hàng loạt công ty.");
+      return false;
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
   const handleViewDetail = async (company: AdminCompany) => {
     setIsDetailLoading(true);
     try {
@@ -209,6 +232,7 @@ export function useAdminCompaniesActions({ onReload }: UseAdminCompaniesActionsO
     setRejectingCompany,
     setRejectReason,
     handleApprove,
+    handleBulkApprove,
     handleViewDetail,
     handleReject,
     handleOpenCreate,

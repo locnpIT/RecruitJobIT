@@ -110,6 +110,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/verify-email/resend",
                                 "/api/v1/auth/proof-types",
                                 "/api/v1/auth/cloudinary-signature",
+                                "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/reset-password",
                                 "/api/v1/payments/sepay/webhook"
                         ).permitAll()
                         .anyRequest().authenticated()

@@ -73,7 +73,7 @@ export function JobFormSelectFields({
 
       <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">Loại hình làm việc</label>
-        <div className="grid gap-2 rounded-md border border-slate-300 bg-white p-3">
+        <div className="grid max-h-56 gap-2 overflow-y-auto rounded-md border border-slate-300 bg-white p-3">
           {loaiHinhOptions.map((item) => {
             const workTypeId = item.id ?? 0;
             return (

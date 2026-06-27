@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { HomeHeader } from "../components/home/HomeHeader";
 import { HomeFooter } from "../components/home/HomeFooter";
+import { ChangePasswordModal } from "./components/modals/ChangePasswordModal";
 import { AvatarCard } from "./components/AvatarCard";
 import { ProfileInfoGrid } from "./components/ProfileInfoGrid";
 import { SkillsPanel } from "./components/SkillsPanel";
@@ -26,6 +27,7 @@ import { ProfileJobMatchesSection } from "./components/ProfileJobMatchesSection"
 // toàn bộ state dữ liệu/mutation đã tách xuống hooks.
 export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const { user, accountTypeChecked, isCandidateAccount } = useCandidateProfileSession();
   const {
     provinces,
@@ -131,8 +133,18 @@ export default function ProfilePage() {
                 role={roleText}
                 status={activeText ? "Đang hoạt động" : "Đang bị khóa"}
               />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setChangePasswordOpen(true)}
+                  className="text-sm font-medium text-blue-600 hover:underline"
+                >
+                  Đổi mật khẩu
+                </button>
+              </div>
             </section>
           </div>
+          <ChangePasswordModal open={changePasswordOpen} onClose={() => setChangePasswordOpen(false)} />
         </section>
 
         <section className="mt-6">

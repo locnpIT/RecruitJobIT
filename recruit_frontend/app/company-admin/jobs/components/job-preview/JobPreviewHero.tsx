@@ -19,7 +19,7 @@ export function JobPreviewHero({ job, company }: JobPreviewHeroProps) {
   const tags = [
     job.nganhNgheTen,
     job.capDoKinhNghiemTen,
-    job.loaiHinhLamViecTen,
+    (job.loaiHinhLamViecs ?? []).map((item) => item.ten).filter(Boolean).join(", ") || null,
     job.id ? `JOB-${job.id}` : null,
   ].filter(Boolean);
 

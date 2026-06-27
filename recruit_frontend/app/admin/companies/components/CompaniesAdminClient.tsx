@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { PageHeader } from "../../components/PageHeader";
 import { CompanyDetailModal } from "./CompanyDetailModal";
 import { CompanyFilters } from "./CompanyFilters";
@@ -14,6 +15,27 @@ import { Button } from "@/components/ui/Button";
 export function CompaniesAdminClient() {
   const data = useAdminCompaniesData();
   const actions = useAdminCompaniesActions({ onReload: data.loadData });
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<number[]>([]);
+
+  const approvableCompanies = useMemo(
+    () => data.companies.filter((company) => company.trangThai !== "APPROVED" && company.trangThai !== "DELETED"),
+    [data.companies],
+  );
+
+  const selectedCompanies = useMemo(
+    () => approvableCompanies.filter((company) => selectedCompanyIds.includes(company.id)),
+    [approvableCompanies, selectedCompanyIds],
+  );
+
+  const handleToggleCompany = (companyId: number, checked: boolean) => {
+    setSelectedCompanyIds((current) =>
+      checked ? Array.from(new Set([...current, companyId])) : current.filter((id) => id !== companyId),
+    );
+  };
+
+  const handleToggleAllCompanies = (checked: boolean) => {
+    setSelectedCompanyIds(checked ? approvableCompanies.map((company) => company.id) : []);
+  };
 
   return (
     <>
@@ -37,12 +59,31 @@ export function CompaniesAdminClient() {
             + Thêm công ty
           </Button>
         </div>
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+          <p className="text-sm text-slate-600">Đã chọn {selectedCompanies.length} công ty có thể duyệt.</p>
+          <Button
+            variant="primary"
+            size="sm"
+            type="button"
+            disabled={actions.isMutating || selectedCompanies.length === 0}
+            onClick={() => void actions.handleBulkApprove(selectedCompanies).then((success) => {
+              if (success) setSelectedCompanyIds([]);
+            })}
+          >
+            {actions.isMutating ? "Đang xử lý..." : "Duyệt đã chọn"}
+          </Button>
+        </div>
         <CompanyTable
           companies={data.companies}
           status={data.status}
           isLoading={data.isLoading}
           isMutating={actions.isMutating}
           isDetailLoading={actions.isDetailLoading}
+          selectedCompanyIds={selectedCompanies.map((company) => company.id)}
+          allSelectableChecked={approvableCompanies.length > 0 && selectedCompanies.length === approvableCompanies.length}
+          hasSelectableCompanies={approvableCompanies.length > 0}
+          onToggleCompany={handleToggleCompany}
+          onToggleAllCompanies={handleToggleAllCompanies}
           onViewDetail={(company) => void actions.handleViewDetail(company)}
           onApprove={(company) => void actions.handleApprove(company)}
           onReject={actions.setRejectingCompany}

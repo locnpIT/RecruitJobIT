@@ -20,11 +20,12 @@ import org.springframework.util.StringUtils;
 public class PublicJobElasticsearchSearchService {
 
     private static final int DEFAULT_PAGE = 0;
-    private static final int DEFAULT_SIZE = 12;
+    private static final int DEFAULT_SIZE = 8;
     private static final int MAX_SIZE = 30;
 
     private final ElasticsearchClientService elasticsearchClientService;
     private final ElasticsearchProperties elasticsearchProperties;
+    private final JobSearchTextAnalyzer textAnalyzer;
 
     public boolean isEnabled() {
         return elasticsearchClientService.isEnabled();
@@ -182,7 +183,7 @@ public class PublicJobElasticsearchSearchService {
         if (StringUtils.hasText(tuKhoa)) {
             must.add(Map.of(
                     "multi_match", Map.of(
-                            "query", tuKhoa.trim(),
+                            "query", textAnalyzer.expandSearchAliases(tuKhoa).trim(),
                             "fields", List.of(
                                     "tieuDe^4",
                                     "moTa^2",
@@ -192,8 +193,8 @@ public class PublicJobElasticsearchSearchService {
                                     "nganhNgheTen^2",
                                     "kyNangs^2"
                             ),
-                            "operator", "and"
-                    )
+                            "operator", "or"
+                )
             ));
         }
 
@@ -203,10 +204,10 @@ public class PublicJobElasticsearchSearchService {
                             "query", diaDiem.trim(),
                             "fields", List.of("tinhThanhTen^2", "xaPhuongTen"),
                             "operator", "and"
-                    )
+                )
             ));
         }
-        addTextMust(must, capDoKinhNghiemText, List.of("capDoKinhNghiemTen^3", "tieuDe", "moTa", "yeuCau"));
+        addExperienceMust(must, capDoKinhNghiemText, khongYeuCauKinhNghiem);
         addTextMust(must, loaiHinhLamViecText, List.of("loaiHinhLamViecTen^3", "tieuDe", "moTa", "yeuCau"));
         if (Boolean.TRUE.equals(remote)) {
             addTextMust(must, "remote từ xa online work from home làm ở nhà", List.of(
@@ -215,14 +216,6 @@ public class PublicJobElasticsearchSearchService {
                     "moTa",
                     "yeuCau",
                     "phucLoi"
-            ));
-        }
-        if (Boolean.TRUE.equals(khongYeuCauKinhNghiem)) {
-            addTextMust(must, "fresher intern thực tập không yêu cầu kinh nghiệm entry", List.of(
-                    "capDoKinhNghiemTen^3",
-                    "tieuDe",
-                    "moTa",
-                    "yeuCau"
             ));
         }
         addExcludedKeywords(mustNot, tuKhoaLoaiTru);
@@ -249,6 +242,65 @@ public class PublicJobElasticsearchSearchService {
                         "operator", "or"
                 )
         ));
+    }
+
+    private void addExperienceMust(List<Object> must, String capDoKinhNghiemText, Boolean khongYeuCauKinhNghiem) {
+        boolean hasLevelText = StringUtils.hasText(capDoKinhNghiemText);
+        boolean wantsNoExperience = Boolean.TRUE.equals(khongYeuCauKinhNghiem);
+
+        if (!hasLevelText && !wantsNoExperience) {
+            return;
+        }
+
+        Map<String, Object> levelQuery = hasLevelText
+                ? textQuery(capDoKinhNghiemText, List.of("capDoKinhNghiemTen^3", "tieuDe", "moTa", "yeuCau"), "or")
+                : null;
+        Map<String, Object> noExperienceQuery = wantsNoExperience
+                ? textQuery("fresher intern thực tập không yêu cầu kinh nghiệm entry mới ra trường chưa có kinh nghiệm",
+                        List.of("capDoKinhNghiemTen^3", "tieuDe", "moTa", "yeuCau"), "or")
+                : null;
+
+        if (hasLevelText && wantsNoExperience && isNoExperienceIntent(capDoKinhNghiemText)) {
+            must.add(Map.of("bool", Map.of(
+                    "should", List.of(levelQuery, noExperienceQuery),
+                    "minimum_should_match", 1
+            )));
+            return;
+        }
+
+        if (levelQuery != null) {
+            must.add(levelQuery);
+        }
+        if (noExperienceQuery != null) {
+            must.add(noExperienceQuery);
+        }
+    }
+
+    private Map<String, Object> textQuery(String query, List<String> fields, String operator) {
+        return Map.of(
+                "multi_match", Map.of(
+                        "query", query.trim(),
+                        "fields", fields,
+                        "operator", operator
+                )
+        );
+    }
+
+    private boolean isNoExperienceIntent(String value) {
+        if (!StringUtils.hasText(value)) {
+            return false;
+        }
+        String normalized = textAnalyzer.normalize(textAnalyzer.expandSearchAliases(value));
+        return textAnalyzer.contains(normalized, "fresher")
+                || textAnalyzer.contains(normalized, "intern")
+                || textAnalyzer.contains(normalized, "thuc tap")
+                || textAnalyzer.contains(normalized, "thực tập")
+                || textAnalyzer.contains(normalized, "moi ra truong")
+                || textAnalyzer.contains(normalized, "mới ra trường")
+                || textAnalyzer.contains(normalized, "khong yeu cau kinh nghiem")
+                || textAnalyzer.contains(normalized, "không yêu cầu kinh nghiệm")
+                || textAnalyzer.contains(normalized, "chua co kinh nghiem")
+                || textAnalyzer.contains(normalized, "chưa có kinh nghiệm");
     }
 
     private void addExcludedKeywords(List<Object> mustNot, String excludedKeywords) {

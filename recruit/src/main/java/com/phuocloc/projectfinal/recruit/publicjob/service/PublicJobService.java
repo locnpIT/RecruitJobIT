@@ -35,7 +35,7 @@ public class PublicJobService {
 
     private static final int DEFAULT_LIMIT = 8;
     private static final int DEFAULT_PAGE = 0;
-    private static final int DEFAULT_SIZE = 12;
+    private static final int DEFAULT_SIZE = 8;
     private static final int SIMILAR_LIMIT = 4;
 
     private final TinTuyenDungRepository tinTuyenDungRepository;
@@ -137,10 +137,9 @@ public class PublicJobService {
 
         var all = searchWithJpa(tuKhoa, diaDiem, null, null, null).stream()
                 .filter(job -> mapper.matchesSalary(job, luongToiThieuMongMuon, luongToiDaMongMuon))
-                .filter(job -> mapper.matchesTextOption(resolveExperienceLevel(job), capDoKinhNghiemText))
+                .filter(job -> matchesAiExperience(job, capDoKinhNghiemText, khongYeuCauKinhNghiem))
                 .filter(job -> mapper.matchesTextOption(resolveWorkType(job), loaiHinhLamViecText))
                 .filter(job -> mapper.matchesRemote(job, remote))
-                .filter(job -> mapper.matchesNoExperienceRequired(job, khongYeuCauKinhNghiem))
                 .filter(job -> !mapper.matchesExcludedKeywords(job, tuKhoaLoaiTru))
                 .toList();
         int from = safePage * safeSize;
@@ -229,12 +228,41 @@ public class PublicJobService {
         if (loaiHinhLamViecId == null) {
             return true;
         }
-        if (job.getLoaiHinhLamViecs() != null && !job.getLoaiHinhLamViecs().isEmpty()) {
-            return job.getLoaiHinhLamViecs().stream()
-                    .filter(Objects::nonNull)
-                    .anyMatch(item -> Objects.equals(item.getId(), loaiHinhLamViecId));
+        return job.getLoaiHinhLamViecs() != null && job.getLoaiHinhLamViecs().stream()
+                .filter(Objects::nonNull)
+                .anyMatch(item -> Objects.equals(item.getId(), loaiHinhLamViecId));
+    }
+
+    private boolean matchesAiExperience(TinTuyenDung job, String capDoKinhNghiemText, Boolean khongYeuCauKinhNghiem) {
+        boolean hasLevelText = StringUtils.hasText(capDoKinhNghiemText);
+        boolean wantsNoExperience = Boolean.TRUE.equals(khongYeuCauKinhNghiem);
+
+        if (!hasLevelText && !wantsNoExperience) {
+            return true;
         }
-        return job.getLoaiHinhLamViec() != null && Objects.equals(job.getLoaiHinhLamViec().getId(), loaiHinhLamViecId);
+        if (isNoExperienceIntent(capDoKinhNghiemText) && wantsNoExperience) {
+            return mapper.matchesTextOption(resolveExperienceLevel(job), capDoKinhNghiemText)
+                    || mapper.matchesNoExperienceRequired(job, true);
+        }
+        return mapper.matchesTextOption(resolveExperienceLevel(job), capDoKinhNghiemText)
+                && mapper.matchesNoExperienceRequired(job, khongYeuCauKinhNghiem);
+    }
+
+    private boolean isNoExperienceIntent(String value) {
+        if (!StringUtils.hasText(value)) {
+            return false;
+        }
+        String normalized = textAnalyzer.normalize(textAnalyzer.expandSearchAliases(value));
+        return textAnalyzer.contains(normalized, "fresher")
+                || textAnalyzer.contains(normalized, "intern")
+                || textAnalyzer.contains(normalized, "thuc tap")
+                || textAnalyzer.contains(normalized, "thực tập")
+                || textAnalyzer.contains(normalized, "moi ra truong")
+                || textAnalyzer.contains(normalized, "mới ra trường")
+                || textAnalyzer.contains(normalized, "khong yeu cau kinh nghiem")
+                || textAnalyzer.contains(normalized, "không yêu cầu kinh nghiệm")
+                || textAnalyzer.contains(normalized, "chua co kinh nghiem")
+                || textAnalyzer.contains(normalized, "chưa có kinh nghiệm");
     }
 
     private List<PublicJobSummaryResponse> mapSummaryFromSearchDocumentIds(List<String> documentIds) {
@@ -283,14 +311,12 @@ public class PublicJobService {
     }
 
     private String resolveWorkType(TinTuyenDung job) {
-        if (job.getLoaiHinhLamViecs() != null && !job.getLoaiHinhLamViecs().isEmpty()) {
-            return job.getLoaiHinhLamViecs().stream()
-                    .filter(Objects::nonNull)
-                    .map(item -> item.getTen() == null ? "" : item.getTen())
-                    .filter(StringUtils::hasText)
-                    .distinct()
-                    .collect(java.util.stream.Collectors.joining(", "));
-        }
-        return job.getLoaiHinhLamViec() == null ? "" : (job.getLoaiHinhLamViec().getTen() == null ? "" : job.getLoaiHinhLamViec().getTen());
+        if (job.getLoaiHinhLamViecs() == null) return "";
+        return job.getLoaiHinhLamViecs().stream()
+                .filter(Objects::nonNull)
+                .map(item -> item.getTen() == null ? "" : item.getTen())
+                .filter(StringUtils::hasText)
+                .distinct()
+                .collect(java.util.stream.Collectors.joining(", "));
     }
 }

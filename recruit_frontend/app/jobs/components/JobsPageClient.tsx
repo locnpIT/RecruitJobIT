@@ -13,9 +13,9 @@ export function JobsPageClient() {
   const jobsSearch = useJobsSearch();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <HomeHeader />
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 md:py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 md:py-10">
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
             Việc làm đang tuyển

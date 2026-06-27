@@ -166,4 +166,16 @@ export const authService = {
     const response = await apiClient.get("/auth/proof-types");
     return response.data.data as OwnerProofTypeOption[];
   },
+
+  forgotPassword: async (email: string): Promise<void> => {
+    await apiClient.post("/auth/forgot-password", { email });
+  },
+
+  resetPassword: async (data: { email: string; maXacNhan: string; matKhauMoi: string }): Promise<void> => {
+    await apiClient.post("/auth/reset-password", data);
+  },
+
+  changePassword: async (data: { matKhauHienTai: string; matKhauMoi: string }): Promise<void> => {
+    await apiClient.post("/auth/me/change-password", data);
+  },
 };

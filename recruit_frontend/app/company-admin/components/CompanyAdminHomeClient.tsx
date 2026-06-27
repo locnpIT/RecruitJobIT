@@ -203,7 +203,7 @@ function RangeSelect({
       <select
         value={value}
         onChange={(event) => onChange(Number(event.target.value) as TrendRangeDays)}
-        className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-teal-500"
+        className="h-9 min-w-[90px] rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-teal-500"
       >
         {TREND_RANGE_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>

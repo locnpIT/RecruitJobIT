@@ -11,6 +11,7 @@ type AdminSidebarProps = {
   isOpen?: boolean;
   onClose?: () => void;
   onNavigate?: () => void;
+  onChangePassword?: () => void;
   onLogout?: () => void;
   badges?: Record<string, number>;
 };
@@ -19,7 +20,7 @@ type AdminSidebarProps = {
  * Sidebar điều hướng cố định của khu vực admin.
  * Nguồn sự thật cho menu nằm ở `admin-nav.ts`, component này chỉ render và tô active state.
  */
-export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout, badges = {} }: AdminSidebarProps) {
+export function AdminSidebar({ isOpen = false, onClose, onNavigate, onChangePassword, onLogout, badges = {} }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -80,6 +81,15 @@ export function AdminSidebar({ isOpen = false, onClose, onNavigate, onLogout, ba
             </Link>
           );
         })}
+
+        <Button
+          variant="unstyled"
+          type="button"
+          onClick={onChangePassword}
+          className="mt-2 block w-full rounded-md border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          Đổi mật khẩu
+        </Button>
 
         <Button
           variant="unstyled"

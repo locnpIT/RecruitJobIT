@@ -10,7 +10,7 @@ import {
   type SearchJobsParams,
 } from "@/services/public/public-job.service";
 
-const DEFAULT_PAGE_SIZE = 12;
+const DEFAULT_PAGE_SIZE = 8;
 
 function parseOptionalNumber(raw: string | null): number | undefined {
   if (!raw) {

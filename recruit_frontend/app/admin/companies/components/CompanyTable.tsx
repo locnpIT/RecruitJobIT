@@ -9,6 +9,11 @@ type CompanyTableProps = {
   isLoading: boolean;
   isMutating: boolean;
   isDetailLoading: boolean;
+  selectedCompanyIds: number[];
+  allSelectableChecked: boolean;
+  hasSelectableCompanies: boolean;
+  onToggleCompany: (companyId: number, checked: boolean) => void;
+  onToggleAllCompanies: (checked: boolean) => void;
   onViewDetail: (company: AdminCompany) => void;
   onApprove: (company: AdminCompany) => void;
   onReject: (company: AdminCompany) => void;
@@ -22,6 +27,11 @@ export function CompanyTable({
   isLoading,
   isMutating,
   isDetailLoading,
+  selectedCompanyIds,
+  allSelectableChecked,
+  hasSelectableCompanies,
+  onToggleCompany,
+  onToggleAllCompanies,
   onViewDetail,
   onApprove,
   onReject,
@@ -39,6 +49,16 @@ export function CompanyTable({
       <table className="w-full min-w-300 text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+            <th className="pb-2 pr-3 font-medium">
+              <input
+                type="checkbox"
+                aria-label="Chọn tất cả công ty có thể duyệt"
+                checked={allSelectableChecked}
+                disabled={!hasSelectableCompanies || isMutating}
+                onChange={(event) => onToggleAllCompanies(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
+              />
+            </th>
             <th className="pb-2 font-medium">Công ty</th>
             <th className="pb-2 font-medium">MST</th>
             <th className="pb-2 font-medium">Owner</th>
@@ -49,8 +69,20 @@ export function CompanyTable({
           </tr>
         </thead>
         <tbody>
-          {companies.map((company) => (
+          {companies.map((company) => {
+            const canApprove = company.trangThai !== "APPROVED" && company.trangThai !== "DELETED";
+            return (
             <tr key={company.id} className="border-b border-slate-100 last:border-none align-top">
+              <td className="py-2.5 pr-3">
+                <input
+                  type="checkbox"
+                  aria-label={`Chọn công ty ${company.ten}`}
+                  checked={selectedCompanyIds.includes(company.id)}
+                  disabled={!canApprove || isMutating}
+                  onChange={(event) => onToggleCompany(company.id, event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-[#008080] focus:ring-[#008080]"
+                />
+              </td>
               <td className="py-2.5 font-medium">
                 <div>{company.ten}</div>
                 <div className="text-xs text-slate-500">{company.website || "--"}</div>
@@ -72,7 +104,7 @@ export function CompanyTable({
                     onClick={() => onViewDetail(company)}>
                     Chi tiết
                   </Button>
-                  {showReviewActions && company.trangThai !== "APPROVED" && company.trangThai !== "DELETED" ? (
+                  {showReviewActions && canApprove ? (
                     <Button variant="primary" size="sm" type="button"
                       disabled={isMutating}
                       onClick={() => onApprove(company)}>
@@ -109,7 +141,8 @@ export function CompanyTable({
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

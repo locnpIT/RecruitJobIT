@@ -74,8 +74,6 @@ app:
     url: ${APP_QDRANT_URL:http://localhost:6333}
     api-key: ${APP_QDRANT_API_KEY:}
     timeout-millis: ${APP_QDRANT_TIMEOUT_MILLIS:5000}
-    # MiniLM-L12-v2 cho ra vector 384 chiều.
-    # Lưu ý: collection Qdrant cũ 256d phải xóa/tạo lại trước khi sync.
     vector-size: ${APP_QDRANT_VECTOR_SIZE:384}
     kho-ho-so-ung-vien: ${APP_QDRANT_KHO_HO_SO_UNG_VIEN:chi_muc_nhung_ho_so_ung_vien}
     kho-don-ung-tuyen: ${APP_QDRANT_KHO_DON_UNG_TUYEN:chi_muc_nhung_don_ung_tuyen}
@@ -89,7 +87,7 @@ app:
     timeout-millis: ${APP_ELASTICSEARCH_TIMEOUT_MILLIS:5000}
     job-index: ${APP_ELASTICSEARCH_JOB_INDEX:public_job_search}
   gemini:
-    enabled: ${APP_GEMINI_ENABLED:false}
+    enabled: ${APP_GEMINI_ENABLED:true}
     api-key: ${APP_GEMINI_API_KEY:}
     model-name: ${APP_GEMINI_MODEL_NAME:gemini-2.5-flash}
     timeout-millis: ${APP_GEMINI_TIMEOUT_MILLIS:20000}

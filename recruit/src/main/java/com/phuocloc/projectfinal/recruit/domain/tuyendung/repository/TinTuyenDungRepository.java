@@ -23,7 +23,6 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
             JOIN t.chiNhanhs cn
             LEFT JOIN FETCH t.chiNhanhs fetchedBranches
             LEFT JOIN FETCH fetchedBranches.congTy fetchedCompany
-            LEFT JOIN FETCH t.loaiHinhLamViec legacyWorkType
             LEFT JOIN FETCH t.loaiHinhLamViecs workTypes
             LEFT JOIN FETCH t.nganhNghe industry
             LEFT JOIN FETCH t.capDoKinhNghiem experienceLevel
@@ -62,7 +61,6 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
             LEFT JOIN FETCH cn.xaPhuong xp
             LEFT JOIN FETCH xp.tinhThanh tt
             LEFT JOIN FETCH t.nganhNghe nn
-            LEFT JOIN FETCH t.loaiHinhLamViec lh
             LEFT JOIN FETCH t.loaiHinhLamViecs lhs
             LEFT JOIN FETCH t.capDoKinhNghiem cd
             WHERE t.ngayXoa IS NULL
@@ -81,7 +79,6 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
             LEFT JOIN FETCH cn.xaPhuong xp
             LEFT JOIN FETCH xp.tinhThanh tt
             LEFT JOIN FETCH t.nganhNghe nn
-            LEFT JOIN FETCH t.loaiHinhLamViec lh
             LEFT JOIN FETCH t.loaiHinhLamViecs lhs
             LEFT JOIN FETCH t.capDoKinhNghiem cd
             WHERE t.id = :id
@@ -100,7 +97,6 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
             LEFT JOIN FETCH cn.xaPhuong xp
             LEFT JOIN FETCH xp.tinhThanh tt
             LEFT JOIN FETCH t.nganhNghe nn
-            LEFT JOIN FETCH t.loaiHinhLamViec lh
             LEFT JOIN FETCH t.loaiHinhLamViecs lhs
             LEFT JOIN FETCH t.capDoKinhNghiem cd
             WHERE t.id IN :ids
@@ -119,7 +115,6 @@ public interface TinTuyenDungRepository extends JpaRepository<TinTuyenDung, Inte
             LEFT JOIN FETCH cn.xaPhuong xp
             LEFT JOIN FETCH xp.tinhThanh tt
             LEFT JOIN FETCH t.nganhNghe nn
-            LEFT JOIN FETCH t.loaiHinhLamViec lh
             LEFT JOIN FETCH t.loaiHinhLamViecs lhs
             LEFT JOIN FETCH t.capDoKinhNghiem cd
             WHERE ct.id = :companyId

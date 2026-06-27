@@ -64,6 +64,15 @@ public class JobSearchTextAnalyzer {
         if (lower.contains("spring")) {
             normalized += " Spring Spring Boot";
         }
+        if (lower.contains("sale") || lower.contains("sales")) {
+            normalized += " sale sales kinh doanh bán hàng ban hang tư vấn bán hàng tu van ban hang";
+        }
+        if (lower.contains("kinh doanh") || lower.contains("bán hàng") || lower.contains("ban hang")) {
+            normalized += " kinh doanh bán hàng ban hang sale sales tư vấn bán hàng tu van ban hang";
+        }
+        if (lower.contains("bất động sản") || lower.contains("bat dong san") || lower.contains("bđs") || lower.contains("bds")) {
+            normalized += " bất động sản bat dong san bđs bds nhà đất nha dat";
+        }
         if (lower.contains("cicd") || lower.contains("ci/cd") || lower.contains("ci cd")) {
             normalized += " CI/CD CICD CI CD";
         }

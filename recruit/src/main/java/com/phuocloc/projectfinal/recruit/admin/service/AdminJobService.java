@@ -138,6 +138,9 @@ public class AdminJobService {
         if (!StringUtils.hasText(status)) {
             return true;
         }
+        if ("PENDING".equalsIgnoreCase(status) && "DRAFT".equalsIgnoreCase(job.getTrangThai())) {
+            return true;
+        }
         return status.equalsIgnoreCase(job.getTrangThai());
     }
 

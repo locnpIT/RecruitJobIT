@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "../../components/PageHeader";
 import { CandidateProofSummary } from "./CandidateProofSummary";
@@ -8,6 +8,7 @@ import { CandidateProofTable } from "./CandidateProofTable";
 import { CandidateProofToolbar } from "./CandidateProofToolbar";
 import { useAdminCandidateProofsActions } from "../hooks/useAdminCandidateProofsActions";
 import { useAdminCandidateProofsData } from "../hooks/useAdminCandidateProofsData";
+import { Button } from "@/components/ui/Button";
 
 const statusOptions = ["PENDING", "APPROVED", "REJECTED"];
 
@@ -21,6 +22,27 @@ export function CandidateProofsAdminClient() {
   const data = useAdminCandidateProofsData();
   const actions = useAdminCandidateProofsActions({ onReload: data.loadData });
   const { mutationError, mutationSuccess, setMutationError, setMutationSuccess } = actions;
+  const [selectedProofKeys, setSelectedProofKeys] = useState<string[]>([]);
+
+  const approvableProofs = useMemo(
+    () => data.items.filter((item) => item.trangThai !== "APPROVED"),
+    [data.items],
+  );
+
+  const selectedProofs = useMemo(
+    () => approvableProofs.filter((item) => selectedProofKeys.includes(`${item.loai}-${item.id}`)),
+    [approvableProofs, selectedProofKeys],
+  );
+
+  const handleToggleProof = (proofKey: string, checked: boolean) => {
+    setSelectedProofKeys((current) =>
+      checked ? Array.from(new Set([...current, proofKey])) : current.filter((key) => key !== proofKey),
+    );
+  };
+
+  const handleToggleAllProofs = (checked: boolean) => {
+    setSelectedProofKeys(checked ? approvableProofs.map((item) => `${item.loai}-${item.id}`) : []);
+  };
 
   useEffect(() => {
     if (data.error) {
@@ -64,11 +86,31 @@ export function CandidateProofsAdminClient() {
           onReload={() => void data.loadData()}
         />
 
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+          <p className="text-sm text-slate-600">Đã chọn {selectedProofs.length} minh chứng có thể duyệt.</p>
+          <Button
+            variant="primary"
+            size="sm"
+            type="button"
+            disabled={Boolean(actions.submittingId) || selectedProofs.length === 0}
+            onClick={() => void actions.handleBulkApprove(selectedProofs).then((success) => {
+              if (success) setSelectedProofKeys([]);
+            })}
+          >
+            {actions.submittingId ? "Đang xử lý..." : "Duyệt đã chọn"}
+          </Button>
+        </div>
+
         <CandidateProofTable
           loading={data.loading}
           items={data.items}
           submittingId={actions.submittingId}
           proofTypeLabel={proofTypeLabel}
+          selectedProofKeys={selectedProofs.map((item) => `${item.loai}-${item.id}`)}
+          allSelectableChecked={approvableProofs.length > 0 && selectedProofs.length === approvableProofs.length}
+          hasSelectableProofs={approvableProofs.length > 0}
+          onToggleProof={handleToggleProof}
+          onToggleAllProofs={handleToggleAllProofs}
           onApprove={(item) => void actions.handleApprove(item)}
           onReject={(item) => {
             const confirmed = window.confirm(`Từ chối minh chứng "${item.tieuDe ?? item.id}"?`);

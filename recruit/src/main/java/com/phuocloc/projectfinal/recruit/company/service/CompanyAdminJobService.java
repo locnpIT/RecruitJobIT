@@ -97,7 +97,7 @@ public class CompanyAdminJobService {
         applyJobPayload(tinTuyenDung, request);
         tinTuyenDung.getChiNhanhs().clear();
         tinTuyenDung.getChiNhanhs().addAll(branches);
-        tinTuyenDung.setTrangThai("DRAFT");
+        tinTuyenDung.setTrangThai("PENDING");
         tinTuyenDung = tinTuyenDungRepository.save(tinTuyenDung);
 
         // Sau khi lưu skill mapping, index semantic/full-text mới có đủ dữ liệu để search chính xác.
@@ -205,7 +205,6 @@ public class CompanyAdminJobService {
                         .ten(item.getTen())
                         .build())
                 .toList();
-        LoaiHinhLamViec firstWorkType = workTypes.stream().findFirst().orElse(null);
         return CompanyAdminJobResponse.builder()
                 .id(ServiceUtils.toLong(tinTuyenDung.getId()))
                 .tieuDe(tinTuyenDung.getTieuDe())
@@ -220,8 +219,6 @@ public class CompanyAdminJobService {
                 .mauCvUrl(tinTuyenDung.getMauCvUrl())
                 .nganhNgheId(tinTuyenDung.getNganhNghe() == null ? null : ServiceUtils.toLong(tinTuyenDung.getNganhNghe().getId()))
                 .nganhNgheTen(tinTuyenDung.getNganhNghe() == null ? null : tinTuyenDung.getNganhNghe().getTen())
-                .loaiHinhLamViecId(firstWorkType == null ? null : ServiceUtils.toLong(firstWorkType.getId()))
-                .loaiHinhLamViecTen(joinWorkTypeNames(workTypes))
                 .loaiHinhLamViecs(workTypeItems)
                 .capDoKinhNghiemId(tinTuyenDung.getCapDoKinhNghiem() == null ? null : ServiceUtils.toLong(tinTuyenDung.getCapDoKinhNghiem().getId()))
                 .capDoKinhNghiemTen(tinTuyenDung.getCapDoKinhNghiem() == null ? null : tinTuyenDung.getCapDoKinhNghiem().getTen())

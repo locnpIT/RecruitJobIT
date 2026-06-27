@@ -1,7 +1,10 @@
 package com.phuocloc.projectfinal.recruit.auth.service;
 
+import com.phuocloc.projectfinal.recruit.auth.dto.request.ChangePasswordRequest;
+import com.phuocloc.projectfinal.recruit.auth.dto.request.ForgotPasswordRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.LoginRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.RegisterRequest;
+import com.phuocloc.projectfinal.recruit.auth.dto.request.ResetPasswordRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.request.VerifyEmailRequest;
 import com.phuocloc.projectfinal.recruit.auth.dto.response.AuthResponse;
 import com.phuocloc.projectfinal.recruit.auth.enums.RoleName;
@@ -14,9 +17,6 @@ import com.phuocloc.projectfinal.recruit.infrastructure.mail.HrCredentialMailSer
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +35,6 @@ public class AuthService {
     private final UsersRepository usersRepository;
     private final RolesRepository rolesRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final HrCredentialMailService mailService;
 
@@ -56,7 +55,7 @@ public class AuthService {
         // Candidate phải bấm link xác nhận email trước khi đăng nhập.
         user.setDangHoatDong(false);
         user.setVaiTroHeThong(userRole);
-        user.setMaXacNhanEmail(generateEmailVerificationCode());
+        user.setMaXacNhanEmail(generateOtpCode());
         user = usersRepository.save(user);
 
         mailService.sendCandidateEmailVerification(
@@ -76,16 +75,12 @@ public class AuthService {
         NguoiDung user = usersRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai email hoặc mật khẩu"));
 
-        if (!Boolean.TRUE.equals(user.getDangHoatDong())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tài khoản chưa được kích hoạt");
+        if (!passwordEncoder.matches(request.getMatKhau(), user.getMatKhauBam())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai email hoặc mật khẩu");
         }
 
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(normalizedEmail, request.getMatKhau())
-            );
-        } catch (BadCredentialsException ex) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sai email hoặc mật khẩu");
+        if (!Boolean.TRUE.equals(user.getDangHoatDong())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tài khoản chưa được kích hoạt");
         }
 
         String accessToken = jwtService.generateAccessToken(user);
@@ -122,7 +117,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tài khoản đã được kích hoạt");
         }
 
-        user.setMaXacNhanEmail(generateEmailVerificationCode());
+        user.setMaXacNhanEmail(generateOtpCode());
         usersRepository.save(user);
         mailService.sendCandidateEmailVerification(
                 user.getEmail(),
@@ -130,6 +125,56 @@ public class AuthService {
                 user.getHo(),
                 user.getMaXacNhanEmail()
         );
+    }
+
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
+        NguoiDung user = usersRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email không tồn tại trong hệ thống"));
+
+        if (!Boolean.TRUE.equals(user.getDangHoatDong())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Tài khoản chưa được kích hoạt, không thể khôi phục mật khẩu");
+        }
+
+        user.setMaXacNhanEmail(generateOtpCode());
+        usersRepository.save(user);
+
+        mailService.sendForgotPasswordCode(
+                user.getEmail(),
+                user.getTen(),
+                user.getHo(),
+                user.getMaXacNhanEmail()
+        );
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        String normalizedEmail = ServiceUtils.normalizeEmail(request.getEmail());
+        NguoiDung user = usersRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Email không tồn tại trong hệ thống"));
+
+        String currentCode = user.getMaXacNhanEmail();
+        if (!StringUtils.hasText(currentCode) || !currentCode.equals(request.getMaXacNhan())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã xác nhận không đúng hoặc đã hết hạn");
+        }
+
+        user.setMatKhauBam(passwordEncoder.encode(request.getMatKhauMoi()));
+        user.setMaXacNhanEmail(null);
+        usersRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(Integer userId, ChangePasswordRequest request) {
+        NguoiDung user = usersRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
+
+        if (!passwordEncoder.matches(request.getMatKhauHienTai(), user.getMatKhauBam())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu hiện tại không đúng");
+        }
+
+        user.setMatKhauBam(passwordEncoder.encode(request.getMatKhauMoi()));
+        usersRepository.save(user);
     }
 
     private VaiTroHeThong requireRole(RoleName roleName) {
@@ -169,7 +214,7 @@ public class AuthService {
         return response;
     }
 
-    private String generateEmailVerificationCode() {
+    private String generateOtpCode() {
         return String.format("%06d", SecureRandomHolder.INSTANCE.nextInt(1_000_000));
     }
 

@@ -111,8 +111,6 @@ export interface CompanyAdminJob {
   mauCvUrl: string | null;
   nganhNgheId: number | null;
   nganhNgheTen: string | null;
-  loaiHinhLamViecId: number | null;
-  loaiHinhLamViecTen: string | null;
   loaiHinhLamViecs?: CompanyJobMetadataOption[];
   capDoKinhNghiemId: number | null;
   capDoKinhNghiemTen: string | null;

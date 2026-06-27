@@ -12,6 +12,7 @@ type CompanyAdminSidebarProps = {
   isOpen?: boolean;
   onClose?: () => void;
   onNavigate?: () => void;
+  onChangePassword?: () => void;
   companyName?: string | null;
   companyLogo?: string | null;
   companyStatus?: string | null;
@@ -30,6 +31,7 @@ export function CompanyAdminSidebar({
   isOpen = false,
   onClose,
   onNavigate,
+  onChangePassword,
   companyName,
   companyLogo,
   companyStatus,
@@ -125,6 +127,15 @@ export function CompanyAdminSidebar({
             )
             );
         })}
+
+        <Button
+          variant="unstyled"
+          type="button"
+          onClick={onChangePassword}
+          className="mt-2 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+          Đổi mật khẩu
+        </Button>
 
         <Button
           variant="unstyled"

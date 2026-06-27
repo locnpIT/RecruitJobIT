@@ -38,6 +38,29 @@ export function useAdminJobsActions({ onReload }: UseAdminJobsActionsOptions) {
     }
   };
 
+  const handleBulkApprove = async (jobIds: number[]) => {
+    if (jobIds.length === 0) {
+      alert("Vui lòng chọn ít nhất một tin để duyệt.");
+      return false;
+    }
+
+    const confirmed = window.confirm(`Duyệt ${jobIds.length} tin tuyển dụng đã chọn?`);
+    if (!confirmed) return false;
+
+    setSubmitting(true);
+    try {
+      await Promise.all(jobIds.map((jobId) => adminJobsService.approveJob(jobId)));
+      await onReload();
+      return true;
+    } catch (err) {
+      console.error(err);
+      alert("Duyệt hàng loạt tin thất bại.");
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleReject = async (jobId: number, reason: string) => {
     setSubmitting(true);
     try {
@@ -91,6 +114,7 @@ export function useAdminJobsActions({ onReload }: UseAdminJobsActionsOptions) {
     setDetailOpen,
     handleViewDetail,
     handleApprove,
+    handleBulkApprove,
     handleReject,
     handleHide,
     formatSalary,

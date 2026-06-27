@@ -16,6 +16,7 @@ public class SemanticMatchScoringService {
     private static final double INDUSTRY_WEIGHT = 0.05;
     private static final double EXPERIENCE_WEIGHT = 0.07;
     private static final double COMPLETENESS_WEIGHT = 0.03;
+    private static final double HARD_MISMATCH_SCORE_CAP = 10.0;
 
     public double scoreCandidateForJob(
             double semanticPercent,
@@ -32,7 +33,8 @@ public class SemanticMatchScoringService {
         double experienceScore = hasRelevantExperience ? 100.0 : hasExperience ? 65.0 : 0.0;
         double completenessScore = hasSummary ? 100.0 : 35.0;
 
-        return weightedScore(semanticPercent, skillScore, industryScore, experienceScore, completenessScore);
+        double score = weightedScore(semanticPercent, skillScore, industryScore, experienceScore, completenessScore);
+        return capHardMismatchScore(score, requiredSkills, matchedSkills, jobIndustry, candidateIndustries);
     }
 
     public double scoreJobForProfile(
@@ -49,7 +51,8 @@ public class SemanticMatchScoringService {
         double experienceScore = hasProfileExperience ? 75.0 : 30.0;
         double completenessScore = hasProfileSummary ? 100.0 : 35.0;
 
-        return weightedScore(semanticPercent, skillScore, industryScore, experienceScore, completenessScore);
+        double score = weightedScore(semanticPercent, skillScore, industryScore, experienceScore, completenessScore);
+        return capHardMismatchScore(score, requiredSkills, matchedSkills, jobIndustry, candidateIndustries);
     }
 
     public String describeScore(double semanticPercent, double finalScore) {
@@ -113,6 +116,27 @@ public class SemanticMatchScoringService {
 
     private double neutralIfEmpty(List<String> values) {
         return values == null || values.isEmpty() ? 50.0 : 25.0;
+    }
+
+    private double capHardMismatchScore(
+            double score,
+            List<String> requiredSkills,
+            List<String> matchedSkills,
+            String jobIndustry,
+            List<String> candidateIndustries
+    ) {
+        if (hasAnyNormalizedValue(requiredSkills)
+                && !hasAnyNormalizedValue(matchedSkills)
+                && !matchesAny(jobIndustry, candidateIndustries)) {
+            return Math.min(score, HARD_MISMATCH_SCORE_CAP);
+        }
+        return score;
+    }
+
+    private boolean hasAnyNormalizedValue(List<String> values) {
+        return values != null && values.stream()
+                .map(this::normalize)
+                .anyMatch(value -> !value.isBlank());
     }
 
     private double clamp(double score) {

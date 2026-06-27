@@ -85,10 +85,9 @@ export function useJobFormState({ branches, selectedBranchId, setActionError }: 
       phucLoi: job.phucLoi ?? "",
       batBuocCV: Boolean(job.batBuocCV),
       mauCvUrl: job.mauCvUrl ?? "",
-      loaiHinhLamViecIds: ((job.loaiHinhLamViecs ?? []).length > 0
-        ? (job.loaiHinhLamViecs ?? []).map((item) => Number(item.id ?? 0))
-        : [Number(job.loaiHinhLamViecId ?? 0)]
-      ).filter((id) => Number.isFinite(id) && id > 0),
+      loaiHinhLamViecIds: (job.loaiHinhLamViecs ?? [])
+        .map((item) => Number(item.id ?? 0))
+        .filter((id) => Number.isFinite(id) && id > 0),
       capDoKinhNghiemId: job.capDoKinhNghiemId ?? 0,
       luongToiThieu: job.luongToiThieu ?? undefined,
       luongToiDa: job.luongToiDa ?? undefined,

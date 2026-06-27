@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -29,7 +30,7 @@ const STATUS_CONTENT = {
   },
 } as const;
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get("email") ?? "";
@@ -92,68 +93,82 @@ export default function VerifyEmailPage() {
   };
 
   return (
-    <AuthLayout>
-      <AuthCard>
-        <div className="text-center">
-          <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full border ${content.tone}`}>
-            <Icon className="h-7 w-7" />
-          </div>
-          <h1 className="mt-5 text-2xl font-bold text-slate-950">{content.title}</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">{content.description}</p>
-          {email ? (
-            <p className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">{email}</p>
-          ) : null}
+    <AuthCard>
+      <div className="text-center">
+        <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full border ${content.tone}`}>
+          <Icon className="h-7 w-7" />
         </div>
-
-        {status !== "success" ? (
-          <div className="mt-6 space-y-4">
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Mã xác nhận 6 số</span>
-              <input
-                value={code}
-                onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                className="h-11 w-full rounded-md border border-slate-300 px-3 text-center text-lg font-semibold tracking-[0.35em] outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-                placeholder="000000"
-              />
-            </label>
-
-            <button
-              type="button"
-              onClick={onConfirm}
-              disabled={isSubmitting}
-              className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#008080] px-3.5 text-sm font-medium text-white transition-colors hover:bg-[#006d6d] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Đang xác nhận..." : "Xác nhận email"}
-            </button>
-
-            <button
-              type="button"
-              onClick={onResend}
-              disabled={isResending}
-              className="inline-flex h-11 w-full items-center justify-center rounded-md border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${isResending ? "animate-spin" : ""}`} />
-              {isResending ? "Đang gửi lại..." : "Gửi lại mã"}
-            </button>
-          </div>
+        <h1 className="mt-5 text-2xl font-bold text-slate-950">{content.title}</h1>
+        <p className="mt-3 text-sm leading-6 text-slate-600">{content.description}</p>
+        {email ? (
+          <p className="mt-3 rounded-md bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">{email}</p>
         ) : null}
+      </div>
 
-        <div className="mt-7 space-y-3">
-          <Link
-            href="/auth/login"
-            className="inline-flex h-9 w-full items-center justify-center rounded-md bg-[#008080] px-3.5 text-sm font-medium text-white transition-colors hover:bg-[#006d6d]"
+      {status !== "success" ? (
+        <div className="mt-6 space-y-4">
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Mã xác nhận 6 số</span>
+            <input
+              value={code}
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              className="h-11 w-full rounded-md border border-slate-300 px-3 text-center text-lg font-semibold tracking-[0.35em] outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              placeholder="000000"
+            />
+          </label>
+
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isSubmitting}
+            className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[#008080] px-3.5 text-sm font-medium text-white transition-colors hover:bg-[#006d6d] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Đến trang đăng nhập
-          </Link>
-          <Link href="/" className="block text-center text-sm font-semibold text-slate-600 hover:text-slate-900">
-            Về trang chủ
-          </Link>
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            {isSubmitting ? "Đang xác nhận..." : "Xác nhận email"}
+          </button>
+
+          <button
+            type="button"
+            onClick={onResend}
+            disabled={isResending}
+            className="inline-flex h-11 w-full items-center justify-center rounded-md border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isResending ? "animate-spin" : ""}`} />
+            {isResending ? "Đang gửi lại..." : "Gửi lại mã"}
+          </button>
         </div>
-      </AuthCard>
+      ) : null}
+
+      <div className="mt-7 space-y-3">
+        <Link
+          href="/auth/login"
+          className="inline-flex h-9 w-full items-center justify-center rounded-md bg-[#008080] px-3.5 text-sm font-medium text-white transition-colors hover:bg-[#006d6d]"
+        >
+          Đến trang đăng nhập
+        </Link>
+        <Link href="/" className="block text-center text-sm font-semibold text-slate-600 hover:text-slate-900">
+          Về trang chủ
+        </Link>
+      </div>
+    </AuthCard>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <AuthLayout>
+      <Suspense
+        fallback={
+          <AuthCard>
+            <div className="py-8 text-center text-sm text-slate-500">Đang tải...</div>
+          </AuthCard>
+        }
+      >
+        <VerifyEmailContent />
+      </Suspense>
     </AuthLayout>
   );
 }

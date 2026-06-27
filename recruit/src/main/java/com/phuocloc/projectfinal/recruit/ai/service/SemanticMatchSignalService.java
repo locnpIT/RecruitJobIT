@@ -60,7 +60,6 @@ public class SemanticMatchSignalService {
         return kyNangTinTuyenDungRepository.findByTinTuyenDungIdOrderByKyNangTenAsc(jobId).stream()
                 .filter(item -> item.getKyNang() != null && item.getKyNang().getTen() != null)
                 .map(item -> item.getKyNang().getTen())
-                .limit(6)
                 .toList();
     }
 
@@ -104,6 +103,12 @@ public class SemanticMatchSignalService {
         return values.stream()
                 .filter(this::hasText)
                 .limit(limit)
+                .collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    public String joinAll(List<String> values) {
+        return values.stream()
+                .filter(this::hasText)
                 .collect(java.util.stream.Collectors.joining(", "));
     }
 

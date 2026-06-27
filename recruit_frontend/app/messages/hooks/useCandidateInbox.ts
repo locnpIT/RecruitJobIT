@@ -28,6 +28,7 @@ export function useCandidateInbox() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [inputValue, setInputValue] = useState("");
+  const [messagesReloadKey, setMessagesReloadKey] = useState(0);
 
   const selectedConversationIdRef = useRef<number | null>(null);
 
@@ -112,7 +113,7 @@ export function useCandidateInbox() {
     return () => {
       mounted = false;
     };
-  }, [selectedConversation?.id]);
+  }, [selectedConversation?.id, messagesReloadKey]);
 
   useEffect(() => {
     selectedConversationIdRef.current = selectedConversation?.id ?? null;
@@ -123,6 +124,7 @@ export function useCandidateInbox() {
     setError("");
     setMessages([]);
     setInputValue("");
+    setMessagesReloadKey((current) => current + 1);
     setSelectedConversation(conversation);
   };
 

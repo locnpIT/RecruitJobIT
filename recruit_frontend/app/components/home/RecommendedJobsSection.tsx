@@ -26,7 +26,6 @@ function formatDeadline(value: string | null) {
 
 function RecommendedJobCard({ job }: { job: CandidateRecommendedJob }) {
   const matchScore = formatMatchScore(job.diemPhuHop);
-  const topSignals = (job.tinHieuKhop ?? []).filter(Boolean).slice(0, 3);
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300">
@@ -74,15 +73,6 @@ function RecommendedJobCard({ job }: { job: CandidateRecommendedJob }) {
             <span className="rounded bg-slate-100 px-2 py-1">Hạn nộp: {formatDeadline(job.denHanLuc)}</span>
           </div>
 
-          {topSignals.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-              {topSignals.map((signal) => (
-                <span key={signal} className="rounded border border-slate-200 bg-white px-2 py-1">
-                  {signal}
-                </span>
-              ))}
-            </div>
-          ) : null}
         </div>
 
         <Link

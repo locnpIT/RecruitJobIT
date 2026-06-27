@@ -31,6 +31,31 @@ export function useAdminCandidateProofsActions({ onReload }: UseAdminCandidatePr
     }
   };
 
+  const handleBulkApprove = async (items: AdminCandidateProof[]) => {
+    if (items.length === 0) {
+      setMutationError("Vui lòng chọn ít nhất một minh chứng để duyệt.");
+      return false;
+    }
+
+    const confirmed = window.confirm(`Duyệt ${items.length} minh chứng đã chọn?`);
+    if (!confirmed) return false;
+
+    setSubmittingId("BULK");
+    setMutationError(null);
+    setMutationSuccess(null);
+    try {
+      await Promise.all(items.map((item) => adminCandidateProofsService.approveCandidateProof(item.loai, item.id)));
+      setMutationSuccess(`Đã duyệt ${items.length} minh chứng ứng viên.`);
+      await onReload();
+      return true;
+    } catch (error) {
+      setMutationError(getApiErrorMessage(error, "Duyệt hàng loạt minh chứng thất bại."));
+      return false;
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
   const handleReject = async (item: AdminCandidateProof) => {
     const rowId = `${item.loai}-${item.id}`;
     setSubmittingId(rowId);
@@ -54,6 +79,7 @@ export function useAdminCandidateProofsActions({ onReload }: UseAdminCandidatePr
     setMutationError,
     setMutationSuccess,
     handleApprove,
+    handleBulkApprove,
     handleReject,
   };
 }
